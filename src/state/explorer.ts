@@ -97,7 +97,7 @@ export function parseFilters(search: string): ExplorerFilters {
         ? 'corrected'
         : 'all',
     query: (params.get('q') ?? '')
-      .replace(/[\u0000-\u001f\u007f]/g, '')
+      .replace(/[\u0000-\u001f\u007f-\u009f\u202a-\u202e\u2066-\u2069]/g, '')
       .slice(0, 200),
     selectedCategories,
     hours:

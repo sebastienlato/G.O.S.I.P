@@ -1,6 +1,6 @@
 # G.O.S.I.P. — Global Open Source Intelligence Platform
 
-A free, local-first global event explorer. **Phase 8 adds separate simulated space, aviation and maritime sources, with sample, plan and missing-coverage details.** Cached USGS earthquakes, NWS New York forecasts and separate environment/original demos remain available. This is a prototype, not an emergency or impact assessment service.
+A free, local-first global event explorer. **Phase 9 adds visible privacy/source licenses, production security policy and a safe public simulation preview.** Cached USGS earthquakes and NWS New York forecasts remain available on exact loopback hosts; other hosts disable these requests with an explicit explanation. This is a prototype, not an emergency or impact assessment service.
 
 ## Run locally
 
@@ -12,6 +12,14 @@ npm run dev
 ```
 
 Open the loopback URL printed by Vite (normally http://127.0.0.1:5173). No credentials, account, backend, or environment file is needed.
+
+## Public readiness
+
+- **Privacy & source licenses** opens directly from the explorer: connection/URL disclosure, cache controls and cleanup, source-specific rights, local map/dependency notices, and the unresolved original-software license.
+- USGS/NWS are **local-only** on exact `localhost`, `127.0.0.1` or `[::1]`. Public/LAN hostnames keep the chosen source visible but do not load cached observations or make provider requests. Choose simulations explicitly or follow the official provider link. No query parameter enables feeds. Browser cooldowns cannot cap public visitor traffic; NWS application identification also remains unresolved for a public client.
+- Production CSP blocks inline scripts and unapproved connections; global no-referrer protects outgoing links. Typed and linked search share control/directional-character sanitization, preserving multilingual text. Select controls have visible keyboard focus; the privacy dialog supports narrow screens and keyboard dismissal/focus return.
+- Build regenerates dependency notices from locked installed packages. `npm audit` found zero known advisories on 2026-10-08. No dependency upgrade was justified.
+- [Beta readiness and limitations](docs/BETA_READINESS.md) records the GitHub Pages candidate, actual limits and remaining owner decisions. **No deployment in Phase 9; original software remains UNLICENSED.**
 
 ## Explore
 
@@ -57,10 +65,11 @@ Open the loopback URL printed by Vite (normally http://127.0.0.1:5173). No crede
 | `npm run typecheck` | Strict TypeScript checking |
 | `npm run build` | Typecheck and production bundle |
 | `npm run preview` | Loopback production preview |
-| `npm test` | 177 focused fixture/history/relationship/place/digital/report/environment/cache/refresh/parser/provider/filter/URL tests |
-| `npm run test:e2e` | Build, fresh preview on port 4173, 116 desktop/mobile Chromium checks |
+| `npm test` | 179 focused fixture/history/relationship/place/digital/report/environment/cache/refresh/parser/provider/filter/URL tests |
+| `npm run test:e2e` | Build, fresh preview on port 4173, 126 desktop/mobile Chromium checks |
 | `npm run format:check` / `npm run format` | Check / apply source formatting |
 | `npm run data:reports` | Rebuild bundled original report source documents |
+| `npm run data:notices` | Rebuild bundled production dependency notices (also runs on build) |
 | `npm run data:map` | Rebuild committed local geography |
 
 Browser tests need Chromium: `PLAYWRIGHT_SKIP_BROWSER_GC=1 npx playwright install chromium`. Port 4173 must be available. Tests intercept earthquake and weather endpoints with invented test-only responses; no check depends on live feed availability. Coverage includes success, malformed/network failure, explicit fallback/retry, stale/retained data, corrections/removal, missing values, current versus demo time, map selection, URL/history, mobile reflow, keyboard access, and map-free list/static entry. Screenshots in `docs/screenshots/` show mocked QA responses or labeled synthetic examples, never evidence of actual conditions. Phase 6 screenshots show desktop/mobile digital lists, details and maps. Tests also cover digital interval boundaries, null positions, sample denominators, safe schema rejection, URL/history, keyboard focus, 320px offline reflow and zero external/map-engine requests for list/static entries. Original report documents remain consistency-checked against fixtures. Phase 7 screenshots show timeline, relationship evidence and 320px list/static exploration; browser checks cover timer bounds/cleanup, reduced motion, keyboard scrubbing, URL/history, supplied/unknown place contexts, relationship navigation and current-source isolation.
@@ -85,7 +94,7 @@ React 19.3, TypeScript 7.0, Vite 8.3, Tailwind 4.3 and MapLibre 6.13; dependency
 
 ## $0 and provenance
 
-Public core access remains free and account-free. **No billing, paid service, hosting, trial, API key or account is used.** Selecting USGS makes a direct credential-free HTTPS request to `earthquake.usgs.gov`, which receives usual connection information including the visitor's IP. Selecting NWS similarly requests `api.weather.gov` directly; no weather imagery or external icons are downloaded. No analytics, external fonts or map tiles. Demo-only exploration makes no external requests; following source links leaves the app.
+Public core access remains free and account-free. **No billing, paid service, hosting, trial, API key or account is used.** On exact loopback hosts, selecting USGS makes a direct credential-free HTTPS request to `earthquake.usgs.gov`, which receives usual connection information including the visitor's IP. Selecting NWS similarly requests `api.weather.gov` directly; no weather imagery or external icons are downloaded. No analytics, external fonts or map tiles. Demo-only exploration makes no external requests; following source links leaves the app.
 
 NWS forecast use is independently scoped and documented in [DATA_POLICY](docs/DATA_POLICY.md); this does not extend USGS permissions to other products. Weather limits are local per page, not a global traffic allowance. USGS scientific data are published at no cost. Source-specific attribution, use/redistribution basis, coverage, cadence and rate limits are recorded in [DATA_POLICY](docs/DATA_POLICY.md). Feed requests have a 12-second timeout, 2 MB body limit and 2,000-record envelope limit; no silent truncation. At least 60 seconds between attempts, with 5-minute fallback backoff on HTTP 429 and longer exposed Retry-After respected. Cooldowns and last failure persist separately from the snapshot across reloads/tabs when storage works. No polling or automatic retry. Provider service limits are not an unlimited-traffic guarantee. Future scale must use bounded caching/throttling or disable the layer; never upgrade to a paid service.
 
@@ -95,10 +104,10 @@ Base geography is public-domain [Natural Earth](https://www.naturalearthdata.com
 
 No backend, deployment, automatic ingestion, service worker or offline cold-start guarantee. The loaded snapshot remains usable during network loss, but the application assets still need to load before a saved snapshot can be read. Cache is per origin/browser profile, can be evicted by the browser, and is not authenticated historical evidence. Returning to a loaded/cached USGS view requires manual refresh to check for changes. Device clock accuracy affects live windows. Regional detection/reporting gaps, provider corrections and overlapping markers remain. No clustering, Safari/Firefox or screen-reader audit.
 
-Initial app JS is ~339 KB / 104 KB gzip, app CSS ~33 KB / 8 KB gzip. Interactive-only MapLibre is ~1.08 MB / 289 KB gzip plus a ~508 KB worker and ~83 KB CSS. Its documented chunk warning is non-failing; list/static entry avoids those downloads.
+Initial app JS is ~367 KB / 109 KB gzip, app CSS ~34 KB / 8 KB gzip. Interactive-only MapLibre is ~1.08 MB / 289 KB gzip plus a ~508 KB worker and ~83 KB CSS. Its documented chunk warning is non-failing; list/static entry avoids those downloads.
 
 Weather covers one New York grid cell only; live fires, weather alerts, weather persistence and global weather coverage are not implemented.
 
 Digital-world content is entirely synthetic; no live outage/censorship coverage or historical archive is claimed.
 
-Phase 8 stops here. Continue in a fresh chat using `prompts/NEXT_PHASE_KICKOFF.md` for Phase 9 public readiness. Local `main` tracks the owner-authorized [G.O.S.I.P. repository](https://github.com/sebastienlato/G.O.S.I.P).
+Phase 9 stops here. Continue in a fresh chat using `prompts/NEXT_PHASE_KICKOFF.md` for Phase 10 web beta. Local `main` tracks the owner-authorized [G.O.S.I.P. repository](https://github.com/sebastienlato/G.O.S.I.P).

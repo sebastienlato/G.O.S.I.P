@@ -1,10 +1,10 @@
 {
   "name": "gosip",
   "version": "0.1.0",
-  "description": "Free, local-first global event explorer — observations, forecasts and attributed report examples",
+  "description": "Free, local-first global event explorer \u2014 observations, forecasts and attributed report examples",
   "scripts": {
     "dev": "vite",
-    "build": "tsc --noEmit && vite build",
+    "build": "npm run data:notices && tsc --noEmit && vite build",
     "typecheck": "tsc --noEmit",
     "preview": "vite preview",
     "test": "vitest run",
@@ -13,7 +13,8 @@
     "data:reports": "node scripts/build-report-documents.mjs",
     "data:map": "node scripts/build-map.mjs",
     "format": "prettier --write src tests scripts *.ts *.json index.html",
-    "format:check": "prettier --check src tests scripts *.ts *.json index.html"
+    "format:check": "prettier --check src tests scripts *.ts *.json index.html",
+    "data:notices": "node scripts/build-dependency-notices.mjs"
   },
   "keywords": [],
   "author": "",

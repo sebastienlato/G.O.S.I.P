@@ -1,4 +1,4 @@
-# Architecture — Phase 8
+# Architecture — Phase 9
 
 A static React + TypeScript application. `App.tsx` owns selected-event context separately from the detail dialog and explicit map-focus requests. One filtered array drives map/feed; NWS renders one co-located marker for the selected or earliest period while the feed exposes all periods. `src/state/explorer.ts` validates/serializes source, search, layers, window, view and map preference; `useExplorerFilters.ts` synchronizes history. No data/selection/camera are encoded in links.
 
@@ -62,3 +62,14 @@ Filtering retains occurrence/report-publication/digital-half-open-interval seman
 Each source uses publication for inclusive backward windows and descending order (6h=1, 24h=2, 72h=3, 168h=4). Sample/planned/gap intervals are displayed separately and do not drive window matching. New sources join bounded simulation playback with explicit latest-content and future-plan caveats. Supplied place/search filters, source changes, layer toggles, URL/history/reset and map/list access reuse existing paths. Original five category keys are preserved: space maps to science; aviation/maritime map to physical with source-specific visible labels. Source arrays never merge.
 
 `AdditionalSource` explains coverage/time semantics; `AdditionalBody` shows invented units, nullable observation/update, provenance and limitations. Two five-degree context markers per source, two null-position records. Country may be absent with a marker (maritime), independently of unmapped locations. No object positions, tracks, new relationship kinds or inferred associations. Existing map memoization, timer cleanup and real-source loading/cache/cadence remain unchanged. `additional.test.ts` and `tests/additional.spec.ts` verify these contracts.
+
+
+## Public-readiness boundary
+
+`sourceAccess.ts` allows real-source activation only on exact loopback hostnames. Both hooks guard initial activation and manual refresh; the USGS store also checks access before fetching. On other hosts neither hook starts its adapter/cache path; `App` keeps source selection explicit and presents disabled status/provider link/simulation recovery. This is not authentication or a global provider quota. No environment flag or URL override exists; a future public-access decision requires a reviewed change. Local provider/cache contracts remain intact.
+
+`PrivacySources` supplies connection, URL/history, storage and independent data/software license information through the existing native modal. A prominent control opens directly to privacy; About retains project context. The browser handles dialog focus/Escape; select focus styles are explicit. Every typed filter update is serialized and parsed through the same bounded validator as shared links; search also strips C1 controls and directional overrides without removing multilingual characters.
+
+Vite injects a production-only meta CSP before other head content: self scripts, no inline/eval scripts, self and exact USGS/NWS connect origins, self/data/blob images, self/blob workers, self/inline styles, and no frames/objects/forms/base changes. Development HMR remains unaffected. `index.html` sets no-referrer and a noscript explanation. Inline styles remain needed by React/MapLibre; frame-ancestors requires future host response headers. `build-dependency-notices.mjs` derives production package/license text from the lock and installed files; build generates the local downloadable notice, without changing the original license.
+
+Production browser tests proxy a reserved fake public origin to local preview assets, never deploying or calling a provider. They verify no public feed/storage activity across selection/reload, explicit fallback, CSP blocking, typed-input sanitization, keyboard privacy navigation and 320px reflow. Existing provider fixtures exercise enabled loopback behavior under the same production CSP.

@@ -35,7 +35,8 @@ export function useExplorerFilters() {
         next.language = 'all'
         next.reportStatus = 'all'
       }
-      const search = serializeFilters(next)
+      const validated = parseFilters(serializeFilters(next))
+      const search = serializeFilters(validated)
       if (search !== window.location.search) {
         window.history[replace ? 'replaceState' : 'pushState'](
           null,
@@ -43,8 +44,8 @@ export function useExplorerFilters() {
           `${window.location.pathname}${search}${window.location.hash}`,
         )
       }
-      current.current = next
-      setFilters(next)
+      current.current = validated
+      setFilters(validated)
     },
     [],
   )

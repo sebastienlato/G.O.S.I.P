@@ -1,3 +1,4 @@
+import { localSourceAccess } from '../state/sourceAccess'
 import { formatTimestamp } from '../data/events'
 import { FIRE_NOTE } from '../data/fire'
 import { NWS_PAGE, WEATHER_COVERAGE } from '../data/weather'
@@ -38,7 +39,7 @@ export default function EnvironmentSource({
         </div>
       </section>
     )
-  if (source !== 'nws') return null
+  if (source !== 'nws' || !localSourceAccess) return null
   const { snapshot, error, loading, stale, refresh, waitSeconds, offline } =
     weather
   return (

@@ -1,0 +1,22 @@
+# Phase 10 beta readiness — 2026-10-08
+
+Phase 9 builds and runs locally. Nothing has been deployed or provisioned. The initial public beta can be a **simulation explorer**: all seven fixture sources, history/place filters, map/list and source details work. Public USGS/NWS requests fail closed; local adapters remain available for development. Restoring them publicly requires a separate bounded-access decision, including NWS application identification. Core access stays free/account-free.
+
+## Candidate, not a hosting selection
+
+**GitHub Pages from the existing repository** is a candidate because it serves static files on an included `github.io` address and is [available for public repositories on GitHub Free](https://docs.github.com/en/pages/getting-started-with-github-pages/what-is-github-pages). No purchased domain or paid plan is needed for that configuration. Phase 10 must confirm the existing repository's visibility/eligibility and owner authorization without changing visibility or enabling billing. Do not create an account. If the intended path requests billing, stop that path.
+
+[Current documented limits](https://docs.github.com/en/pages/getting-started-with-github-pages/github-pages-limits): published site ≤1 GB, soft bandwidth 100 GB/month, ordinary builds ≤10/hour, 10-minute deployment timeout; rate limits and service withdrawal can occur. Pages is not for commercial SaaS/e-commerce or sensitive transactions. This educational, static, account-free prototype is the proposed scope. No paid CDN, Actions runner, storage or quota increase is authorized. Build locally and publish static output through an approved free path; do not infer that every Actions configuration is free. On excessive traffic, accept provider rejection/unpublish/reduce assets instead of upgrading. Pages' soft limits are not an app-controlled hard bandwidth cap; there is no reliable global usage meter in this client.
+
+The app currently assumes hosting at `/`. A repository Pages path requires testing and adapting **all** asset, geography, notice and report-document URLs as well as shared links; do not merely set Vite base and assume it works. The included domain avoids any domain purchase. Pages logs visitor IPs for security according to its official overview; disclose the actual host before release.
+
+## Release limits and remaining work
+
+- **Owner decision:** original software is `UNLICENSED`. Apache-2.0 is only proposed. Obtain license choice and exact copyright holder/year before adding a canonical license or presenting the beta as open source. Dependency and source licenses are independent. Phase 9 does not require that decision to finish.
+- **Security:** built production HTML has CSP (same-origin scripts, no eval/inline scripts, bounded connections, no frames/objects/forms/base changes) and no-referrer policy. Inline styles and local/blob workers remain allowed for React/MapLibre. Host response headers should supply `frame-ancestors`, `nosniff` and Permissions-Policy if supported; meta CSP cannot prevent embedding and does not protect directly served text files. No full penetration test or security certification.
+- **Accessibility:** deterministic Chromium keyboard entry, skip link, dialog navigation/Escape/focus return, visible select focus and 320px reflow checked. Existing reduced-motion/map/list regressions pass. No complete WCAG, screen-reader, Safari or Firefox audit claimed.
+- **Performance:** initial JS ~367 KB / 109 KB gzip; MapLibre ~1.08 MB / 289 KB gzip plus 508 KB worker and 83 KB CSS remains lazy. Direct list/static avoids those assets. Notices load only when opened. Prefer a list/static beta entry when traffic is constrained. No unlimited-scale or offline cold-start claim.
+- **Dependencies:** locked install and npm audit returned zero known advisories on review; no forced or speculative upgrades. Build regenerates local production dependency notices. Audit results are time-specific, not a guarantee.
+- **Data:** all original time/null/coverage contracts remain. Source terms rechecked in DATA_POLICY. No new feeds, accounts, keys, AI, billing or sensitive tracks. A public disabled-source empty view is not proof of absent events.
+
+Next chat: resolve only the genuinely missing license/hosting owner decisions, prepare and verify the exact static candidate, then deploy only under Phase 10 authorization and a verified $0 path. If blocked, retain the reviewable local build and request the single missing action; do not fabricate a live URL.

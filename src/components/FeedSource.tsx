@@ -1,3 +1,4 @@
+import { localSourceAccess } from '../state/sourceAccess'
 import { additionalLayers, type AdditionalSource } from '../data/additional'
 import type { Source } from '../state/explorer'
 import { formatTimestamp } from '../data/events'
@@ -94,7 +95,7 @@ export default function FeedSource({
           ))}
         </div>
       </div>
-      {source === 'usgs' && (
+      {source === 'usgs' && localSourceAccess && (
         <div className="source-status">
           <div aria-live="polite">
             <strong>

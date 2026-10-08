@@ -1,3 +1,4 @@
+import { localSourceAccess } from './sourceAccess'
 import { useEffect, useState } from 'react'
 import {
   createWeatherProvider,
@@ -14,6 +15,7 @@ export function useWeather(active: boolean) {
   const [now, setNow] = useState(Date.now)
   const [offline, setOffline] = useState(!navigator.onLine)
   async function refresh() {
+    if (!localSourceAccess) return
     if (!navigator.onLine || document.visibilityState === 'hidden') {
       setError(
         'Refresh paused while offline or hidden. Refresh manually when ready.',
@@ -35,10 +37,10 @@ export function useWeather(active: boolean) {
     }
   }
   useEffect(() => {
-    if (active && !attempted) void refresh()
+    if (active && localSourceAccess && !attempted) void refresh()
   })
   useEffect(() => {
-    if (!active) return
+    if (!active || !localSourceAccess) return
     const tick = () => {
       setNow(Date.now())
       setOffline(!navigator.onLine)

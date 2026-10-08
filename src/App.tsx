@@ -1,3 +1,5 @@
+import PrivacySources from './components/PrivacySources'
+import { localSourceAccess, PUBLIC_SOURCE_NOTE } from './state/sourceAccess'
 import {
   additionalLayers,
   isAdditionalSource,
@@ -103,6 +105,7 @@ export default function App() {
     reports ||
     digital ||
     additional !== null
+  const sourceDisabled = !isDemo && !localSourceAccess
   const availableCategories: Category[] = additional
     ? [additionalLayers[additional].category]
     : source === 'demo'
@@ -143,6 +146,12 @@ export default function App() {
   const [shareMessage, setShareMessage] = useState('')
   const [manualLink, setManualLink] = useState('')
   const about = useRef<HTMLDialogElement>(null)
+  const [privacyOnly, setPrivacyOnly] = useState(false)
+  function openAbout(privacy = false) {
+    setPrivacyOnly(privacy)
+    about.current?.showModal()
+    if (about.current) about.current.scrollTop = 0
+  }
   const search = useRef<HTMLInputElement>(null)
   const mapRegion = useRef<HTMLDivElement>(null)
   const events = useMemo(
@@ -302,7 +311,7 @@ export default function App() {
             <Compass size={16} />
             Explorer
           </span>
-          <button onClick={() => about.current?.showModal()}>
+          <button onClick={() => openAbout()}>
             <Info size={16} />
             About the project
           </button>
@@ -331,7 +340,9 @@ export default function App() {
                   ? cursor === null
                     ? 'DEMO SNAPSHOT'
                     : 'SIMULATED PLAYBACK'
-                  : 'LIVE VIEW CLOCK'}
+                  : sourceDisabled
+                    ? 'SOURCE DISABLED'
+                    : 'LIVE VIEW CLOCK'}
               </span>
               <strong>
                 {isDemo && cursor === null ? (
@@ -344,6 +355,17 @@ export default function App() {
               </strong>
             </div>
           </div>
+        </div>
+        <div className="readiness-bar">
+          <p>
+            <strong>
+              {localSourceAccess ? 'Local preview' : 'Simulation preview'}
+            </strong>{' '}
+            · Free access · No account or analytics
+          </p>
+          <button onClick={() => openAbout(true)}>
+            Privacy & source licenses
+          </button>
         </div>
         <FeedSource
           source={source}
@@ -359,6 +381,41 @@ export default function App() {
           }}
           {...earthquakes}
         />
+        {!localSourceAccess && (source === 'usgs' || source === 'nws') && (
+          <section
+            className="feed-source source-status"
+            aria-label="Source access status"
+          >
+            <strong>
+              {source === 'usgs' ? 'USGS' : 'NWS'} · Disabled on this host
+            </strong>
+            <p>{PUBLIC_SOURCE_NOTE}</p>
+            <div className="source-actions">
+              <button
+                onClick={() =>
+                  updateFilters({
+                    source: 'demo',
+                    query: '',
+                    selectedCategories: categoryKeys,
+                  })
+                }
+              >
+                Explore simulated examples
+              </button>
+              <a
+                href={
+                  source === 'usgs'
+                    ? 'https://earthquake.usgs.gov/earthquakes/map/'
+                    : 'https://forecast.weather.gov/MapClick.php?lat=40.7128&lon=-74.0060'
+                }
+                target="_blank"
+                rel="noreferrer"
+              >
+                Visit official provider ↗
+              </a>
+            </div>
+          </section>
+        )}
         <EnvironmentSource
           source={source}
           weather={weather}
@@ -398,24 +455,26 @@ export default function App() {
               <span>No live data or real alerts.</span>
             </p>
             <button
-              onClick={() => about.current?.showModal()}
+              onClick={() => openAbout()}
               aria-label="About simulated data"
             >
               <Info size={17} />
             </button>
           </div>
         )}
-        <HistoryControls
-          key={source}
-          source={source}
-          cursor={cursor}
-          country={country}
-          region={region}
-          hours={hours}
-          events={allEvents}
-          suspended={!!detailId}
-          update={updateFilters}
-        />
+        {!sourceDisabled && (
+          <HistoryControls
+            key={source}
+            source={source}
+            cursor={cursor}
+            country={country}
+            region={region}
+            hours={hours}
+            events={allEvents}
+            suspended={!!detailId}
+            update={updateFilters}
+          />
+        )}
         <div className="filter-bar" aria-label="Event filters">
           <div className="filter-label">
             <SlidersHorizontal size={16} />
@@ -865,24 +924,28 @@ export default function App() {
                 <div className="empty-state">
                   <Search size={30} />
                   <h3>
-                    {selectedCategories.length
-                      ? 'No matching signals'
-                      : 'All layers are off'}
+                    {sourceDisabled
+                      ? 'Source disabled on this host'
+                      : selectedCategories.length
+                        ? 'No matching signals'
+                        : 'All layers are off'}
                   </h3>
                   <p>
-                    {digital
-                      ? 'No digital examples match these filters. Change the measurement family or result, enable Digital world, clear search or widen the interval window. No data is not proof of connectivity or absence of blocking.'
-                      : reports
-                        ? 'No report examples match these filters. Try another language, clear the correction filter or widen the publication window. An empty result says nothing about real-world activity.'
-                        : source === 'nws'
-                          ? 'No forecast periods overlap this view. Check source status, enable Environment, clear search or widen the future window. This is not evidence of safe weather.'
-                          : !isDemo
-                            ? 'No observations match this view. Check the source status above, enable Earth & activity, clear search or widen the window. An empty result does not mean no earthquakes occurred.'
-                            : !selectedCategories.length
-                              ? 'Enable a layer to explore the simulated events.'
-                              : query.trim()
-                                ? `No examples match “${query.trim()}” with these layers and this time window. This is a small invented sample, not evidence of no activity.`
-                                : 'No examples in this time window. Try the full seven-day demo sample.'}
+                    {sourceDisabled
+                      ? 'No provider data was loaded. Use the source panel above to choose a labeled simulation or visit the official provider.'
+                      : digital
+                        ? 'No digital examples match these filters. Change the measurement family or result, enable Digital world, clear search or widen the interval window. No data is not proof of connectivity or absence of blocking.'
+                        : reports
+                          ? 'No report examples match these filters. Try another language, clear the correction filter or widen the publication window. An empty result says nothing about real-world activity.'
+                          : source === 'nws'
+                            ? 'No forecast periods overlap this view. Check source status, enable Environment, clear search or widen the future window. This is not evidence of safe weather.'
+                            : !isDemo
+                              ? 'No observations match this view. Check the source status above, enable Earth & activity, clear search or widen the window. An empty result does not mean no earthquakes occurred.'
+                              : !selectedCategories.length
+                                ? 'Enable a layer to explore the simulated events.'
+                                : query.trim()
+                                  ? `No examples match “${query.trim()}” with these layers and this time window. This is a small invented sample, not evidence of no activity.`
+                                  : 'No examples in this time window. Try the full seven-day demo sample.'}
                   </p>
                   {(country || region || cursor !== null) && (
                     <p>
@@ -983,6 +1046,7 @@ export default function App() {
           <div className="flex items-center justify-between">
             <span className="eyebrow">OPEN TO EVERYONE</span>
             <button
+              autoFocus
               className="icon-button"
               aria-label="Close about"
               onClick={() => about.current?.close()}
@@ -990,52 +1054,35 @@ export default function App() {
               <X size={20} />
             </button>
           </div>
-          <h2 id="about-title">
-            A shared view.
-            <br />
-            An honest starting point.
-          </h2>
-          <p>
-            GOSIP is a free global event explorer. Choose USGS earthquake
-            observations, New York NWS forecasts, four synthetic fire examples,
-            six multilingual report fixtures, six synthetic digital measurement
-            scenarios, twelve space/aviation/maritime activity examples, or 18
-            invented examples across five categories. Simulated examples are
-            never mixed with real observations.
-          </p>
-          <h3>Transparent by design</h3>
-          <p>
-            Demo time is fixed at 8 October 2026, 16:00 UTC. USGS filters use
-            the current device clock. Earthquake locations and magnitudes are
-            estimates that may change; provider review does not verify impacts.
-            An empty region does not mean nothing is happening there.
-          </p>
-          <h3>Local. Free. Account-free.</h3>
-          <p>
-            The map and interface are local. Selecting NWS makes two bounded
-            requests to api.weather.gov, which receives your IP address; weather
-            is held only in memory with manual hourly refresh. Forecast windows
-            look forward; earthquake windows look back. Selecting USGS reuses a
-            saved snapshot or sends a direct, credential-free request to
-            earthquake.usgs.gov; that provider receives the usual connection
-            information, including your IP address. No analytics, billing, or
-            account is used. Refresh is manual and bounded. One validated
-            snapshot is saved on this device for up to 24 hours; use the source
-            panel to clear it. If the feed fails, explicitly choose the
-            simulated fallback. Static map and list access remain available.
-          </p>
-          <p className="muted text-sm">
-            Base geography:{' '}
-            <a
-              href="https://www.naturalearthdata.com/about/terms-of-use/"
-              target="_blank"
-              rel="noreferrer"
-            >
-              Natural Earth public-domain data
-            </a>
-            , bundled via world-atlas. Boundaries are illustrative and may be
-            outdated. No position on disputed borders is implied.
-          </p>
+          {privacyOnly ? (
+            <h2 id="about-title">Privacy & sources</h2>
+          ) : (
+            <>
+              <h2 id="about-title">
+                A shared view.
+                <br />
+                An honest starting point.
+              </h2>
+              <p>
+                GOSIP is a free global event explorer. Choose USGS earthquake
+                observations, New York NWS forecasts, four synthetic fire
+                examples, six multilingual report fixtures, six synthetic
+                digital measurement scenarios, twelve space/aviation/maritime
+                activity examples, or 18 invented examples across five
+                categories. Simulated examples are never mixed with real
+                observations.
+              </p>
+              <h3>Transparent by design</h3>
+              <p>
+                Demo time is fixed at 8 October 2026, 16:00 UTC. USGS filters
+                use the current device clock. Earthquake locations and
+                magnitudes are estimates that may change; provider review does
+                not verify impacts. An empty region does not mean nothing is
+                happening there.
+              </p>
+            </>
+          )}
+          <PrivacySources />
         </div>
       </dialog>
     </>

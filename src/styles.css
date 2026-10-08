@@ -1947,3 +1947,48 @@ dialog::backdrop {
   font-size: 0.75rem;
   color: #cde0d7;
 }
+
+/* Readiness information remains reachable without entering the map. */
+.readiness-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 18px;
+  font-size: 13px;
+  color: #b9c6c4;
+}
+.readiness-bar strong {
+  color: #d5e7cd;
+}
+.readiness-bar button {
+  border: 1px solid #465552;
+  border-radius: 6px;
+  padding: 10px 14px;
+  min-height: 44px;
+  text-align: left;
+}
+.privacy-sources {
+  overflow-wrap: anywhere;
+}
+.privacy-sources ul {
+  padding-left: 20px;
+}
+.privacy-sources li {
+  margin: 14px 0;
+  font-size: 14px;
+  line-height: 1.8;
+}
+.privacy-sources a {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+select,
+summary {
+  outline-offset: 4px;
+}
+select:focus-visible,
+summary:focus-visible {
+  outline: 2px solid var(--mint);
+}
