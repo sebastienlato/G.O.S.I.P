@@ -1,0 +1,50 @@
+{
+  "name": "gosip",
+  "version": "0.1.0",
+  "description": "Free, local-first global event explorer — simulated Phase 0 prototype",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "typecheck": "tsc --noEmit",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "npm run build && playwright test",
+    "data:map": "node scripts/build-map.mjs",
+    "format": "prettier --write src tests scripts *.ts *.json index.html",
+    "format:check": "prettier --check src tests scripts *.ts *.json index.html"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "UNLICENSED",
+  "type": "module",
+  "dependencies": {
+    "lucide-react": "^1.53.0",
+    "maplibre-gl": "^6.13.0",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.64.0",
+    "@tailwindcss/vite": "^4.3.3",
+    "@types/geojson": "^7946.0.16",
+    "@types/node": "^26.6.4",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@types/topojson-client": "^3.1.5",
+    "@vitejs/plugin-react": "^6.1.2",
+    "d3-geo": "^3.1.1",
+    "d3-geo-projection": "^4.0.0",
+    "prettier": "^3.9.9",
+    "tailwindcss": "^4.3.3",
+    "topojson-client": "^3.1.0",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.4",
+    "vitest": "^5.0.3",
+    "world-atlas": "^2.0.2"
+  },
+  "private": true,
+  "engines": {
+    "node": "^22.12.0 || >=24.0.0"
+  }
+}

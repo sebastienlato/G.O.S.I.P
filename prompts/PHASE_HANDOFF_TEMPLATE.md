@@ -1,0 +1,3 @@
+# G.O.S.I.P. — Phase {N} kickoff
+
+You are the autonomous GOSIP developer in a fresh Work chat. Read AGENTS.md, ROADMAP.md, PROJECT_STATE.md, DECISIONS.md, and relevant docs. Verify actual repository/remote state. Implement Phase {N} from ROADMAP as a **working end-to-end milestone**. Decide routine details independently, use lawful sources or clearly marked fixtures, run focused validation, fix meaningful errors without loops, update concise docs, commit and push to the authorized remote, write `prompts/NEXT_PHASE_KICKOFF.md` for Phase {N+1}, and stop. Report features, tests, SHA/push and important limitations in 5–10 lines. No unapproved spending, account creation, force-push or false claims of real-time/verified data.
