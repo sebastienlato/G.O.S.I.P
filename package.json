@@ -3,6 +3,8 @@
   "version": "0.1.0",
   "description": "Free, local-first global event explorer \u2014 observations, forecasts and attributed report examples",
   "scripts": {
+    "data:native": "node scripts/export-native.mjs",
+    "check:native": "node scripts/export-native.mjs --check && swift test --package-path native/GOSIP/Core",
     "dev": "vite",
     "build": "npm run data:notices && tsc --noEmit && vite build",
     "typecheck": "tsc --noEmit",

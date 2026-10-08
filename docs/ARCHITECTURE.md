@@ -1,4 +1,12 @@
-# Architecture — Phase 10
+# Architecture — Phase 11
+
+## Native client
+
+`native/GOSIP` adds a dependency-free SwiftUI app and Foundation-only Swift package. The checked-in Xcode project compiles the same core source and bundles fixtures/geography/notices; simulator signing is disabled. `ExplorerView` owns source/filter/cursor/dialog state, `OfflineMap` draws local geographic rings, and detail sections preserve source-specific semantics. One filtered array drives map/list; null positions stay in the list. There is no native transport, persistence or location API.
+
+`scripts/export-native.mjs` uses existing TypeScript validators and canonical original fixtures, exporting exact raw payloads/IDs with native display projections and source-separated arrays. It also generates a web-filter oracle for the Swift tests. `--check` rejects committed-resource drift; the native decoder bounds and validates its presentation envelope. The app does not load the test oracle. See [IOS](IOS.md) for commands, coverage and deliberate limitations. Web code and deployed assets remain independent.
+
+## Web client
 
 A static React + TypeScript application. `App.tsx` owns selected-event context separately from the detail dialog and explicit map-focus requests. One filtered array drives map/feed; NWS renders one co-located marker for the selected or earliest period while the feed exposes all periods. `src/state/explorer.ts` validates/serializes source, search, layers, window, view and map preference; `useExplorerFilters.ts` synchronizes history. No data/selection/camera are encoded in links.
 

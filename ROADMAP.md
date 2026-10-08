@@ -13,7 +13,7 @@
 8. **Additional layers:** space, aviation, maritime where free/legal feasible; defer restricted feeds.
 9. **Public readiness:** security, accessibility, performance, privacy, legal source audit, free-tier budgets.
 10. **Web beta — complete:** owner-authorized GitHub Pages simulation beta deployed and verified; public feeds fail closed, hosting limits disclosed, Apache-2.0 and contribution documentation published.
-11. **iOS:** native SwiftUI client on shared data contracts with map, list, filters, details.
+11. **iOS — complete:** native SwiftUI simulator client with all 46 shared original fixtures, local map/list, filters, source-specific details and history. No live feeds, signing or paid distribution. See `docs/IOS.md`.
 
 AI is deferred. No project-wide freeze when one data provider is unavailable. Real feed approval applies to the feed, not to all development.
 
