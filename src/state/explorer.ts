@@ -1,3 +1,4 @@
+import { type AdditionalSource, additionalLayers } from '../data/additional'
 import { parseCursor, parsePlace, supportsPlayback } from '../data/history'
 import {
   digitalFamilies,
@@ -10,7 +11,13 @@ import { categories, type Category, type WindowHours } from '../data/events'
 
 export const categoryKeys = Object.keys(categories) as Category[]
 export type Source =
-  'demo' | 'usgs' | 'nws' | 'fire-demo' | 'reports-demo' | 'digital-demo'
+  | AdditionalSource
+  | 'demo'
+  | 'usgs'
+  | 'nws'
+  | 'fire-demo'
+  | 'reports-demo'
+  | 'digital-demo'
 export interface ExplorerFilters {
   source: Source
   cursor: number | null
@@ -65,6 +72,7 @@ export function parseFilters(search: string): ExplorerFilters {
       'fire-demo',
       'reports-demo',
       'digital-demo',
+      ...Object.keys(additionalLayers),
     ].includes(params.get('source') ?? '')
       ? (params.get('source') as Source)
       : 'demo',

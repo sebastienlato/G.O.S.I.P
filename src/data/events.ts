@@ -1,4 +1,9 @@
 import {
+  isAdditional,
+  additionalBases,
+  type AdditionalEvent,
+} from './additional'
+import {
   isDigital,
   digitalFamilies,
   digitalResults,
@@ -61,20 +66,23 @@ export type ExplorerEvent =
   | ThermalEvent
   | ReportEvent
   | DigitalEvent
+  | AdditionalEvent
 export const eventBadge = (event: ExplorerEvent) =>
-  isDigital(event)
-    ? 'SIMULATED · DIGITAL MEASUREMENT'
-    : isReport(event)
-      ? 'SIMULATED · ATTRIBUTED CLAIM'
-      : event.is_demo
-        ? 'SIMULATED'
-        : isForecast(event)
-          ? 'FORECAST · NWS'
-          : event.status === 'deleted'
-            ? 'WITHDRAWN · USGS'
-            : 'OBSERVATION · USGS'
+  isAdditional(event)
+    ? `SIMULATED · ${event.family.toUpperCase()}`
+    : isDigital(event)
+      ? 'SIMULATED · DIGITAL MEASUREMENT'
+      : isReport(event)
+        ? 'SIMULATED · ATTRIBUTED CLAIM'
+        : event.is_demo
+          ? 'SIMULATED'
+          : isForecast(event)
+            ? 'FORECAST · NWS'
+            : event.status === 'deleted'
+              ? 'WITHDRAWN · USGS'
+              : 'OBSERVATION · USGS'
 export const markerLabel = (event: ExplorerEvent) =>
-  `${isDigital(event) ? 'Simulated digital measurement' : isReport(event) ? 'Simulated report' : event.is_demo ? 'Simulated' : isForecast(event) ? 'NWS forecast' : 'USGS observation'}: ${event.title}, ${event.country || event.region}`
+  `${isAdditional(event) ? `Simulated ${event.family} example` : isDigital(event) ? 'Simulated digital measurement' : isReport(event) ? 'Simulated report' : event.is_demo ? 'Simulated' : isForecast(event) ? 'NWS forecast' : 'USGS observation'}: ${event.title}, ${event.country || event.region}`
 
 type Seed = [Category, string, string, string, number, number, number, string]
 const seeds: Seed[] = [
@@ -372,7 +380,7 @@ export function filterEvents(
               Date.parse(e.occurred_at) < referenceTime
             : Date.parse(eventTime(e)) >= cutoff &&
               Date.parse(eventTime(e)) <= referenceTime) &&
-        `${e.title} ${e.summary} ${e.region} ${e.country} ${categories[e.category].label} ${isDigital(e) ? `${e.source_name} ${e.method} ${digitalFamilies[e.family]} ${digitalResults[e.result]} ${e.network_asn === null ? '' : `AS${e.network_asn}`}` : ''} ${isReport(e) ? `${e.source_name} ${e.source_language} ${e.translation?.title ?? ''} ${e.translation?.summary ?? ''}` : ''}`
+        `${e.title} ${e.summary} ${e.region} ${e.country} ${categories[e.category].label} ${isAdditional(e) ? `${e.family} ${additionalBases[e.basis]} ${e.unit}` : ''} ${isDigital(e) ? `${e.source_name} ${e.method} ${digitalFamilies[e.family]} ${digitalResults[e.result]} ${e.network_asn === null ? '' : `AS${e.network_asn}`}` : ''} ${isReport(e) ? `${e.source_name} ${e.source_language} ${e.translation?.title ?? ''} ${e.translation?.summary ?? ''}` : ''}`
           .toLocaleLowerCase()
           .includes(q),
     )
@@ -382,13 +390,15 @@ export function filterEvents(
         : Date.parse(eventTime(b)) - Date.parse(eventTime(a)),
     )
 }
-// Report ordering uses publication; digital ordering uses interval end.
+// Reports and additional summaries use publication; digital uses interval end.
 export const eventTime = (event: ExplorerEvent): string =>
-  isDigital(event)
-    ? event.interval_end
-    : isReport(event)
-      ? event.published_at
-      : event.occurred_at
+  isAdditional(event)
+    ? event.published_at
+    : isDigital(event)
+      ? event.interval_end
+      : isReport(event)
+        ? event.published_at
+        : event.occurred_at
 export type MappedEvent = ExplorerEvent & { coordinates: [number, number] }
 export const hasCoordinates = (event: ExplorerEvent): event is MappedEvent =>
   event.coordinates !== null
@@ -418,20 +428,26 @@ export function formatTimestamp(iso: string | number): string {
 }
 
 export const locationMeaning = (event: ExplorerEvent) =>
-  isDigital(event)
+  isAdditional(event)
     ? event.location_precision === 'region'
-      ? 'Broad illustrative region · not a probe or outage extent'
+      ? 'Broad illustrative context · not a vehicle or orbital position'
       : event.location_precision === 'withheld'
         ? 'Location withheld for safety · not mapped'
         : 'Location not supplied · not mapped'
-    : isReport(event)
+    : isDigital(event)
       ? event.location_precision === 'region'
-        ? 'Broad illustrative region · not an incident position'
+        ? 'Broad illustrative region · not a probe or outage extent'
         : event.location_precision === 'withheld'
           ? 'Location withheld for safety · not mapped'
           : 'Location not supplied · not mapped'
-      : event.is_demo
-        ? 'Approximate location'
-        : isForecast(event)
-          ? 'Forecast location'
-          : 'Estimated epicentre'
+      : isReport(event)
+        ? event.location_precision === 'region'
+          ? 'Broad illustrative region · not an incident position'
+          : event.location_precision === 'withheld'
+            ? 'Location withheld for safety · not mapped'
+            : 'Location not supplied · not mapped'
+        : event.is_demo
+          ? 'Approximate location'
+          : isForecast(event)
+            ? 'Forecast location'
+            : 'Estimated epicentre'

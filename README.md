@@ -1,6 +1,6 @@
 # G.O.S.I.P. — Global Open Source Intelligence Platform
 
-A free, local-first global event explorer. **Phase 7 adds simulated timeline playback, supplied country/region filters and evidence-backed fixture relationships.** Cached USGS earthquakes, NWS New York forecasts and separate environment/original demos remain available. This is a prototype, not an emergency or impact assessment service.
+A free, local-first global event explorer. **Phase 8 adds separate simulated space, aviation and maritime sources, with sample, plan and missing-coverage details.** Cached USGS earthquakes, NWS New York forecasts and separate environment/original demos remain available. This is a prototype, not an emergency or impact assessment service.
 
 ## Run locally
 
@@ -14,6 +14,10 @@ npm run dev
 Open the loopback URL printed by Vite (normally http://127.0.0.1:5173). No credentials, account, backend, or environment file is needed.
 
 ## Explore
+
+- **Space / Aviation / Maritime · simulated** (`?source=space-demo|aviation-demo|maritime-demo`): four original examples per source, independently selected. Explore a delayed aggregate, a future plan, a collection gap and an older sample. Counts are invented catalog entries, flight movements or port calls, never people, real tracks or current positions. No additional live provider is connected.
+- Publication drives backward windows and newest-first order: each source has 6h=1 / 24h=2 / 3d=3 / 7d=4 at the fixed fixture clock. Details distinguish sample cutoff, half-open sample/planned/gap interval, publication, nullable update and scenario retrieval. Plans remain unobserved; missing coverage remains null, not zero. Playback shows latest fixture content, not earlier knowledge or completed movements.
+- Two broad context markers and two feed-only examples per source. Supplied country/region, search (including basis and units), layer toggles, keyboard details, shared links, history, reset and map/feed actions work with all three sources. Country is not nationality; no orbital elements, object/aircraft/vessel IDs, precise positions, routes, causal links or safety guidance. Official candidate review and unresolved live-use limits are in [DATA_POLICY](docs/DATA_POLICY.md#phase-8--additional-layer-candidates-and-original-examples-2026-10-08).
 
 - **Time & place:** scrub the simulation clock hourly across 1–8 October 2026, step six hours, or play six-hour increments every 1.2 seconds. Playback stops at the fixed snapshot, on hidden pages/history navigation, source/place/window changes, and opening details. Reduced motion disables automatic playback; stepping and keyboard slider controls remain available. Return to snapshot restores the original counts.
 - Playback explores occurrence, report publication or overlapping digital intervals in the **latest fixtures**, not what was known at an earlier time. Corrections and full interval totals remain visible; intervals extending after the cursor are explicitly labeled. Visible UTC cursor/range and source coverage explain this limit. USGS week/cache snapshots and current NWS predictions have no historical playback; their live clocks and manual refresh remain unchanged.
@@ -53,18 +57,21 @@ Open the loopback URL printed by Vite (normally http://127.0.0.1:5173). No crede
 | `npm run typecheck` | Strict TypeScript checking |
 | `npm run build` | Typecheck and production bundle |
 | `npm run preview` | Loopback production preview |
-| `npm test` | 135 focused history/relationship/place/digital/report/environment/cache/refresh/parser/provider/filter/URL tests |
-| `npm run test:e2e` | Build, fresh preview on port 4173, 94 desktop/mobile Chromium checks |
+| `npm test` | 177 focused fixture/history/relationship/place/digital/report/environment/cache/refresh/parser/provider/filter/URL tests |
+| `npm run test:e2e` | Build, fresh preview on port 4173, 116 desktop/mobile Chromium checks |
 | `npm run format:check` / `npm run format` | Check / apply source formatting |
 | `npm run data:reports` | Rebuild bundled original report source documents |
 | `npm run data:map` | Rebuild committed local geography |
 
 Browser tests need Chromium: `PLAYWRIGHT_SKIP_BROWSER_GC=1 npx playwright install chromium`. Port 4173 must be available. Tests intercept earthquake and weather endpoints with invented test-only responses; no check depends on live feed availability. Coverage includes success, malformed/network failure, explicit fallback/retry, stale/retained data, corrections/removal, missing values, current versus demo time, map selection, URL/history, mobile reflow, keyboard access, and map-free list/static entry. Screenshots in `docs/screenshots/` show mocked QA responses or labeled synthetic examples, never evidence of actual conditions. Phase 6 screenshots show desktop/mobile digital lists, details and maps. Tests also cover digital interval boundaries, null positions, sample denominators, safe schema rejection, URL/history, keyboard focus, 320px offline reflow and zero external/map-engine requests for list/static entries. Original report documents remain consistency-checked against fixtures. Phase 7 screenshots show timeline, relationship evidence and 320px list/static exploration; browser checks cover timer bounds/cleanup, reduced motion, keyboard scrubbing, URL/history, supplied/unknown place contexts, relationship navigation and current-source isolation.
 
+Phase 8 checks cover all three new sources, unsafe schema inputs, publication boundaries, future plans, missing locations, playback/share/history, keyboard map focus, 320px offline access and zero external/map-engine requests in list/static views. Phase 8 screenshots are original synthetic examples.
+
 ## Structure
 
 React 19.3, TypeScript 7.0, Vite 8.3, Tailwind 4.3 and MapLibre 6.13; dependency versions are locked.
 
+- `src/data/additional.ts`, `additionalExamples.json`: bounded space/aviation/maritime simulations with publication windows and separate sample/plan/gap semantics. No network adapter.
 - `src/data/events.ts`: discriminated demo/observation contract, unchanged demo parser/fixtures and filtering.
 - `src/data/usgs.ts`: bounded USGS parser/provider, stream size limit, timeout, deduplication and cadence.
 - `src/data/weather.ts`, `fire.ts`: bounded NWS forecast adapter and separate validated thermal simulations.
@@ -94,4 +101,4 @@ Weather covers one New York grid cell only; live fires, weather alerts, weather 
 
 Digital-world content is entirely synthetic; no live outage/censorship coverage or historical archive is claimed.
 
-Phase 7 stops here. Continue in a fresh chat using `prompts/NEXT_PHASE_KICKOFF.md` for Phase 8 additional layers (space, aviation and maritime where free/legal feasible). Local `main` tracks the owner-authorized [G.O.S.I.P. repository](https://github.com/sebastienlato/G.O.S.I.P).
+Phase 8 stops here. Continue in a fresh chat using `prompts/NEXT_PHASE_KICKOFF.md` for Phase 9 public readiness. Local `main` tracks the owner-authorized [G.O.S.I.P. repository](https://github.com/sebastienlato/G.O.S.I.P).

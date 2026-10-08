@@ -1,3 +1,4 @@
+import { isAdditionalSource } from './additional'
 import { DEMO_TIME, type ExplorerEvent } from './events'
 import { isDigital } from './digital'
 import { isReport } from './reports'
@@ -5,6 +6,7 @@ import { isReport } from './reports'
 export const HOUR = 3_600_000
 export const HISTORY_START = DEMO_TIME - 168 * HOUR
 export const supportsPlayback = (source: string) =>
+  isAdditionalSource(source) ||
   ['demo', 'fire-demo', 'reports-demo', 'digital-demo'].includes(source)
 
 export function parseCursor(value: string | null): number | null {

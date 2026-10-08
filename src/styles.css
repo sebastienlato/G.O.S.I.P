@@ -1933,3 +1933,17 @@ dialog::backdrop {
     flex-basis: 100%;
   }
 }
+
+.additional-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0.9rem 0;
+}
+.additional-legend span {
+  padding: 0.4rem 0.65rem;
+  border: 1px solid #384943;
+  border-radius: 0.4rem;
+  font-size: 0.75rem;
+  color: #cde0d7;
+}

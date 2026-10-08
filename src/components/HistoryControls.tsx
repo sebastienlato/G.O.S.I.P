@@ -1,3 +1,4 @@
+import { isAdditionalSource } from '../data/additional'
 import { useEffect, useState } from 'react'
 import {
   DEMO_TIME,
@@ -175,11 +176,13 @@ export default function HistoryControls({
           )}
           <p className="history-note">
             {events.length} original fixtures in this source.{' '}
-            {source === 'reports-demo'
-              ? 'Publication drives the window; corrections do not change publication.'
-              : source === 'digital-demo'
-                ? 'Measurement intervals overlap the window; full interval totals may extend beyond the cursor.'
-                : 'Scenario occurrence drives the window.'}{' '}
+            {isAdditionalSource(source)
+              ? 'Publication drives the window; sample intervals and future plans stay separate. No track is animated.'
+              : source === 'reports-demo'
+                ? 'Publication drives the window; corrections do not change publication.'
+                : source === 'digital-demo'
+                  ? 'Measurement intervals overlap the window; full interval totals may extend beyond the cursor.'
+                  : 'Scenario occurrence drives the window.'}{' '}
             Latest fixture text, corrections and full measurements remain
             visible. This is timestamp exploration, not a reconstruction of what
             was known then. No complete archive or real-world coverage.

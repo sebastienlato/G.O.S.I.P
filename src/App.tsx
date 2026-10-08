@@ -1,3 +1,12 @@
+import {
+  additionalLayers,
+  isAdditionalSource,
+  additionalBySource,
+  isAdditional,
+  additionalReadout,
+  additionalBases,
+} from './data/additional'
+import AdditionalSource from './components/AdditionalSource'
 import HistoryControls from './components/HistoryControls'
 import { matchesPlace } from './data/history'
 import {
@@ -85,12 +94,18 @@ export default function App() {
   ] = useExplorerFilters()
   const earthquakes = useEarthquakes(source === 'usgs')
   const weather = useWeather(source === 'nws')
+  const additional = isAdditionalSource(source) ? source : null
   const digital = source === 'digital-demo'
   const reports = source === 'reports-demo'
   const isDemo =
-    source === 'demo' || source === 'fire-demo' || reports || digital
-  const availableCategories: Category[] =
-    source === 'demo'
+    source === 'demo' ||
+    source === 'fire-demo' ||
+    reports ||
+    digital ||
+    additional !== null
+  const availableCategories: Category[] = additional
+    ? [additionalLayers[additional].category]
+    : source === 'demo'
       ? categoryKeys
       : source === 'usgs'
         ? ['physical']
@@ -102,17 +117,19 @@ export default function App() {
   const activeCategoryCount = availableCategories.filter((key) =>
     selectedCategories.includes(key),
   ).length
-  const allEvents = digital
-    ? digitalExamples
-    : reports
-      ? reportExamples
-      : source === 'demo'
-        ? demoEvents
-        : source === 'fire-demo'
-          ? fireExamples
-          : source === 'nws'
-            ? (weather.snapshot?.events ?? noEvents)
-            : (earthquakes.snapshot?.events ?? noEvents)
+  const allEvents = additional
+    ? additionalBySource[additional]
+    : digital
+      ? digitalExamples
+      : reports
+        ? reportExamples
+        : source === 'demo'
+          ? demoEvents
+          : source === 'fire-demo'
+            ? fireExamples
+            : source === 'nws'
+              ? (weather.snapshot?.events ?? noEvents)
+              : (earthquakes.snapshot?.events ?? noEvents)
   const referenceTime = isDemo
     ? (cursor ?? DEMO_TIME)
     : Math.floor((source === 'nws' ? weather.now : earthquakes.now) / 60_000) *
@@ -353,6 +370,7 @@ export default function App() {
             })
           }
         />
+        {additional && <AdditionalSource source={additional} />}
         {digital && (
           <DigitalSource
             family={digitalFamily}
@@ -424,7 +442,9 @@ export default function App() {
                   className="category-dot"
                   style={{ background: categories[key].color }}
                 />
-                {categories[key].label}
+                {additional
+                  ? additionalLayers[additional].label
+                  : categories[key].label}
               </button>
             ))}
           </div>
@@ -438,6 +458,13 @@ export default function App() {
         </div>
         <div className={`explorer ${view === 'list' ? 'list-view' : ''}`}>
           <div className="explorer-controls">
+            {additional && (
+              <p className="report-map-note">
+                {mapEvents.length} broad context markers ·{' '}
+                {events.length - mapEvents.length} examples not mapped. Markers
+                are not tracks or current positions.
+              </p>
+            )}
             {digital && (
               <p className="report-map-note">
                 {mapEvents.length} broad regional markers ·{' '}
@@ -489,7 +516,7 @@ export default function App() {
                     {isDemo
                       ? digital
                         ? 'Measurement intervals overlapping the past…'
-                        : reports
+                        : reports || additional
                           ? cursor === null
                             ? 'Published before the demo snapshot'
                             : 'Published before the playback cursor'
@@ -673,21 +700,23 @@ export default function App() {
             <div className="feed-meta">
               <span aria-live="polite" role="status">
                 {events.length}{' '}
-                {digital
-                  ? 'simulated digital'
-                  : reports
-                    ? 'simulated report'
-                    : isDemo
-                      ? 'simulated'
-                      : source === 'nws'
-                        ? 'NWS forecast'
-                        : 'USGS'}{' '}
+                {additional
+                  ? `simulated ${additionalLayers[additional].family}`
+                  : digital
+                    ? 'simulated digital'
+                    : reports
+                      ? 'simulated report'
+                      : isDemo
+                        ? 'simulated'
+                        : source === 'nws'
+                          ? 'NWS forecast'
+                          : 'USGS'}{' '}
                 {events.length === 1 ? 'event' : 'events'}
               </span>
               <span>
                 {digital
                   ? 'Interval end · newest first'
-                  : reports
+                  : reports || additional
                     ? 'Publication · newest first'
                     : source === 'nws'
                       ? 'Soonest first'
@@ -714,7 +743,9 @@ export default function App() {
                         className="category-dot"
                         style={{ background: categories[event.category].color }}
                       />
-                      {categories[event.category].label}
+                      {isAdditional(event)
+                        ? additionalLayers[`${event.family}-demo`].label
+                        : categories[event.category].label}
                     </span>
                     <span
                       className="event-age"
@@ -733,7 +764,7 @@ export default function App() {
                         : isDigital(event) &&
                             Date.parse(event.interval_end) > referenceTime
                           ? `Interval extends to ${formatTimestamp(event.interval_end)} · full fixture totals`
-                          : `${isDigital(event) ? 'Interval ended ' : isReport(event) ? 'Published ' : ''}${demoAge(eventTime(event), referenceTime)} ${isDemo ? (cursor === null ? 'before snapshot' : 'before cursor') : 'ago'}`}
+                          : `${isDigital(event) ? 'Interval ended ' : isReport(event) || isAdditional(event) ? 'Published ' : ''}${demoAge(eventTime(event), referenceTime)} ${isDemo ? (cursor === null ? 'before snapshot' : 'before cursor') : 'ago'}`}
                     </span>
                   </div>
                   <h3
@@ -752,6 +783,27 @@ export default function App() {
                       </>
                     )}
                   </p>
+                  {isAdditional(event) && (
+                    <div className="digital-card-meta">
+                      <p>{additionalBases[event.basis]}</p>
+                      <p>{additionalReadout(event)}</p>
+                      <p>
+                        {event.basis === 'planned-window'
+                          ? 'Planned validity'
+                          : event.basis === 'coverage-gap'
+                            ? 'Collection gap'
+                            : 'Sample interval'}
+                        : {formatTimestamp(event.interval_start)} →{' '}
+                        {formatTimestamp(event.interval_end)}
+                      </p>
+                      <p>
+                        {event.coordinates
+                          ? 'Broad context only'
+                          : 'Not mapped'}{' '}
+                        · no real tracks
+                      </p>
+                    </div>
+                  )}
                   {isDigital(event) && (
                     <div className="digital-card-meta">
                       <p>{digitalResults[event.result]}</p>
@@ -947,8 +999,9 @@ export default function App() {
             GOSIP is a free global event explorer. Choose USGS earthquake
             observations, New York NWS forecasts, four synthetic fire examples,
             six multilingual report fixtures, six synthetic digital measurement
-            scenarios, or 18 invented examples across five categories. Simulated
-            examples are never mixed with real observations.
+            scenarios, twelve space/aviation/maritime activity examples, or 18
+            invented examples across five categories. Simulated examples are
+            never mixed with real observations.
           </p>
           <h3>Transparent by design</h3>
           <p>

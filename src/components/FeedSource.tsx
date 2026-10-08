@@ -1,3 +1,4 @@
+import { additionalLayers, type AdditionalSource } from '../data/additional'
 import type { Source } from '../state/explorer'
 import { formatTimestamp } from '../data/events'
 import { COVERAGE, type EarthquakeSnapshot } from '../data/usgs'
@@ -81,6 +82,16 @@ export default function FeedSource({
           >
             Digital world · simulated
           </button>
+          {Object.entries(additionalLayers).map(([key, layer]) => (
+            <button
+              key={key}
+              aria-pressed={source === key}
+              className={source === key ? 'active' : ''}
+              onClick={() => onChange(key as AdditionalSource)}
+            >
+              {layer.label} · simulated
+            </button>
+          ))}
         </div>
       </div>
       {source === 'usgs' && (

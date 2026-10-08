@@ -1,3 +1,5 @@
+import { isAdditional, additionalLayers } from '../data/additional'
+import AdditionalBody from './AdditionalBody'
 import Relationships from './Relationships'
 import { isDigital } from '../data/digital'
 import DigitalBody from './DigitalBody'
@@ -23,6 +25,7 @@ export default function EventDetail({
   onClose: () => void
   onShowOnMap: () => void
 }) {
+  const additional = isAdditional(event)
   const digital = isDigital(event)
   const report = isReport(event)
   const forecast = isForecast(event)
@@ -70,7 +73,9 @@ export default function EventDetail({
             className="category-dot"
             style={{ background: categories[event.category].color }}
           />
-          {categories[event.category].label}
+          {isAdditional(event)
+            ? additionalLayers[`${event.family}-demo`].label
+            : categories[event.category].label}
         </div>
         <h2
           id="detail-title"
@@ -118,7 +123,9 @@ export default function EventDetail({
           </p>
         )}
         <>
-          {digital ? (
+          {additional ? (
+            <AdditionalBody event={event} />
+          ) : digital ? (
             <DigitalBody event={event} />
           ) : report ? (
             <ReportBody event={event} />
@@ -292,8 +299,13 @@ export default function EventDetail({
           </button>
         ) : (
           <p className="report-label">
-            This {digital ? 'measurement scenario' : 'report'} is not mapped.
-            Explore it in the feed.
+            This{' '}
+            {additional
+              ? 'activity example'
+              : digital
+                ? 'measurement scenario'
+                : 'report'}{' '}
+            is not mapped. Explore it in the feed.
           </p>
         )}
         <div className="detail-footer">
