@@ -12,7 +12,7 @@
 7. **History:** timeline playback, regional/country exploration, evidence-backed event relationships.
 8. **Additional layers:** space, aviation, maritime where free/legal feasible; defer restricted feeds.
 9. **Public readiness:** security, accessibility, performance, privacy, legal source audit, free-tier budgets.
-10. **Web beta:** deploy to owner-authorized free hosting, verify feeds and limits, publish open-source documentation.
+10. **Web beta — complete:** owner-authorized GitHub Pages simulation beta deployed and verified; public feeds fail closed, hosting limits disclosed, Apache-2.0 and contribution documentation published.
 11. **iOS:** native SwiftUI client on shared data contracts with map, list, filters, details.
 
 AI is deferred. No project-wide freeze when one data provider is unavailable. Real feed approval applies to the feed, not to all development.

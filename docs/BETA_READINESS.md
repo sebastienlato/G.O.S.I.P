@@ -1,6 +1,12 @@
 # Phase 10 web beta — 2026-10-08
 
-**Prepared and tested; publication owner-authorized; deployment in progress.** Owner selected GitHub Pages preparation and delegated the original license decision. Existing `sebastienlato/G.O.S.I.P` is PUBLIC with owner ADMIN access; Pages API initially returned 404 (not configured). No visibility/account/domain/billing changes made.
+**Deployed and verified:** [GOSIP web beta](https://sebastienlato.github.io/G.O.S.I.P/) · [lightweight list](https://sebastienlato.github.io/G.O.S.I.P/?view=list). Owner explicitly authorized final publication after checks and delegated the original license decision. The existing repository remains PUBLIC; no visibility/account/domain/billing changes.
+
+- Release source: `aeb99878722e0ef3281970397f360a046258ee2a`; published static branch: `6bac523599f604fd3e7c2f6e7e4b3bed083b494d`.
+- GitHub Pages built-in run [37859757329](https://github.com/sebastienlato/G.O.S.I.P/actions/runs/37859757329) succeeded, Pages API `built`, `gh-pages:/`, HTTPS enforced, no custom domain. Initially Pages returned 404; publishing the gh-pages branch activated it, and the subsequent create request returned 409/already enabled. Readback confirmed the exact intended configuration; nothing was overwritten.
+- Actual HTTPS desktop/mobile smoke passed: source SHA from release.json, HTTP 200/non-HTML report/license/icon files, report query reload, static and interactive maps, provider guards, privacy, production CSP/no-referrer and layout, with no external requests. Live screenshots inspected. Initial image assertion ran before download completion; corrected to await image completion, rerun passed. Script: `node scripts/verify-live-pages.mjs <actual-Pages-URL> <release-source-SHA>`.
+- Actual response has HSTS; no frame-ancestors, nosniff or Permissions-Policy header observed. Meta CSP remains the app policy. GitHub controls host headers/cache (observed max-age=600); publication/withdrawal may take time to propagate.
+- Built-in Pages deployment created one ~795 KB temporary artifact, observed expiry after one day. No custom artifact/cache workflow or retention increase was added. Only the included Pages path is used; no billable resources were provisioned.
 
 ## Verified $0 path and limits
 
@@ -12,13 +18,13 @@
 
 ## Reviewable release
 
-- ~2.81 MB complete static output; local release check rejects ≥10 MB, well below the host site limit. Lazy MapLibre remains the largest asset. List/static avoids engine JS/CSS/worker/geography.
+- ~2.81 MB complete static output (2,806,658 bytes before the small release manifest); local release check rejects ≥10 MB, well below the host site limit. Lazy MapLibre remains the largest asset. List/static avoids engine JS/CSS/worker/geography.
 - Repository base `/G.O.S.I.P/` covers entry assets, favicon, worker, interactive/static geography, report originals/correction evidence and every license/notice. Query-based share/history links preserve the path. Arbitrary subroutes are not supported; missing files return 404, not an SPA copy.
 - Canonical report schema remains `/reports/<validated-id>.txt`; no arbitrary URL or deployment-prefix acceptance was introduced.
 - Apache-2.0 for original code/docs/fixtures; Copyright 2026 GOSIP contributors. LICENSE/NOTICE and contribution guidance added after owner delegation; third-party/source rights remain separate.
 - Public source requests/cache restore remain disabled, with official provider links and explicit simulation recovery. No new data permission or real-time public coverage is claimed.
-- CSP/no-referrer/noscript preserved. Meta CSP cannot set `frame-ancestors` or protect direct text responses. No custom response-header support is configured on Pages; do not claim anti-embedding, nosniff or Permissions-Policy unless actual responses establish it.
-- 182 core tests, 126 root production desktop/mobile Chromium regressions, 14 strict-static repository-path public-host checks passed. Screenshots inspected. Tests use fictional payloads/local assets; live-host checks await deployment. No full WCAG/security/screen-reader/Safari/Firefox audit.
+- CSP/no-referrer/noscript preserved. Meta CSP cannot set `frame-ancestors` or protect direct text responses. No custom response-header support is configured on Pages; anti-embedding, nosniff and Permissions-Policy are not claimed.
+- 182 core tests, 126 root production desktop/mobile Chromium regressions, 14 strict-static repository-path public-host checks passed. Screenshots inspected. Tests use fictional payloads/local assets; actual live-host smoke checks also passed. No full WCAG/security/screen-reader/Safari/Firefox audit.
 - Node 26.8.1 `npm ci`, strict typecheck and both production builds pass; audit reports zero known advisories at install. Documented lazy-map chunk warning remains non-failing.
 
 ## Release procedure

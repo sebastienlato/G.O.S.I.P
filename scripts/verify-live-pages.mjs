@@ -71,11 +71,13 @@ try {
     await page.goto(`${site}?map=static`)
     await expect(page.getByTestId('static-map')).toBeVisible()
     await expect(page.locator('.event-card')).toHaveCount(12)
-    assert(
-      await page
-        .locator('img[src$="world.svg"]')
-        .evaluate((img) => img.naturalWidth > 0),
-    )
+    await expect
+      .poll(() =>
+        page
+          .locator('img[src$="world.svg"]')
+          .evaluate((img) => img.complete && img.naturalWidth > 0),
+      )
+      .toBe(true)
     assert.equal(
       requests.filter((request) => /maplibre|world\.geojson/.test(request))
         .length,

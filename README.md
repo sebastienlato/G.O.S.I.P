@@ -1,6 +1,8 @@
 # G.O.S.I.P. — Global Open Source Intelligence Platform
 
-A free, local-first global event explorer. **Phase 10 prepares a GitHub Pages web beta with repository-path assets, Apache-2.0 licensing and tested public simulation access.** Cached USGS earthquakes and NWS New York forecasts remain available on exact loopback hosts; other hosts disable these requests with an explicit explanation. This is a prototype, not an emergency or impact assessment service.
+A free, local-first global event explorer. **Phase 10 delivers a live GitHub Pages web beta with repository-path assets, Apache-2.0 licensing and tested public simulation access.** Cached USGS earthquakes and NWS New York forecasts remain available on exact loopback hosts; other hosts disable these requests with an explicit explanation. This is a prototype, not an emergency or impact assessment service.
+
+**[Open the web beta](https://sebastienlato.github.io/G.O.S.I.P/)** · [Lightweight list](https://sebastienlato.github.io/G.O.S.I.P/?view=list) · Simulated data, free access, no account.
 
 ## Run locally
 
@@ -19,7 +21,7 @@ Open the loopback URL printed by Vite (normally http://127.0.0.1:5173). No crede
 - USGS/NWS are **local-only** on exact `localhost`, `127.0.0.1` or `[::1]`. Public/LAN hostnames keep the chosen source visible but do not load cached observations or make provider requests. Choose simulations explicitly or follow the official provider link. No query parameter enables feeds. Browser cooldowns cannot cap public visitor traffic; NWS application identification also remains unresolved for a public client.
 - Production CSP blocks inline scripts and unapproved connections; global no-referrer protects outgoing links. Typed and linked search share control/directional-character sanitization, preserving multilingual text. Select controls have visible keyboard focus; the privacy dialog supports narrow screens and keyboard dismissal/focus return.
 - Build regenerates dependency notices from locked installed packages. `npm audit` found zero known advisories on 2026-10-08. No dependency upgrade was justified.
-- [Beta readiness and limitations](docs/BETA_READINESS.md) records the GitHub Pages candidate, actual limits and remaining owner decisions. Phase 10 release is prepared; publication is owner-authorized and deployment is in progress.
+- [Beta readiness and limitations](docs/BETA_READINESS.md) records the deployed GitHub Pages release, actual limits and verification. **[Phase 10 beta is live](https://sebastienlato.github.io/G.O.S.I.P/)**, with HTTPS and actual desktop/mobile smoke checks passed.
 
 ## Using the web beta
 
