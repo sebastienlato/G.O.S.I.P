@@ -628,11 +628,13 @@ export default function App() {
           </p>
           <h3>Local. Free. Account-free.</h3>
           <p>
-            The map and interface are local. Selecting USGS sends a direct,
-            credential-free request to earthquake.usgs.gov; that provider
-            receives the usual connection information, including your IP
-            address. No analytics, billing, or account is used. Refresh is
-            manual and bounded. If the feed fails, explicitly choose the
+            The map and interface are local. Selecting USGS reuses a saved
+            snapshot or sends a direct, credential-free request to
+            earthquake.usgs.gov; that provider receives the usual connection
+            information, including your IP address. No analytics, billing, or
+            account is used. Refresh is manual and bounded. One validated
+            snapshot is saved on this device for up to 24 hours; use the source
+            panel to clear it. If the feed fails, explicitly choose the
             simulated fallback. Static map and list access remain available.
           </p>
           <p className="muted text-sm">

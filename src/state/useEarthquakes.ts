@@ -1,46 +1,57 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
-import {
-  snapshotIsStale,
-  usgsProvider,
-  type EarthquakeSnapshot,
-} from '../data/usgs'
+import { useEffect, useState, useSyncExternalStore } from 'react'
+import { snapshotIsStale } from '../data/usgs'
+import { CACHE_KEY, CADENCE_KEY } from './earthquakeCache'
+import { createEarthquakeStore } from './earthquakeStore'
+
+const store = createEarthquakeStore({
+  storage: () => window.localStorage,
+  locks: navigator.locks,
+  canFetch: () => navigator.onLine && document.visibilityState !== 'hidden',
+})
 
 export function useEarthquakes(enabled: boolean) {
-  const [snapshot, setSnapshot] = useState<EarthquakeSnapshot | null>(null)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
+  const state = useSyncExternalStore(store.subscribe, store.getSnapshot)
   const [now, setNow] = useState(Date.now)
-  const started = useRef(false)
-  const refresh = useCallback(async () => {
-    setLoading(true)
-    try {
-      setSnapshot(await usgsProvider.load())
-      setError('')
-    } catch (error) {
-      setError(error instanceof Error ? error.message : 'USGS unavailable.')
-    } finally {
-      setLoading(false)
-      setNow(Date.now())
-    }
-  }, [])
+  const [offline, setOffline] = useState(!navigator.onLine)
   useEffect(() => {
     if (!enabled) return
-    setNow(Date.now())
-    if (!started.current) {
-      started.current = true
-      void refresh()
+    store.start()
+    // UI clock only. Neither timers nor reconnect/visibility events fetch data.
+    const tick = () => {
+      store.expire()
+      setNow(Date.now())
+      setOffline(!navigator.onLine)
     }
-    // UI clock only: this timer never makes a network request.
-    const timer = window.setInterval(() => setNow(Date.now()), 1000)
-    return () => window.clearInterval(timer)
-  }, [enabled, refresh])
+    tick()
+    const timer = window.setInterval(tick, 1000)
+    const sync = (event: StorageEvent) => {
+      if (
+        event.key === CACHE_KEY ||
+        event.key === CADENCE_KEY ||
+        event.key === null
+      )
+        store.sync()
+    }
+    window.addEventListener('storage', sync)
+    window.addEventListener('online', tick)
+    window.addEventListener('offline', tick)
+    return () => {
+      window.clearInterval(timer)
+      window.removeEventListener('storage', sync)
+      window.removeEventListener('online', tick)
+      window.removeEventListener('offline', tick)
+    }
+  }, [enabled])
   return {
-    snapshot,
-    loading,
-    error,
+    ...state,
     now,
-    refresh,
-    stale: !!snapshot && (!!error || snapshotIsStale(snapshot, now)),
-    waitSeconds: Math.max(0, Math.ceil((usgsProvider.retryAt - now) / 1000)),
+    offline,
+    refresh: store.refresh,
+    clearCache: store.clearCache,
+    coordinationLimited: store.coordinationLimited,
+    stale:
+      !!state.snapshot &&
+      (!!state.error || snapshotIsStale(state.snapshot, now)),
+    waitSeconds: Math.max(0, Math.ceil((state.retryAt - now) / 1000)),
   }
 }

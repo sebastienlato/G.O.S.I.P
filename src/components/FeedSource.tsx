@@ -9,6 +9,12 @@ type Props = {
   error: string
   stale: boolean
   waitSeconds: number
+  cached: boolean
+  saved: boolean
+  storageNote: string
+  offline: boolean
+  coordinationLimited: boolean
+  clearCache: () => void
   refresh: () => Promise<void>
 }
 export default function FeedSource({
@@ -20,6 +26,12 @@ export default function FeedSource({
   stale,
   waitSeconds,
   refresh,
+  cached,
+  saved,
+  storageNote,
+  offline,
+  coordinationLimited,
+  clearCache,
 }: Props) {
   return (
     <section className="feed-source" aria-label="Data source">
@@ -55,7 +67,9 @@ export default function FeedSource({
                   : snapshot
                     ? stale
                       ? 'STALE · refresh to check for changes'
-                      : 'USGS snapshot loaded · manual refresh'
+                      : cached
+                        ? 'CACHED USGS snapshot · manual refresh'
+                        : 'USGS snapshot loaded · manual refresh'
                     : 'USGS observations'}
             </strong>
             {error && <p className="source-error">{error}</p>}
@@ -68,6 +82,29 @@ export default function FeedSource({
               </p>
             )}
           </div>
+          {snapshot && (
+            <p>
+              {cached
+                ? 'Cached observations · original retrieval time preserved. '
+                : ''}
+              {saved
+                ? 'Last usable snapshot saved on this device for up to 24 hours.'
+                : 'Current observations are held in memory.'}
+            </p>
+          )}
+          {storageNote && <p className="source-error">{storageNote}</p>}
+          {offline && (
+            <p className="source-error">
+              Offline · refresh paused. Loaded observations remain available.
+              Reconnect, then refresh manually.
+            </p>
+          )}
+          {coordinationLimited && (
+            <p>
+              Browser tab locks are unavailable; request coordination between
+              tabs is best effort.
+            </p>
+          )}
           <p>{COVERAGE}</p>
           <p>
             Credit:{' '}
@@ -83,9 +120,12 @@ export default function FeedSource({
           <div className="source-actions">
             <button
               onClick={() => void refresh()}
-              disabled={loading || waitSeconds > 0}
+              disabled={loading || offline || waitSeconds > 0}
             >
               {loading ? 'Loading…' : error ? 'Retry USGS' : 'Refresh USGS'}
+            </button>
+            <button onClick={clearCache} disabled={loading}>
+              Clear saved USGS cache
             </button>
             {waitSeconds > 0 && (
               <span>Refresh available in {waitSeconds}s</span>

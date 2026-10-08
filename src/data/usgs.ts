@@ -167,7 +167,7 @@ export function snapshotIsStale(
   )
 }
 
-// One bounded request, shared across React remounts. No polling or persistent storage.
+// Bounded transport. The state store handles persistence and cross-tab coordination.
 export function createUSGSProvider(
   fetcher: typeof fetch = fetch,
   now = Date.now,
@@ -248,4 +248,3 @@ export function createUSGSProvider(
     },
   }
 }
-export const usgsProvider = createUSGSProvider()
