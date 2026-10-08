@@ -1,3 +1,4 @@
+import { assetPath } from '../state/assetPath'
 import { locationMeaning } from '../data/events'
 import { useEffect, useRef, useState } from 'react'
 import type { Map as MapInstance, Marker } from 'maplibre-gl'
@@ -76,7 +77,7 @@ export default function WorldMap({
             sources: {
               world: {
                 type: 'geojson',
-                data: '/world.geojson',
+                data: assetPath('/world.geojson'),
                 attribution: 'Natural Earth · public domain',
               },
             },
@@ -212,7 +213,7 @@ export default function WorldMap({
         <div className="static-map" data-testid="static-map">
           <div className="static-world">
             <img
-              src="/world.svg"
+              src={assetPath('/world.svg')}
               alt="World map with approximate regional event locations"
             />
             {events.map((event) => (

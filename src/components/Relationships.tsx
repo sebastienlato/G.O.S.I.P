@@ -1,3 +1,4 @@
+import { assetPath } from '../state/assetPath'
 import { isDigital, digitalExamples } from '../data/digital'
 import { correctionRelationship, parseRelationships } from '../data/history'
 import { type ExplorerEvent } from '../data/events'
@@ -30,7 +31,11 @@ export default function Relationships({
             shown above. A superseded version is not an independent report.
           </p>
           {correction.url && (
-            <a href={correction.url} target="_blank" rel="noreferrer">
+            <a
+              href={assetPath(correction.url)}
+              target="_blank"
+              rel="noreferrer"
+            >
               Read the original fixture evidence ↗
             </a>
           )}

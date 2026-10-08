@@ -73,7 +73,7 @@ test('privacy dialog supports keyboard focus, narrow reflow and real license fil
   await page.keyboard.press('Enter')
   const dialog = page.getByRole('dialog')
   await expect(page.getByRole('button', { name: 'Close about' })).toBeFocused()
-  await expect(dialog).toContainText('UNLICENSED')
+  await expect(dialog).toContainText('Apache-2.0')
   await expect(dialog).toContainText('browser history and copied links')
   await page.keyboard.press('Tab')
   await expect(dialog.getByRole('link', { name: 'USGS terms' })).toBeFocused()

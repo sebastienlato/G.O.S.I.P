@@ -1,4 +1,4 @@
-# Architecture — Phase 9
+# Architecture — Phase 10
 
 A static React + TypeScript application. `App.tsx` owns selected-event context separately from the detail dialog and explicit map-focus requests. One filtered array drives map/feed; NWS renders one co-located marker for the selected or earliest period while the feed exposes all periods. `src/state/explorer.ts` validates/serializes source, search, layers, window, view and map preference; `useExplorerFilters.ts` synchronizes history. No data/selection/camera are encoded in links.
 
@@ -10,7 +10,7 @@ A static React + TypeScript application. `App.tsx` owns selected-event context s
 
 `WorldMap.tsx` still loads MapLibre JS/CSS/worker only in interactive mode, uses local Natural Earth geometry, handles resize/lifecycle cleanup and WebGL/network fallback to SVG, preserves selection, and supports explicit regional focus and cooperative touch gestures. List/static entry avoids all interactive-map downloads. No clustering; the full feed remains the way to inspect overlapping markers. Mobile feed scrolls with the page.
 
-Vite builds `dist/`; Vitest tests parser/provider/filter/URL boundaries; Playwright tests deterministic production desktop/mobile behavior and injected failures. No credentials, auth, backend, external tiles/fonts, analytics, deployment or service worker. Only selected USGS/NWS views make external data requests. Review independently scoped source permissions in `DATA_POLICY.md`. Snapshot persistence does not cache application assets or establish offline cold-start support.
+Vite builds `dist/`; Vitest tests parser/provider/filter/URL boundaries; Playwright tests deterministic production desktop/mobile behavior and injected failures. No credentials, auth, backend, external tiles/fonts, analytics or service worker. Only selected USGS/NWS views make external data requests. Review independently scoped source permissions in `DATA_POLICY.md`. Snapshot persistence does not cache application assets or establish offline cold-start support.
 
 ## Environment path
 
@@ -73,3 +73,11 @@ Each source uses publication for inclusive backward windows and descending order
 Vite injects a production-only meta CSP before other head content: self scripts, no inline/eval scripts, self and exact USGS/NWS connect origins, self/data/blob images, self/blob workers, self/inline styles, and no frames/objects/forms/base changes. Development HMR remains unaffected. `index.html` sets no-referrer and a noscript explanation. Inline styles remain needed by React/MapLibre; frame-ancestors requires future host response headers. `build-dependency-notices.mjs` derives production package/license text from the lock and installed files; build generates the local downloadable notice, without changing the original license.
 
 Production browser tests proxy a reserved fake public origin to local preview assets, never deploying or calling a provider. They verify no public feed/storage activity across selection/reload, explicit fallback, CSP blocking, typed-input sanitization, keyboard privacy navigation and 320px reflow. Existing provider fixtures exercise enabled loopback behavior under the same production CSP.
+
+## Repository-path static beta
+
+`vite build --mode pages` targets `/G.O.S.I.P/`; ordinary dev/build still use `/`. Vite handles entry/icon/chunk/worker paths; `assetPath.ts` prefixes canonical local geography, notices, report originals and report correction evidence when rendered. It rejects external/traversal/encoded/query paths. The report parser still requires exactly `/reports/<validated-id>.txt`; deployment paths never enter source records. URL/history already preserve the current pathname and hash; beta tests verify copied links, Back and reload.
+
+`check-pages-release.mjs` checks required files, license copies, report documents, base/CSP and a conservative 10 MB local budget. `.nojekyll` disables Jekyll. `publish-pages.mjs` defaults to local preparation, requires clean/pushed main, the exact authorized remote and public visibility. With an explicit `--publish`, it uses an isolated Git index to append static output to `gh-pages`, without switching the checkout or force-pushing. `release.json` identifies the source commit. Pages settings are managed separately after owner authorization. No custom Actions workflow, runner, cache or artifact-upload configuration is installed; GitHub's built-in branch deployment handles publishing.
+
+`npm run test:beta` uses a strict local static server and reserved public hostname. Missing files return 404; there is no SPA fallback. Fourteen desktop/mobile checks cover every simulation source, both map modes/list, worker/geography, original/evidence/license files, sharing/history/reload, CSP, keyboard/320px layout and zero external provider traffic. Root-host provider regressions remain separate and use invented payloads. Public source guards and clocks are unchanged.

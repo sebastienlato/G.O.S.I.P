@@ -1,3 +1,4 @@
+import { assetPath } from '../state/assetPath'
 import { localSourceAccess } from '../state/sourceAccess'
 
 export default function PrivacySources() {
@@ -62,24 +63,58 @@ export default function PrivacySources() {
         <li>
           <strong>Map:</strong> Natural Earth 4.1.0 public-domain geography via
           world-atlas 2.0.2. Boundaries are illustrative and may be outdated.{' '}
-          <a href="/MAP_DATA_LICENSE.txt" target="_blank" rel="noreferrer">
+          <a
+            href={assetPath('/MAP_DATA_LICENSE.txt')}
+            target="_blank"
+            rel="noreferrer"
+          >
             Natural Earth notice ↗
           </a>
           {' · '}
-          <a href="/WORLD_ATLAS_LICENSE.txt" target="_blank" rel="noreferrer">
+          <a
+            href={assetPath('/WORLD_ATLAS_LICENSE.txt')}
+            target="_blank"
+            rel="noreferrer"
+          >
             world-atlas notice ↗
           </a>
         </li>
         <li>
-          <strong>Software:</strong> original GOSIP code remains UNLICENSED,
-          pending the owner's copyright/license decision. Free access does not
-          grant an open-source license. Dependencies retain their own licenses.{' '}
-          <a href="/dependency-notices.txt" target="_blank" rel="noreferrer">
+          <strong>Software:</strong> original GOSIP code, documentation and
+          synthetic fixtures are Apache-2.0 licensed. Copyright 2026 GOSIP
+          contributors. Dependencies and provider data retain their separate
+          rights.{' '}
+          <a href={assetPath('/LICENSE.txt')} target="_blank" rel="noreferrer">
+            GOSIP Apache-2.0 license ↗
+          </a>
+          {' · '}
+          <a href={assetPath('/NOTICE.txt')} target="_blank" rel="noreferrer">
+            GOSIP notice ↗
+          </a>
+          {' · '}
+          <a
+            href={assetPath('/dependency-notices.txt')}
+            target="_blank"
+            rel="noreferrer"
+          >
             Bundled dependency notices ↗
           </a>
         </li>
       </ul>
       <h3>Free access, bounded service</h3>
+      <p>
+        GitHub Pages logs visitor IP addresses for security. Its published
+        limits include a 1 GB site and 100 GB/month soft bandwidth limit;
+        throttling or withdrawal is possible. GOSIP has no global usage meter.
+        We accept service interruption or unpublishing instead of paid upgrades.{' '}
+        <a
+          href="https://docs.github.com/en/pages/getting-started-with-github-pages/what-is-github-pages"
+          target="_blank"
+          rel="noreferrer"
+        >
+          GitHub Pages privacy & hosting ↗
+        </a>
+      </p>
       <p>
         No paid fallback or automatic upgrade. Real sources are restricted to
         local loopback use until public access limits are resolved; browser

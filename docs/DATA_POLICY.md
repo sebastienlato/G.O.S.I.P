@@ -107,3 +107,11 @@ The shipped products remain narrowly scoped. No new feed or permission is inferr
 - **Privacy/licenses:** the visible Privacy & source licenses dialog describes URL/search/history disclosure, possible host logs, direct-provider connection information, storage expiry/cleanup, separate cooldown/failure storage and external navigation. No telemetry/cookies/accounts were added. Original code/fixtures remain `UNLICENSED`; no owner copyright decision is invented. Production dependency license texts are generated from installed locked packages into a local notice, including the MIT license in murmurhash-js's README. Natural Earth and world-atlas notices remain separate.
 
 Research used official policy/documentation only; automated tests use original invented payloads. Availability, numeric quotas, public browser identification and unlimited free scale are not claimed. Future hosting is separately evaluated in [BETA_READINESS](BETA_READINESS.md).
+
+## Phase 10 — static beta and original license (2026-10-08)
+
+No new data product, feed, redistribution permission or real-source enablement. The public beta remains simulations only, with official provider navigation and unchanged loopback-only USGS/NWS adapters. Exact canonical report-document validation is preserved; repository hosting prefixes are added only to displayed links. Original fixture text, clocks, nullable values, coverage and safety limits are unchanged.
+
+The owner delegated the original license decision during Phase 10. Apache-2.0 now covers original code, documentation and synthetic fixtures with “Copyright 2026 GOSIP contributors.” Canonical LICENSE/NOTICE and bundled copies are available; dependencies, Natural Earth/world-atlas and provider material retain independent rights. Free GOSIP access is a project commitment, not a claim that Apache-2.0 requires every downstream operator to offer a free service.
+
+GitHub Pages is the owner-selected candidate, independently checked as eligible through the existing public repository. Host IP logging is disclosed in the explorer and README. Current official hosting limits, free publishing scope, deployment status and fail-closed response are recorded in BETA_READINESS. No account, key, domain, billing or public provider requests were added.

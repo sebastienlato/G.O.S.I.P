@@ -14,11 +14,14 @@
     "data:map": "node scripts/build-map.mjs",
     "format": "prettier --write src tests scripts *.ts *.json index.html",
     "format:check": "prettier --check src tests scripts *.ts *.json index.html",
-    "data:notices": "node scripts/build-dependency-notices.mjs"
+    "data:notices": "node scripts/build-dependency-notices.mjs && node scripts/copy-project-license.mjs",
+    "build:pages": "npm run data:notices && tsc --noEmit && vite build --mode pages && node scripts/check-pages-release.mjs",
+    "test:beta": "npm run build:pages && BETA_TEST=1 playwright test",
+    "release:pages": "node scripts/publish-pages.mjs"
   },
   "keywords": [],
   "author": "",
-  "license": "UNLICENSED",
+  "license": "Apache-2.0",
   "type": "module",
   "dependencies": {
     "lucide-react": "^1.53.0",

@@ -1,3 +1,4 @@
+import { assetPath } from '../state/assetPath'
 import { formatTimestamp, locationMeaning } from '../data/events'
 import { reportLanguages, type ReportEvent } from '../data/reports'
 
@@ -22,7 +23,11 @@ export default function ReportBody({ event }: { event: ReportEvent }) {
       </p>
       <p className="report-link">
         {event.source_url ? (
-          <a href={event.source_url} target="_blank" rel="noreferrer">
+          <a
+            href={assetPath(event.source_url)}
+            target="_blank"
+            rel="noreferrer"
+          >
             Open original fixture (plain text) ↗
           </a>
         ) : (
