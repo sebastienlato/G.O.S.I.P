@@ -4,7 +4,7 @@ Act as autonomous lead developer in `/Users/sebastienlato/Dev/GOSIP`. Read `AGEN
 
 ## Actual starting point
 
-Phase 0 is implemented and committed locally on `main` (`Build Phase 0 local global event explorer`). The initial workspace had no Git metadata or remote; a new local repository was initialized. **No GitHub push has occurred because no authorized remote was supplied.** Inspect current status/remotes; if the owner has since configured the authorized GOSIP remote, use it. Otherwise complete local work and ask only for the missing repository URL/setup. Never infer or delete the previous repository, create an unauthorized remote, overwrite remote history, or force-push.
+Phase 0 is implemented and pushed to GitHub: implementation commit `2ce4434` (`Build Phase 0 local global event explorer`), followed by a documentation update recording remote setup. The owner explicitly authorized `https://github.com/sebastienlato/G.O.S.I.P.git` as `origin`; local `main` tracks `origin/main`. Inspect current status/remotes and continue using this authorized destination. Never delete the previous repository, create an unauthorized remote, overwrite remote history, or force-push.
 
 The runnable application uses React 19.3, TypeScript 7.0, Vite 8.3, Tailwind 4.3, and MapLibre 6.13. Use Node 22.12+ (22.x), 24+, or newer. `npm ci`, then `npm run dev` starts a loopback-only server. No credentials/environment variables needed.
 
