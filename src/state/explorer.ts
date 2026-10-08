@@ -1,10 +1,19 @@
+import {
+  digitalFamilies,
+  digitalResults,
+  type DigitalFamily,
+  type DigitalResult,
+} from '../data/digital'
 import { reportLanguages, type ReportLanguage } from '../data/reports'
 import { categories, type Category, type WindowHours } from '../data/events'
 
 export const categoryKeys = Object.keys(categories) as Category[]
-export type Source = 'demo' | 'usgs' | 'nws' | 'fire-demo' | 'reports-demo'
+export type Source =
+  'demo' | 'usgs' | 'nws' | 'fire-demo' | 'reports-demo' | 'digital-demo'
 export interface ExplorerFilters {
   source: Source
+  digitalFamily: DigitalFamily | 'all'
+  digitalResult: DigitalResult | 'all'
   language: ReportLanguage | 'all'
   reportStatus: 'all' | 'corrected'
   query: string
@@ -15,6 +24,8 @@ export interface ExplorerFilters {
 }
 export const defaultFilters: ExplorerFilters = {
   source: 'demo',
+  digitalFamily: 'all',
+  digitalResult: 'all',
   query: '',
   language: 'all',
   reportStatus: 'all',
@@ -36,11 +47,25 @@ export function parseFilters(search: string): ExplorerFilters {
     : categoryKeys
   const hours = params.get('hours')
   return {
-    source: ['usgs', 'nws', 'fire-demo', 'reports-demo'].includes(
-      params.get('source') ?? '',
-    )
+    source: [
+      'usgs',
+      'nws',
+      'fire-demo',
+      'reports-demo',
+      'digital-demo',
+    ].includes(params.get('source') ?? '')
       ? (params.get('source') as Source)
       : 'demo',
+    digitalFamily:
+      params.get('source') === 'digital-demo' &&
+      Object.hasOwn(digitalFamilies, params.get('digital') ?? '')
+        ? (params.get('digital') as DigitalFamily)
+        : 'all',
+    digitalResult:
+      params.get('source') === 'digital-demo' &&
+      Object.hasOwn(digitalResults, params.get('result') ?? '')
+        ? (params.get('result') as DigitalResult)
+        : 'all',
     language:
       params.get('source') === 'reports-demo' &&
       Object.hasOwn(reportLanguages, params.get('lang') ?? '')
@@ -67,6 +92,12 @@ export function parseFilters(search: string): ExplorerFilters {
 export function serializeFilters(filters: ExplorerFilters): string {
   const params = new URLSearchParams()
   if (filters.source !== 'demo') params.set('source', filters.source)
+  if (filters.source === 'digital-demo') {
+    if (filters.digitalFamily !== 'all')
+      params.set('digital', filters.digitalFamily)
+    if (filters.digitalResult !== 'all')
+      params.set('result', filters.digitalResult)
+  }
   if (filters.source === 'reports-demo') {
     if (filters.language !== 'all') params.set('lang', filters.language)
     if (filters.reportStatus !== 'all')

@@ -27,6 +27,8 @@ export function useExplorerFilters() {
     (patch: Partial<ExplorerFilters>, replace = false) => {
       const next = { ...current.current, ...patch }
       if (next.source !== current.current.source) {
+        next.digitalFamily = 'all'
+        next.digitalResult = 'all'
         next.language = 'all'
         next.reportStatus = 'all'
       }

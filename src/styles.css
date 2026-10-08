@@ -1748,3 +1748,41 @@ dialog::backdrop {
   display: block;
   margin-top: 12px;
 }
+
+.digital-source details {
+  margin-top: 12px;
+}
+.digital-source summary {
+  cursor: pointer;
+  color: #d5c8ff;
+}
+.digital-source a {
+  text-decoration: underline;
+}
+.digital-card-meta {
+  margin-top: 12px;
+}
+.digital-card-meta p:first-child {
+  color: #d5c8ff;
+  font-weight: 600;
+}
+.digital-card-meta p {
+  margin-top: 5px;
+  line-height: 1.5;
+}
+.digital-measurement {
+  border: 1px solid #b5a5f54d;
+  border-radius: 12px;
+  padding: 18px;
+  margin: 20px 0;
+  background: #b5a5f509;
+}
+.digital-measurement strong {
+  display: block;
+  font-size: 1.15rem;
+  margin-top: 10px;
+}
+.digital-measurement p {
+  margin-top: 10px;
+  line-height: 1.6;
+}

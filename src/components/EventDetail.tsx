@@ -1,3 +1,5 @@
+import { isDigital } from '../data/digital'
+import DigitalBody from './DigitalBody'
 import { isReport } from '../data/reports'
 import ReportBody from './ReportBody'
 import { isForecast } from '../data/weather'
@@ -16,6 +18,7 @@ export default function EventDetail({
   onClose: () => void
   onShowOnMap: () => void
 }) {
+  const digital = isDigital(event)
   const report = isReport(event)
   const forecast = isForecast(event)
   const quake = !event.is_demo && !forecast
@@ -78,28 +81,34 @@ export default function EventDetail({
         </p>
         <div className="simulation-note">
           <strong>
-            {report
-              ? 'SIMULATED · ATTRIBUTED CLAIM'
-              : event.is_demo
-                ? 'SIMULATED EVENT'
-                : forecast
-                  ? 'WEATHER FORECAST · NWS'
-                  : event.status === 'deleted'
-                    ? 'WITHDRAWN BY PROVIDER'
-                    : 'EARTHQUAKE OBSERVATION'}
+            {digital
+              ? 'SIMULATED · DIGITAL MEASUREMENT'
+              : report
+                ? 'SIMULATED · ATTRIBUTED CLAIM'
+                : event.is_demo
+                  ? 'SIMULATED EVENT'
+                  : forecast
+                    ? 'WEATHER FORECAST · NWS'
+                    : event.status === 'deleted'
+                      ? 'WITHDRAWN BY PROVIDER'
+                      : 'EARTHQUAKE OBSERVATION'}
           </strong>
           <span>
-            {report
-              ? 'An invented publisher’s claim, not a verified incident. No real-world event or independent corroboration is asserted.'
-              : event.is_demo
-                ? 'Invented for this prototype. Not a real-world report, alert, or verified observation.'
-                : forecast
-                  ? 'Prediction for a future validity interval. Not a measurement, official alert, or confirmed impact. Check the current NWS source for warnings.'
-                  : 'Provider estimate subject to revision. Review status concerns source parameters, not verified damage, casualties or an emergency alert.'}
+            {digital
+              ? 'Invented measurement scenario. Not a confirmed outage, intentional censorship or real provider observation.'
+              : report
+                ? 'An invented publisher’s claim, not a verified incident. No real-world event or independent corroboration is asserted.'
+                : event.is_demo
+                  ? 'Invented for this prototype. Not a real-world report, alert, or verified observation.'
+                  : forecast
+                    ? 'Prediction for a future validity interval. Not a measurement, official alert, or confirmed impact. Check the current NWS source for warnings.'
+                    : 'Provider estimate subject to revision. Review status concerns source parameters, not verified damage, casualties or an emergency alert.'}
           </span>
         </div>
         <>
-          {report ? (
+          {digital ? (
+            <DigitalBody event={event} />
+          ) : report ? (
             <ReportBody event={event} />
           ) : (
             <>
@@ -270,7 +279,8 @@ export default function EventDetail({
           </button>
         ) : (
           <p className="report-label">
-            This report is not mapped. Explore it in the feed.
+            This {digital ? 'measurement scenario' : 'report'} is not mapped.
+            Explore it in the feed.
           </p>
         )}
         <div className="detail-footer">

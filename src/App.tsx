@@ -1,3 +1,12 @@
+import {
+  isDigital,
+  digitalExamples,
+  digitalMatches,
+  digitalReadout,
+  digitalResults,
+  digitalFamilies,
+} from './data/digital'
+import DigitalSource from './components/DigitalSource'
 import { isReport, reportExamples, reportLanguages } from './data/reports'
 import ReportSource from './components/ReportSource'
 import EnvironmentSource from './components/EnvironmentSource'
@@ -64,33 +73,41 @@ export default function App() {
       source,
       language,
       reportStatus,
+      digitalFamily,
+      digitalResult,
     },
     updateFilters,
   ] = useExplorerFilters()
   const earthquakes = useEarthquakes(source === 'usgs')
   const weather = useWeather(source === 'nws')
+  const digital = source === 'digital-demo'
   const reports = source === 'reports-demo'
-  const isDemo = source === 'demo' || source === 'fire-demo' || reports
+  const isDemo =
+    source === 'demo' || source === 'fire-demo' || reports || digital
   const availableCategories: Category[] =
     source === 'demo'
       ? categoryKeys
       : source === 'usgs'
         ? ['physical']
-        : reports
-          ? ['civic']
-          : ['environment']
+        : digital
+          ? ['digital']
+          : reports
+            ? ['civic']
+            : ['environment']
   const activeCategoryCount = availableCategories.filter((key) =>
     selectedCategories.includes(key),
   ).length
-  const allEvents = reports
-    ? reportExamples
-    : source === 'demo'
-      ? demoEvents
-      : source === 'fire-demo'
-        ? fireExamples
-        : source === 'nws'
-          ? (weather.snapshot?.events ?? noEvents)
-          : (earthquakes.snapshot?.events ?? noEvents)
+  const allEvents = digital
+    ? digitalExamples
+    : reports
+      ? reportExamples
+      : source === 'demo'
+        ? demoEvents
+        : source === 'fire-demo'
+          ? fireExamples
+          : source === 'nws'
+            ? (weather.snapshot?.events ?? noEvents)
+            : (earthquakes.snapshot?.events ?? noEvents)
   const referenceTime = isDemo
     ? DEMO_TIME
     : Math.floor((source === 'nws' ? weather.now : earthquakes.now) / 60_000) *
@@ -108,18 +125,18 @@ export default function App() {
   const mapRegion = useRef<HTMLDivElement>(null)
   const events = useMemo(
     () =>
-      filterEvents(
-        allEvents,
-        query,
-        selectedCategories,
-        hours,
-        referenceTime,
-      ).filter(
-        (event) =>
-          !isReport(event) ||
-          ((language === 'all' || event.source_language === language) &&
-            (reportStatus === 'all' || event.correction !== null)),
-      ),
+      filterEvents(allEvents, query, selectedCategories, hours, referenceTime)
+        .filter(
+          (event) =>
+            !isReport(event) ||
+            ((language === 'all' || event.source_language === language) &&
+              (reportStatus === 'all' || event.correction !== null)),
+        )
+        .filter(
+          (event) =>
+            !isDigital(event) ||
+            digitalMatches(event, digitalFamily, digitalResult),
+        ),
     [
       allEvents,
       query,
@@ -128,6 +145,8 @@ export default function App() {
       referenceTime,
       language,
       reportStatus,
+      digitalFamily,
+      digitalResult,
     ],
   )
   const selectedEvent = events.find((e) => e.id === selectedId)
@@ -167,6 +186,8 @@ export default function App() {
     source,
     language,
     reportStatus,
+    digitalFamily,
+    digitalResult,
   ])
   const reset = () =>
     updateFilters({
@@ -175,13 +196,17 @@ export default function App() {
       hours: 24,
       language: 'all',
       reportStatus: 'all',
+      digitalFamily: 'all',
+      digitalResult: 'all',
     })
   const isFiltered =
     query.trim() !== '' ||
     selectedCategories.length !== categoryKeys.length ||
     hours !== 24 ||
     language !== 'all' ||
-    reportStatus !== 'all'
+    reportStatus !== 'all' ||
+    digitalFamily !== 'all' ||
+    digitalResult !== 'all'
   function toggleCategory(category: Category) {
     updateFilters({
       selectedCategories: selectedCategories.includes(category)
@@ -305,6 +330,14 @@ export default function App() {
             })
           }
         />
+        {digital && (
+          <DigitalSource
+            family={digitalFamily}
+            result={digitalResult}
+            onFamily={(digitalFamily) => updateFilters({ digitalFamily })}
+            onResult={(digitalResult) => updateFilters({ digitalResult })}
+          />
+        )}
         {reports && (
           <ReportSource
             language={language}
@@ -371,6 +404,14 @@ export default function App() {
         </div>
         <div className={`explorer ${view === 'list' ? 'list-view' : ''}`}>
           <div className="explorer-controls">
+            {digital && (
+              <p className="report-map-note">
+                {mapEvents.length} broad regional markers ·{' '}
+                {events.length - mapEvents.length} scenarios not mapped (unknown
+                or withheld locations). All matching scenarios remain in the
+                feed.
+              </p>
+            )}
             {reports && (
               <p className="report-map-note">
                 {mapEvents.length} broad regional markers ·{' '}
@@ -412,9 +453,11 @@ export default function App() {
                   <strong>Time window</strong>
                   <span>
                     {isDemo
-                      ? reports
-                        ? 'Published before the demo snapshot'
-                        : 'Before the demo snapshot'
+                      ? digital
+                        ? 'Measurement intervals overlapping the past…'
+                        : reports
+                          ? 'Published before the demo snapshot'
+                          : 'Before the demo snapshot'
                       : source === 'nws'
                         ? 'Forecast valid in the next…'
                         : 'Before the current clock'}
@@ -443,11 +486,15 @@ export default function App() {
                 {activeCategoryCount} of {availableCategories.length} layers ·{' '}
                 {timeOptions.find((option) => option.value === hours)?.label}{' '}
                 {isDemo
-                  ? 'before snapshot'
+                  ? digital
+                    ? 'overlapping intervals before snapshot'
+                    : 'before snapshot'
                   : source === 'nws'
                     ? 'ahead · overlapping periods'
                     : 'before now'}
                 {query.trim() ? ` · “${query.trim()}”` : ''}
+                {digital &&
+                  ` · ${digitalFamily === 'all' ? 'All digital measurements' : digitalFamilies[digitalFamily]} · ${digitalResult === 'all' ? 'All results' : digitalResults[digitalResult]}`}
                 {reports &&
                   ` · ${language === 'all' ? 'All languages' : reportLanguages[language]} · ${reportStatus === 'all' ? 'All reports' : 'With correction'}`}
               </p>
@@ -568,28 +615,34 @@ export default function App() {
               )}
             </div>
             <p id="search-help" className="search-help">
-              {reports
-                ? 'Search original titles, summaries, supplied translations, publishers, language codes, regions and countries.'
-                : 'Search titles, descriptions, regions and countries.'}
+              {digital
+                ? 'Search method, sample result, fictional ASN, region or country. No tested URLs or probe identities.'
+                : reports
+                  ? 'Search original titles, summaries, supplied translations, publishers, language codes, regions and countries.'
+                  : 'Search titles, descriptions, regions and countries.'}
             </p>
             <div className="feed-meta">
               <span aria-live="polite" role="status">
                 {events.length}{' '}
-                {reports
-                  ? 'simulated report'
-                  : isDemo
-                    ? 'simulated'
-                    : source === 'nws'
-                      ? 'NWS forecast'
-                      : 'USGS'}{' '}
+                {digital
+                  ? 'simulated digital'
+                  : reports
+                    ? 'simulated report'
+                    : isDemo
+                      ? 'simulated'
+                      : source === 'nws'
+                        ? 'NWS forecast'
+                        : 'USGS'}{' '}
                 {events.length === 1 ? 'event' : 'events'}
               </span>
               <span>
-                {reports
-                  ? 'Publication · newest first'
-                  : source === 'nws'
-                    ? 'Soonest first'
-                    : 'Most recent'}{' '}
+                {digital
+                  ? 'Interval end · newest first'
+                  : reports
+                    ? 'Publication · newest first'
+                    : source === 'nws'
+                      ? 'Soonest first'
+                      : 'Most recent'}{' '}
                 <ArrowDown size={12} />
               </span>
             </div>
@@ -626,7 +679,7 @@ export default function App() {
                     >
                       {isForecast(event)
                         ? `Valid from ${formatTimestamp(event.occurred_at)}`
-                        : `${isReport(event) ? 'Published ' : ''}${demoAge(eventTime(event), referenceTime)} ${isDemo ? 'before snapshot' : 'ago'}`}
+                        : `${isDigital(event) ? 'Interval ended ' : isReport(event) ? 'Published ' : ''}${demoAge(eventTime(event), referenceTime)} ${isDemo ? 'before snapshot' : 'ago'}`}
                     </span>
                   </div>
                   <h3
@@ -645,6 +698,16 @@ export default function App() {
                       </>
                     )}
                   </p>
+                  {isDigital(event) && (
+                    <div className="digital-card-meta">
+                      <p>{digitalResults[event.result]}</p>
+                      <p>{digitalReadout(event)}</p>
+                      <p>
+                        {digitalFamilies[event.family]} ·{' '}
+                        {event.coordinates ? 'Broad region' : 'Not mapped'}
+                      </p>
+                    </div>
+                  )}
                   {isReport(event) && (
                     <div className="report-card-meta">
                       <p dir="auto">{event.source_name}</p>
@@ -701,17 +764,19 @@ export default function App() {
                       : 'All layers are off'}
                   </h3>
                   <p>
-                    {reports
-                      ? 'No report examples match these filters. Try another language, clear the correction filter or widen the publication window. An empty result says nothing about real-world activity.'
-                      : source === 'nws'
-                        ? 'No forecast periods overlap this view. Check source status, enable Environment, clear search or widen the future window. This is not evidence of safe weather.'
-                        : !isDemo
-                          ? 'No observations match this view. Check the source status above, enable Earth & activity, clear search or widen the window. An empty result does not mean no earthquakes occurred.'
-                          : !selectedCategories.length
-                            ? 'Enable a layer to explore the simulated events.'
-                            : query.trim()
-                              ? `No examples match “${query.trim()}” with these layers and this time window. This is a small invented sample, not evidence of no activity.`
-                              : 'No examples in this time window. Try the full seven-day demo sample.'}
+                    {digital
+                      ? 'No digital examples match these filters. Change the measurement family or result, enable Digital world, clear search or widen the interval window. No data is not proof of connectivity or absence of blocking.'
+                      : reports
+                        ? 'No report examples match these filters. Try another language, clear the correction filter or widen the publication window. An empty result says nothing about real-world activity.'
+                        : source === 'nws'
+                          ? 'No forecast periods overlap this view. Check source status, enable Environment, clear search or widen the future window. This is not evidence of safe weather.'
+                          : !isDemo
+                            ? 'No observations match this view. Check the source status above, enable Earth & activity, clear search or widen the window. An empty result does not mean no earthquakes occurred.'
+                            : !selectedCategories.length
+                              ? 'Enable a layer to explore the simulated events.'
+                              : query.trim()
+                                ? `No examples match “${query.trim()}” with these layers and this time window. This is a small invented sample, not evidence of no activity.`
+                                : 'No examples in this time window. Try the full seven-day demo sample.'}
                   </p>
                   <div className="empty-actions">
                     {!selectedCategories.length && (
@@ -802,9 +867,9 @@ export default function App() {
           <p>
             GOSIP is a free global event explorer. Choose USGS earthquake
             observations, New York NWS forecasts, four synthetic fire examples,
-            six multilingual report fixtures, or 18 invented examples across
-            five categories. Simulated examples are never mixed with real
-            observations.
+            six multilingual report fixtures, six synthetic digital measurement
+            scenarios, or 18 invented examples across five categories. Simulated
+            examples are never mixed with real observations.
           </p>
           <h3>Transparent by design</h3>
           <p>

@@ -1,4 +1,4 @@
-# Architecture — Phase 5
+# Architecture — Phase 6
 
 A static React + TypeScript application. `App.tsx` owns selected-event context separately from the detail dialog and explicit map-focus requests. One filtered array drives map/feed; NWS renders one co-located marker for the selected or earliest period while the feed exposes all periods. `src/state/explorer.ts` validates/serializes source, search, layers, window, view and map preference; `useExplorerFilters.ts` synchronizes history. No data/selection/camera are encoded in links.
 
@@ -31,3 +31,14 @@ URL sources now include `nws` and `fire-demo`. Both expose Environment only. Dis
 Report coordinates are nullable; regional markers must be whole multiples of five degrees. Unknown/withheld locations require null coordinates. `hasCoordinates` narrows the map array, while the full array stays in the feed. Missing-position selection has no map action. Memoizing the mapped array independently of selection preserves marker elements and keyboard focus. No geocoding or inferred publisher position.
 
 `source=reports-demo`, `lang=en|fr|es|ar` (omission = all), `reports=corrected` (omission = all) extend validated URL/history state. Report-only parameters are discarded outside report sources and reset on source switches. Global affairs is the only report layer. Source panel, cards and details label simulations/claims and missing coverage. List/static entries still avoid MapLibre engine/CSS/worker/GeoJSON.
+
+
+## Digital examples path
+
+`digital.ts` validates `digitalExamples.json` as six original simulations (`kind: digital`, `source=digital-demo`). The schema caps input at 50 records, bounds text/IDs/counts, rejects unknown fields (including URLs, probe IPs and contributor IDs), and enforces calendar/order, known methods/results, sample denominators, compatible units and complete prior baseline intervals. All timestamps are scenario times; retrieval must equal the fixed fixture snapshot. Network IDs are nullable or fictional private-use ASNs (64512–65534). Regional coordinates are five-degree multiples; unknown/withheld positions must be null. No network adapter, persistence or raw contributor data.
+
+The digital source exposes the existing Digital world layer plus `digital=outage|interference` and `result=anomaly|no-anomaly|no-samples|inconclusive`. Omission means all; invalid values and digital-only parameters on other sources are discarded. These filters join URL/history and reset on source changes. Search includes method, result, family and supplied fictional ASN. Source arrays remain separate.
+
+`filterEvents` intersects half-open measurement intervals with the backward window (`end > cutoff && start < referenceTime`); `eventTime` sorts digital examples by interval end. Publication/update never bump ordering. Fixed clock counts: 6h=1, 24h=3, 72h=4, 168h=6. NWS forward validity, report publication and earthquake occurrence clocks remain unchanged. Four mapped fixtures use the existing memoized coordinate filter; two null-position fixtures stay in the feed. List/static entry still skips MapLibre downloads.
+
+`DigitalSource` presents coverage, interpretation, research links and two filters. `DigitalBody` presents method, aggregation, interval/baseline, scenario update/retrieval, sample counts and missing values. Numeric summaries preserve units (responsive /24 blocks vs web tests); neither is population coverage. Explicit simulation/anomaly labels extend cards, map labels and details. No real outage, censorship verdict, actor, cause or corroboration inference. `digital.test.ts` and `tests/digital.spec.ts` validate these boundaries with deterministic original fixtures.
