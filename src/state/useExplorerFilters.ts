@@ -26,6 +26,10 @@ export function useExplorerFilters() {
   const updateFilters = useCallback(
     (patch: Partial<ExplorerFilters>, replace = false) => {
       const next = { ...current.current, ...patch }
+      if (next.source !== current.current.source) {
+        next.language = 'all'
+        next.reportStatus = 'all'
+      }
       const search = serializeFilters(next)
       if (search !== window.location.search) {
         window.history[replace ? 'replaceState' : 'pushState'](

@@ -1665,3 +1665,86 @@ dialog::backdrop {
   line-height: 1.7;
   margin: 8px 0;
 }
+
+.report-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 14px;
+}
+.report-filters label {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  font-size: 13px;
+}
+.report-filters select {
+  font: inherit;
+  color: #e6eae5;
+  background: #182528;
+  border: 1px solid #516166;
+  border-radius: 7px;
+  padding: 10px;
+  max-width: 100%;
+}
+.report-filters select:focus-visible {
+  outline: 2px solid var(--mint);
+  outline-offset: 3px;
+}
+.report-map-note {
+  grid-column: 1 / -1;
+  padding: 12px 20px;
+  color: var(--muted);
+  font-size: 13px;
+  border-bottom: 1px solid var(--line);
+}
+.report-card-meta {
+  margin: 12px 0;
+  display: grid;
+  gap: 6px;
+}
+.report-card-meta p {
+  font-size: 12px;
+  line-height: 1.6;
+}
+.report-card-meta .correction-badge {
+  color: #f3b67c;
+}
+.report-label,
+.report-link {
+  font-size: 13px;
+  line-height: 1.7;
+  margin: 16px 0;
+  color: var(--muted);
+}
+.report-correction,
+.report-translation {
+  margin: 20px 0;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-left: 3px solid #f3b67c;
+  border-radius: 8px;
+  display: grid;
+  gap: 12px;
+  font-size: 14px;
+  line-height: 1.7;
+}
+.report-translation {
+  border-left-color: var(--mint);
+}
+.report-correction h3,
+.report-translation h3 {
+  margin: 0;
+}
+.report-correction details {
+  overflow-wrap: anywhere;
+}
+.report-correction summary {
+  cursor: pointer;
+  color: var(--mint);
+}
+.report-correction details p,
+.report-correction details strong {
+  display: block;
+  margin-top: 12px;
+}

@@ -1,0 +1,32 @@
+GOSIP ORIGINAL SYNTHETIC REPORT — NOT REAL NEWS
+All publishers, claims and timestamps below are invented fixture content.
+This document is the original bundled source, not an external news article.
+
+{
+  "id": "report-demo-dialogue",
+  "kind": "report",
+  "is_demo": true,
+  "status": "attributed-claim",
+  "freshness": "fixed-demo",
+  "category": "civic",
+  "title": "مثال خيالي عن حوار إقليمي",
+  "summary": "تصف نشرة الأفق الخيالية حواراً إقليمياً حول التعاون المدني. هذا مثال مصنوع، ولا يشير إلى اجتماع أو اتفاق حقيقي.",
+  "source_name": "نشرة الأفق (fictional)",
+  "source_language": "ar",
+  "source_url": "/reports/report-demo-dialogue.txt",
+  "region": "North Africa",
+  "country": "",
+  "coordinates": [
+    15,
+    30
+  ],
+  "location_precision": "region",
+  "occurred_at": null,
+  "published_at": "2026-10-07T00:00:00.000Z",
+  "updated_at": null,
+  "collected_at": "2026-10-08T16:00:00.000Z",
+  "translation": null,
+  "correction": null,
+  "uncertainty": "Invented attributed claim. No independent verification, numerical confidence or corroboration is supplied.",
+  "coverage_note": "Original GOSIP simulation. Regional markers are illustrative context, not incident positions. This small multilingual sample is not representative of global reporting."
+}

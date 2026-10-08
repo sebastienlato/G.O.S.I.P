@@ -1,6 +1,6 @@
 # G.O.S.I.P. — Global Open Source Intelligence Platform
 
-A free, local-first global event explorer. **Phase 4 adds a small live NWS weather forecast view and separate synthetic fire exploration, alongside cached USGS earthquakes and the original demo.** This is a prototype, not an emergency or impact assessment service.
+A free, local-first global event explorer. **Phase 5 adds multilingual, explicitly synthetic global reports with attributed-claim semantics and a bounded correction example.** Cached USGS earthquakes, NWS New York forecasts and separate environment/original demos remain available. This is a prototype, not an emergency or impact assessment service.
 
 ## Run locally
 
@@ -14,6 +14,10 @@ npm run dev
 Open the loopback URL printed by Vite (normally http://127.0.0.1:5173). No credentials, account, backend, or environment file is needed.
 
 ## Explore
+
+- **Global reports · simulated** (`?source=reports-demo`): six original fictional reports in English, French, Spanish and Arabic. Filter by source language and supplied correction, search publisher/original text/supplied translation, and share those filters. Global affairs is the available layer. Publication windows use the fixed **2026-10-08 16:00 UTC** demo snapshot: 6h = 1, 24h = 4, 7d = 6. Reports are attributed claims, never verified incidents; repetition is not independent corroboration.
+- Report details distinguish publisher, language, original text, one explicitly supplied synthetic English translation, scenario publication/update/retrieval and optional claimed occurrence. Missing times/translations remain missing. Original links open bundled plain-text source fixtures with fictional-publisher labels, not external news articles. One correction compares a supplied prior version with the current version; no complete revision history is claimed.
+- Four broad illustrative region markers; an unknown-location report and a safety-withheld report remain in the feed without coordinates or map navigation. No sensitive/tactical positions, automatic geocoding, news requests, report persistence or automatic translation. ReliefWeb needs an approved application name and source-specific rights checks; Wikinews is read-only. See the independent [Phase 5 source review](docs/DATA_POLICY.md#phase-5--global-report-source-review-2026-10-08). No live news integration was enabled.
 
 - **NWS weather · New York** (`?source=nws`): one forecast grid cell near Lower Manhattan, not global weather. Periods show temperature/unit, precipitation chance, wind and unaltered forecast text. Windows look **forward** for overlapping validity intervals, with soonest periods first; expired periods disappear. Update, generation, retrieval and validity times stay distinct. These are predictions, not measurements, official alerts or confirmed impacts. One map marker represents the selected or earliest period; use the feed to explore all periods.
 - Weather loads once on first eligible selection, then refreshes manually no more than hourly in this page. Two requests resolve the current grid and load its forecast; 12 seconds total, 100 KB per response, maximum 32 periods. Missing values remain missing; invalid periods are counted, all-invalid/oversized responses fail. A failed refresh retains prior data as stale; success replaces it. Six-hour staleness is measured from the oldest provider/retrieval time. Weather is **memory only**: no saved cache, reload/tab coordination or automatic retries. Offline/hidden attempts pause; reconnect requires manual refresh.
@@ -29,7 +33,7 @@ Open the loopback URL printed by Vite (normally http://127.0.0.1:5173). No crede
 - Interactive MapLibre map, persistent selection, regional focus and cooperative touch gestures; a local clickable SVG fallback when WebGL/map loading fails. Markers are estimates; overlapping markers can be explored in the full feed. Country search for USGS depends on provider place text; no country is inferred.
 - Full-width list mode, mobile controls and one page scroll, targeted empty-state recovery, native detail dialogs with focus return. Direct `?view=list` or `?map=static` avoids interactive map JS/CSS/worker/GeoJSON downloads. Add `source=usgs` to either for observations.
 
-“Copy view link” preserves validated source, search, layers, window, map/list and static-map preferences. Typing replaces history; other changes push; Back/Forward restores. Selection/camera/data are not shared. Unknown parameters are removed, categories are whitelisted and search is capped at 200 characters. Clipboard failure exposes a manual copy field. Localhost links require the app at that address.
+“Copy view link” preserves validated source, search, layers, window, report language/correction filters, map/list and static-map preferences. Typing replaces history; other changes push; Back/Forward restores. Selection/camera/data are not shared. Unknown parameters are removed, categories are whitelisted and search is capped at 200 characters. Clipboard failure exposes a manual copy field. Localhost links require the app at that address.
 
 ## Commands and checks
 
@@ -39,12 +43,13 @@ Open the loopback URL printed by Vite (normally http://127.0.0.1:5173). No crede
 | `npm run typecheck` | Strict TypeScript checking |
 | `npm run build` | Typecheck and production bundle |
 | `npm run preview` | Loopback production preview |
-| `npm test` | 83 focused environment/cache/refresh/parser/provider/filter/URL tests |
-| `npm run test:e2e` | Build, fresh preview on port 4173, 58 desktop/mobile Chromium checks |
+| `npm test` | 100 focused report/environment/cache/refresh/parser/provider/filter/URL tests |
+| `npm run test:e2e` | Build, fresh preview on port 4173, 68 desktop/mobile Chromium checks |
 | `npm run format:check` / `npm run format` | Check / apply source formatting |
+| `npm run data:reports` | Rebuild bundled original report source documents |
 | `npm run data:map` | Rebuild committed local geography |
 
-Browser tests need Chromium: `PLAYWRIGHT_SKIP_BROWSER_GC=1 npx playwright install chromium`. Port 4173 must be available. Tests intercept earthquake and weather endpoints with invented test-only responses; no check depends on live feed availability. Coverage includes success, malformed/network failure, explicit fallback/retry, stale/retained data, corrections/removal, missing values, current versus demo time, map selection, URL/history, mobile reflow, keyboard access, and map-free list/static entry. Screenshots in `docs/screenshots/` show mocked QA responses or labeled synthetic examples, never evidence of actual conditions. Phase 4 includes desktop/mobile weather lists and fire detail views.
+Browser tests need Chromium: `PLAYWRIGHT_SKIP_BROWSER_GC=1 npx playwright install chromium`. Port 4173 must be available. Tests intercept earthquake and weather endpoints with invented test-only responses; no check depends on live feed availability. Coverage includes success, malformed/network failure, explicit fallback/retry, stale/retained data, corrections/removal, missing values, current versus demo time, map selection, URL/history, mobile reflow, keyboard access, and map-free list/static entry. Screenshots in `docs/screenshots/` show mocked QA responses or labeled synthetic examples, never evidence of actual conditions. Phase 5 adds desktop/mobile report lists, correction details and map views; original report documents are consistency-checked against the fixtures.
 
 ## Structure
 
@@ -53,6 +58,7 @@ React 19.3, TypeScript 7.0, Vite 8.3, Tailwind 4.3 and MapLibre 6.13; dependency
 - `src/data/events.ts`: discriminated demo/observation contract, unchanged demo parser/fixtures and filtering.
 - `src/data/usgs.ts`: bounded USGS parser/provider, stream size limit, timeout, deduplication and cadence.
 - `src/data/weather.ts`, `fire.ts`: bounded NWS forecast adapter and separate validated thermal simulations.
+- `src/data/reports.ts`, `reportExamples.json`: bounded original report fixtures, nullable locations/times, language/translation metadata and one supplied correction. `public/reports/` contains their generated plain-text originals.
 - `src/state/`: source-aware URL/history, versioned local cache, shared refresh store and loading/freshness.
 - `src/components/`: source panel, accessible details, map lifecycle/fallback.
 - `public/`: bundled Natural Earth geography and notices.
@@ -70,8 +76,8 @@ Base geography is public-domain [Natural Earth](https://www.naturalearthdata.com
 
 No backend, deployment, automatic ingestion, service worker or offline cold-start guarantee. The loaded snapshot remains usable during network loss, but the application assets still need to load before a saved snapshot can be read. Cache is per origin/browser profile, can be evicted by the browser, and is not authenticated historical evidence. Returning to a loaded/cached USGS view requires manual refresh to check for changes. Device clock accuracy affects live windows. Regional detection/reporting gaps, provider corrections and overlapping markers remain. No clustering, Safari/Firefox or screen-reader audit.
 
-Initial app JS is ~287 KB / 91 KB gzip, app CSS ~28 KB / 7 KB gzip. Interactive-only MapLibre is ~1.08 MB / 289 KB gzip plus a ~508 KB worker and ~83 KB CSS. Its documented chunk warning is non-failing; list/static entry avoids those downloads.
+Initial app JS is ~305 KB / 96 KB gzip, app CSS ~30 KB / 7 KB gzip. Interactive-only MapLibre is ~1.08 MB / 289 KB gzip plus a ~508 KB worker and ~83 KB CSS. Its documented chunk warning is non-failing; list/static entry avoids those downloads.
 
 Weather covers one New York grid cell only; live fires, weather alerts, weather persistence and global weather coverage are not implemented.
 
-Phase 4 stops here. Continue in a fresh chat using `prompts/NEXT_PHASE_KICKOFF.md` for Phase 5 global reports. Local `main` tracks the owner-authorized [G.O.S.I.P. repository](https://github.com/sebastienlato/G.O.S.I.P).
+Phase 5 stops here. Continue in a fresh chat using `prompts/NEXT_PHASE_KICKOFF.md` for Phase 6 digital-world measurements. Local `main` tracks the owner-authorized [G.O.S.I.P. repository](https://github.com/sebastienlato/G.O.S.I.P).

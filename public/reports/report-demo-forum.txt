@@ -1,0 +1,37 @@
+GOSIP ORIGINAL SYNTHETIC REPORT — NOT REAL NEWS
+All publishers, claims and timestamps below are invented fixture content.
+This document is the original bundled source, not an external news article.
+
+{
+  "id": "report-demo-forum",
+  "kind": "report",
+  "is_demo": true,
+  "status": "attributed-claim",
+  "freshness": "fixed-demo",
+  "category": "civic",
+  "title": "Forum date corrected in fictional dispatch",
+  "summary": "The fictional Open Horizon Desk says a regional dialogue took place on 6 October, correcting its earlier 7 October date. No real meeting or agreement is reported.",
+  "source_name": "Open Horizon Desk (fictional)",
+  "source_language": "en",
+  "source_url": "/reports/report-demo-forum.txt",
+  "region": "East Africa",
+  "country": "Kenya",
+  "coordinates": [
+    35,
+    0
+  ],
+  "location_precision": "region",
+  "occurred_at": "2026-10-06T10:00:00.000Z",
+  "published_at": "2026-10-08T13:00:00.000Z",
+  "updated_at": "2026-10-08T15:00:00.000Z",
+  "collected_at": "2026-10-08T16:00:00.000Z",
+  "translation": null,
+  "correction": {
+    "previous_title": "Fictional desk reports a dialogue on 7 October",
+    "previous_summary": "The fictional desk originally claimed the regional dialogue took place on 7 October.",
+    "previous_updated_at": "2026-10-08T13:00:00.000Z",
+    "note": "The invented publisher corrects the claimed date from 7 October to 6 October. This is one supplied prior version, not a comprehensive revision history or independent verification."
+  },
+  "uncertainty": "Invented attributed claim. No independent verification, numerical confidence or corroboration is supplied.",
+  "coverage_note": "Original GOSIP simulation. Regional markers are illustrative context, not incident positions. This small multilingual sample is not representative of global reporting."
+}

@@ -1,3 +1,5 @@
+import { isReport, reportExamples, reportLanguages } from './data/reports'
+import ReportSource from './components/ReportSource'
 import EnvironmentSource from './components/EnvironmentSource'
 import { useWeather } from './state/useWeather'
 import { isForecast } from './data/weather'
@@ -28,6 +30,8 @@ import FeedSource from './components/FeedSource'
 import { useEarthquakes } from './state/useEarthquakes'
 import {
   categories,
+  eventTime,
+  hasCoordinates,
   DEMO_TIME,
   eventBadge,
   locationMeaning,
@@ -51,23 +55,36 @@ const timeOptions: { value: WindowHours; label: string }[] = [
 
 export default function App() {
   const [
-    { query, selectedCategories, hours, view, mapMode, source },
+    {
+      query,
+      selectedCategories,
+      hours,
+      view,
+      mapMode,
+      source,
+      language,
+      reportStatus,
+    },
     updateFilters,
   ] = useExplorerFilters()
   const earthquakes = useEarthquakes(source === 'usgs')
   const weather = useWeather(source === 'nws')
-  const isDemo = source === 'demo' || source === 'fire-demo'
+  const reports = source === 'reports-demo'
+  const isDemo = source === 'demo' || source === 'fire-demo' || reports
   const availableCategories: Category[] =
     source === 'demo'
       ? categoryKeys
       : source === 'usgs'
         ? ['physical']
-        : ['environment']
+        : reports
+          ? ['civic']
+          : ['environment']
   const activeCategoryCount = availableCategories.filter((key) =>
     selectedCategories.includes(key),
   ).length
-  const allEvents =
-    source === 'demo'
+  const allEvents = reports
+    ? reportExamples
+    : source === 'demo'
       ? demoEvents
       : source === 'fire-demo'
         ? fireExamples
@@ -91,18 +108,38 @@ export default function App() {
   const mapRegion = useRef<HTMLDivElement>(null)
   const events = useMemo(
     () =>
-      filterEvents(allEvents, query, selectedCategories, hours, referenceTime),
-    [allEvents, query, selectedCategories, hours, referenceTime],
+      filterEvents(
+        allEvents,
+        query,
+        selectedCategories,
+        hours,
+        referenceTime,
+      ).filter(
+        (event) =>
+          !isReport(event) ||
+          ((language === 'all' || event.source_language === language) &&
+            (reportStatus === 'all' || event.correction !== null)),
+      ),
+    [
+      allEvents,
+      query,
+      selectedCategories,
+      hours,
+      referenceTime,
+      language,
+      reportStatus,
+    ],
   )
   const selectedEvent = events.find((e) => e.id === selectedId)
+  const mappedEvents = useMemo(() => events.filter(hasCoordinates), [events])
   const mapEvents = useMemo(
     () =>
       source === 'nws'
-        ? selectedEvent
+        ? selectedEvent && hasCoordinates(selectedEvent)
           ? [selectedEvent]
-          : events.slice(0, 1)
-        : events,
-    [source, selectedEvent, events],
+          : mappedEvents.slice(0, 1)
+        : mappedEvents,
+    [source, selectedEvent, mappedEvents],
   )
   const detailEvent = events.find((e) => e.id === detailId)
   const selectEvent = useCallback((id: string) => {
@@ -121,13 +158,30 @@ export default function App() {
   useEffect(() => {
     setShareMessage('')
     setManualLink('')
-  }, [query, selectedCategories, hours, view, mapMode, source])
+  }, [
+    query,
+    selectedCategories,
+    hours,
+    view,
+    mapMode,
+    source,
+    language,
+    reportStatus,
+  ])
   const reset = () =>
-    updateFilters({ query: '', selectedCategories: categoryKeys, hours: 24 })
+    updateFilters({
+      query: '',
+      selectedCategories: categoryKeys,
+      hours: 24,
+      language: 'all',
+      reportStatus: 'all',
+    })
   const isFiltered =
     query.trim() !== '' ||
     selectedCategories.length !== categoryKeys.length ||
-    hours !== 24
+    hours !== 24 ||
+    language !== 'all' ||
+    reportStatus !== 'all'
   function toggleCategory(category: Category) {
     updateFilters({
       selectedCategories: selectedCategories.includes(category)
@@ -136,6 +190,7 @@ export default function App() {
     })
   }
   function showOnMap(id: string) {
+    if (!events.find((event) => event.id === id)?.coordinates) return
     setDetailId(null)
     updateFilters({ view: 'map' })
     setFocusRequest((previous) => ({
@@ -250,6 +305,14 @@ export default function App() {
             })
           }
         />
+        {reports && (
+          <ReportSource
+            language={language}
+            reportStatus={reportStatus}
+            onLanguage={(language) => updateFilters({ language })}
+            onStatus={(reportStatus) => updateFilters({ reportStatus })}
+          />
+        )}
         {isDemo && (
           <div className="demo-banner">
             <span className="demo-badge">
@@ -308,6 +371,14 @@ export default function App() {
         </div>
         <div className={`explorer ${view === 'list' ? 'list-view' : ''}`}>
           <div className="explorer-controls">
+            {reports && (
+              <p className="report-map-note">
+                {mapEvents.length} broad regional markers ·{' '}
+                {events.length - mapEvents.length} reports not mapped (unknown
+                or withheld locations). All matching reports remain in the feed.
+              </p>
+            )}
+
             <div className="map-toolbar">
               <div className="map-toolbar-title">
                 <Globe2 size={15} />
@@ -341,7 +412,9 @@ export default function App() {
                   <strong>Time window</strong>
                   <span>
                     {isDemo
-                      ? 'Before the demo snapshot'
+                      ? reports
+                        ? 'Published before the demo snapshot'
+                        : 'Before the demo snapshot'
                       : source === 'nws'
                         ? 'Forecast valid in the next…'
                         : 'Before the current clock'}
@@ -375,6 +448,8 @@ export default function App() {
                     ? 'ahead · overlapping periods'
                     : 'before now'}
                 {query.trim() ? ` · “${query.trim()}”` : ''}
+                {reports &&
+                  ` · ${language === 'all' ? 'All languages' : reportLanguages[language]} · ${reportStatus === 'all' ? 'All reports' : 'With correction'}`}
               </p>
               <button onClick={() => void shareFilters()}>
                 <Link size={14} /> Copy view link
@@ -411,7 +486,10 @@ export default function App() {
                   <button onClick={() => setDetailId(selectedEvent.id)}>
                     Read details
                   </button>
-                  <button onClick={() => showOnMap(selectedEvent.id)}>
+                  <button
+                    disabled={!selectedEvent.coordinates}
+                    onClick={() => showOnMap(selectedEvent.id)}
+                  >
                     Show on map
                   </button>
                   <button onClick={showInFeed}>Find in feed</button>
@@ -490,20 +568,28 @@ export default function App() {
               )}
             </div>
             <p id="search-help" className="search-help">
-              Search titles, descriptions, regions and countries.
+              {reports
+                ? 'Search original titles, summaries, supplied translations, publishers, language codes, regions and countries.'
+                : 'Search titles, descriptions, regions and countries.'}
             </p>
             <div className="feed-meta">
               <span aria-live="polite" role="status">
                 {events.length}{' '}
-                {isDemo
-                  ? 'simulated'
-                  : source === 'nws'
-                    ? 'NWS forecast'
-                    : 'USGS'}{' '}
+                {reports
+                  ? 'simulated report'
+                  : isDemo
+                    ? 'simulated'
+                    : source === 'nws'
+                      ? 'NWS forecast'
+                      : 'USGS'}{' '}
                 {events.length === 1 ? 'event' : 'events'}
               </span>
               <span>
-                {source === 'nws' ? 'Soonest first' : 'Most recent'}{' '}
+                {reports
+                  ? 'Publication · newest first'
+                  : source === 'nws'
+                    ? 'Soonest first'
+                    : 'Most recent'}{' '}
                 <ArrowDown size={12} />
               </span>
             </div>
@@ -540,10 +626,13 @@ export default function App() {
                     >
                       {isForecast(event)
                         ? `Valid from ${formatTimestamp(event.occurred_at)}`
-                        : `${demoAge(event.occurred_at, referenceTime)} ${isDemo ? 'before snapshot' : 'ago'}`}
+                        : `${isReport(event) ? 'Published ' : ''}${demoAge(eventTime(event), referenceTime)} ${isDemo ? 'before snapshot' : 'ago'}`}
                     </span>
                   </div>
-                  <h3>
+                  <h3
+                    lang={isReport(event) ? event.source_language : undefined}
+                    dir="auto"
+                  >
                     {event.title}
                     <ArrowUpRight size={15} />
                   </h3>
@@ -556,6 +645,31 @@ export default function App() {
                       </>
                     )}
                   </p>
+                  {isReport(event) && (
+                    <div className="report-card-meta">
+                      <p dir="auto">{event.source_name}</p>
+                      <p>
+                        Original · {reportLanguages[event.source_language]} (
+                        {event.source_language}) ·{' '}
+                        {event.translation
+                          ? 'Supplied translation'
+                          : 'No translation supplied'}
+                      </p>
+                      {event.correction && (
+                        <p className="correction-badge">
+                          Correction supplied · prior version available
+                        </p>
+                      )}
+                      {!event.coordinates && (
+                        <p>
+                          {event.location_precision === 'withheld'
+                            ? 'Location withheld for safety'
+                            : 'Location not supplied'}{' '}
+                          · not mapped
+                        </p>
+                      )}
+                    </div>
+                  )}
                   {isForecast(event) && (
                     <p className="environment-readout">
                       {event.temperature == null
@@ -587,15 +701,17 @@ export default function App() {
                       : 'All layers are off'}
                   </h3>
                   <p>
-                    {source === 'nws'
-                      ? 'No forecast periods overlap this view. Check source status, enable Environment, clear search or widen the future window. This is not evidence of safe weather.'
-                      : !isDemo
-                        ? 'No observations match this view. Check the source status above, enable Earth & activity, clear search or widen the window. An empty result does not mean no earthquakes occurred.'
-                        : !selectedCategories.length
-                          ? 'Enable a layer to explore the simulated events.'
-                          : query.trim()
-                            ? `No examples match “${query.trim()}” with these layers and this time window. This is a small invented sample, not evidence of no activity.`
-                            : 'No examples in this time window. Try the full seven-day demo sample.'}
+                    {reports
+                      ? 'No report examples match these filters. Try another language, clear the correction filter or widen the publication window. An empty result says nothing about real-world activity.'
+                      : source === 'nws'
+                        ? 'No forecast periods overlap this view. Check source status, enable Environment, clear search or widen the future window. This is not evidence of safe weather.'
+                        : !isDemo
+                          ? 'No observations match this view. Check the source status above, enable Earth & activity, clear search or widen the window. An empty result does not mean no earthquakes occurred.'
+                          : !selectedCategories.length
+                            ? 'Enable a layer to explore the simulated events.'
+                            : query.trim()
+                              ? `No examples match “${query.trim()}” with these layers and this time window. This is a small invented sample, not evidence of no activity.`
+                              : 'No examples in this time window. Try the full seven-day demo sample.'}
                   </p>
                   <div className="empty-actions">
                     {!selectedCategories.length && (
@@ -685,9 +801,10 @@ export default function App() {
           </h2>
           <p>
             GOSIP is a free global event explorer. Choose USGS earthquake
-            observations, New York NWS forecasts, four synthetic fire examples
-            or 18 invented examples across five categories. Simulated examples
-            are never mixed with real observations.
+            observations, New York NWS forecasts, four synthetic fire examples,
+            six multilingual report fixtures, or 18 invented examples across
+            five categories. Simulated examples are never mixed with real
+            observations.
           </p>
           <h3>Transparent by design</h3>
           <p>

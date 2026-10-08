@@ -1,4 +1,4 @@
-# Architecture — Phase 4
+# Architecture — Phase 5
 
 A static React + TypeScript application. `App.tsx` owns selected-event context separately from the detail dialog and explicit map-focus requests. One filtered array drives map/feed; NWS renders one co-located marker for the selected or earliest period while the feed exposes all periods. `src/state/explorer.ts` validates/serializes source, search, layers, window, view and map preference; `useExplorerFilters.ts` synchronizes history. No data/selection/camera are encoded in links.
 
@@ -21,3 +21,13 @@ Vite builds `dist/`; Vitest tests parser/provider/filter/URL boundaries; Playwri
 `fire.ts` adds four original synthetic thermal examples through the existing demo validator plus sensor-field checks. They are separate from the original 18 demo fixtures and from real sources, use the same fixed demo clock, and carry invented confidence/radiative-power/brightness values. No FIRMS requests or credentials.
 
 URL sources now include `nws` and `fire-demo`. Both expose Environment only. Discrete source changes retain window/view, clear search/layers/selection, and never substitute sources automatically. Forecast intervals intersect `[now, now + window)` and sort ascending; other sources retain backward windows and descending time. Forecast cards/details distinguish validity from update/retrieval; thermal details distinguish synthetic values from measured evidence. The one forecast map marker avoids stacking all periods on the same coordinate. Direct list/static entry still bypasses MapLibre downloads.
+
+## Report examples path
+
+`reports.ts` validates `reportExamples.json` as original synthetic reports only (`kind: report`, `is_demo: true`, `status: attributed-claim`). At most 50 input records, bounded IDs/text, supported language codes, strict calendar/timestamp ordering and one optional earlier correction. No fetcher or saved report cache. Original source URLs are either null or exactly the bundled `/reports/<validated-id>.txt` path; scripts/build-report-documents.mjs regenerates these plain-text documents, and core tests detect content drift. No arbitrary third-party URL, HTML rendering or full-article ingestion.
+
+`occurred_at` is nullable. `eventTime` selects report **publication** for filtering/sorting; scenario corrections do not bump publication. Claimed occurrence is only displayed when supplied. Reports use the fixed demo clock; real USGS/NWS clocks remain untouched. Original title/summary carry `lang` and `dir=auto`; one author-supplied synthetic translation has separate credit. Correction details show one supplied earlier version, never a second corroborating report or complete ledger.
+
+Report coordinates are nullable; regional markers must be whole multiples of five degrees. Unknown/withheld locations require null coordinates. `hasCoordinates` narrows the map array, while the full array stays in the feed. Missing-position selection has no map action. Memoizing the mapped array independently of selection preserves marker elements and keyboard focus. No geocoding or inferred publisher position.
+
+`source=reports-demo`, `lang=en|fr|es|ar` (omission = all), `reports=corrected` (omission = all) extend validated URL/history state. Report-only parameters are discarded outside report sources and reset on source switches. Global affairs is the only report layer. Source panel, cards and details label simulations/claims and missing coverage. List/static entries still avoid MapLibre engine/CSS/worker/GeoJSON.

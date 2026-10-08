@@ -1,0 +1,37 @@
+GOSIP ORIGINAL SYNTHETIC REPORT — NOT REAL NEWS
+All publishers, claims and timestamps below are invented fixture content.
+This document is the original bundled source, not an external news article.
+
+{
+  "id": "report-demo-water",
+  "kind": "report",
+  "is_demo": true,
+  "status": "attributed-claim",
+  "freshness": "fixed-demo",
+  "category": "civic",
+  "title": "Un dialogue régional sur l’eau annoncé",
+  "summary": "Le Bulletin des Rives, une rédaction fictive, annonce une consultation sur le partage de l’eau. Aucun accord réel ni participant réel n’est décrit.",
+  "source_name": "Bulletin des Rives (fictional)",
+  "source_language": "fr",
+  "source_url": "/reports/report-demo-water.txt",
+  "region": "Western Europe",
+  "country": "France",
+  "coordinates": [
+    0,
+    45
+  ],
+  "location_precision": "region",
+  "occurred_at": null,
+  "published_at": "2026-10-08T09:00:00.000Z",
+  "updated_at": null,
+  "collected_at": "2026-10-08T16:00:00.000Z",
+  "translation": {
+    "language": "en",
+    "title": "A regional dialogue on water announced",
+    "summary": "The fictional Rivers Bulletin announces a consultation on water sharing. No real agreement or real participant is described.",
+    "supplied_by": "GOSIP fixture author · supplied synthetic translation"
+  },
+  "correction": null,
+  "uncertainty": "Invented attributed claim. No independent verification, numerical confidence or corroboration is supplied.",
+  "coverage_note": "Original GOSIP simulation. Regional markers are illustrative context, not incident positions. This small multilingual sample is not representative of global reporting."
+}

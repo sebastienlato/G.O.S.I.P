@@ -1,3 +1,4 @@
+import { isReport, type ReportEvent } from './reports'
 import { isForecast, type ForecastEvent } from './weather'
 import type { ThermalEvent } from './fire'
 export const categories = {
@@ -48,17 +49,19 @@ export interface EarthquakeEvent extends Omit<
   depth_km: number | null
 }
 export type ExplorerEvent =
-  DemoEvent | EarthquakeEvent | ForecastEvent | ThermalEvent
+  DemoEvent | EarthquakeEvent | ForecastEvent | ThermalEvent | ReportEvent
 export const eventBadge = (event: ExplorerEvent) =>
-  event.is_demo
-    ? 'SIMULATED'
-    : isForecast(event)
-      ? 'FORECAST · NWS'
-      : event.status === 'deleted'
-        ? 'WITHDRAWN · USGS'
-        : 'OBSERVATION · USGS'
+  isReport(event)
+    ? 'SIMULATED · ATTRIBUTED CLAIM'
+    : event.is_demo
+      ? 'SIMULATED'
+      : isForecast(event)
+        ? 'FORECAST · NWS'
+        : event.status === 'deleted'
+          ? 'WITHDRAWN · USGS'
+          : 'OBSERVATION · USGS'
 export const markerLabel = (event: ExplorerEvent) =>
-  `${event.is_demo ? 'Simulated' : isForecast(event) ? 'NWS forecast' : 'USGS observation'}: ${event.title}, ${event.country || event.region}`
+  `${isReport(event) ? 'Simulated report' : event.is_demo ? 'Simulated' : isForecast(event) ? 'NWS forecast' : 'USGS observation'}: ${event.title}, ${event.country || event.region}`
 
 type Seed = [Category, string, string, string, number, number, number, string]
 const seeds: Seed[] = [
@@ -351,18 +354,25 @@ export function filterEvents(
         (isForecast(e)
           ? Date.parse(e.valid_until) > referenceTime &&
             Date.parse(e.occurred_at) < referenceTime + hours * 3_600_000
-          : Date.parse(e.occurred_at) >= cutoff &&
-            Date.parse(e.occurred_at) <= referenceTime) &&
-        `${e.title} ${e.summary} ${e.region} ${e.country} ${categories[e.category].label}`
+          : Date.parse(eventTime(e)) >= cutoff &&
+            Date.parse(eventTime(e)) <= referenceTime) &&
+        `${e.title} ${e.summary} ${e.region} ${e.country} ${categories[e.category].label} ${isReport(e) ? `${e.source_name} ${e.source_language} ${e.translation?.title ?? ''} ${e.translation?.summary ?? ''}` : ''}`
           .toLocaleLowerCase()
           .includes(q),
     )
     .sort((a, b) =>
       isForecast(a) && isForecast(b)
         ? Date.parse(a.occurred_at) - Date.parse(b.occurred_at)
-        : Date.parse(b.occurred_at) - Date.parse(a.occurred_at),
+        : Date.parse(eventTime(b)) - Date.parse(eventTime(a)),
     )
 }
+// Reports filter and sort by publication, never by an unknown/inferred occurrence.
+export const eventTime = (event: ExplorerEvent): string =>
+  isReport(event) ? event.published_at : event.occurred_at
+export type MappedEvent = ExplorerEvent & { coordinates: [number, number] }
+export const hasCoordinates = (event: ExplorerEvent): event is MappedEvent =>
+  event.coordinates !== null
+
 export function demoAge(iso: string, referenceTime = DEMO_TIME): string {
   const minutes = Math.max(
     0,
@@ -388,8 +398,14 @@ export function formatTimestamp(iso: string | number): string {
 }
 
 export const locationMeaning = (event: ExplorerEvent) =>
-  event.is_demo
-    ? 'Approximate location'
-    : isForecast(event)
-      ? 'Forecast location'
-      : 'Estimated epicentre'
+  isReport(event)
+    ? event.location_precision === 'region'
+      ? 'Broad illustrative region · not an incident position'
+      : event.location_precision === 'withheld'
+        ? 'Location withheld for safety · not mapped'
+        : 'Location not supplied · not mapped'
+    : event.is_demo
+      ? 'Approximate location'
+      : isForecast(event)
+        ? 'Forecast location'
+        : 'Estimated epicentre'

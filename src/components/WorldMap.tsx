@@ -6,12 +6,12 @@ import {
   categories,
   eventBadge,
   markerLabel,
-  type ExplorerEvent,
+  type MappedEvent,
 } from '../data/events'
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url'
 
 type Props = {
-  events: ExplorerEvent[]
+  events: MappedEvent[]
   selectedId: string | null
   onSelect: (id: string) => void
   focusRequest: { id: string; sequence: number } | null
@@ -244,7 +244,7 @@ export default function WorldMap({
         </span>
         <h2>
           {selectedEvent
-            ? selectedEvent.country || 'Earthquake observation'
+            ? selectedEvent.country || selectedEvent.region
             : 'Explore the signals.'}
         </h2>
         <p>

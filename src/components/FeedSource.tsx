@@ -67,6 +67,13 @@ export default function FeedSource({
           >
             Fire examples · simulated
           </button>
+          <button
+            aria-pressed={source === 'reports-demo'}
+            className={source === 'reports-demo' ? 'active' : ''}
+            onClick={() => onChange('reports-demo')}
+          >
+            Global reports · simulated
+          </button>
         </div>
       </div>
       {source === 'usgs' && (

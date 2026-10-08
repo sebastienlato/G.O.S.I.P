@@ -1,0 +1,29 @@
+GOSIP ORIGINAL SYNTHETIC REPORT — NOT REAL NEWS
+All publishers, claims and timestamps below are invented fixture content.
+This document is the original bundled source, not an external news article.
+
+{
+  "id": "report-demo-access",
+  "kind": "report",
+  "is_demo": true,
+  "status": "attributed-claim",
+  "freshness": "fixed-demo",
+  "category": "civic",
+  "title": "Humanitarian access claim · location withheld",
+  "summary": "The fictional Open Horizon Desk describes an unconfirmed access discussion. Routes, facilities and positions of vulnerable people are deliberately omitted. This is an invented safety example, not conflict tracking.",
+  "source_name": "Open Horizon Desk (fictional)",
+  "source_language": "en",
+  "source_url": "/reports/report-demo-access.txt",
+  "region": "Region withheld",
+  "country": "",
+  "coordinates": null,
+  "location_precision": "withheld",
+  "occurred_at": null,
+  "published_at": "2026-10-07T20:00:00.000Z",
+  "updated_at": null,
+  "collected_at": "2026-10-08T16:00:00.000Z",
+  "translation": null,
+  "correction": null,
+  "uncertainty": "Invented attributed claim. No independent verification, numerical confidence or corroboration is supplied.",
+  "coverage_note": "Original GOSIP simulation. Regional markers are illustrative context, not incident positions. This small multilingual sample is not representative of global reporting."
+}

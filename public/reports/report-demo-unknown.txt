@@ -1,0 +1,29 @@
+GOSIP ORIGINAL SYNTHETIC REPORT — NOT REAL NEWS
+All publishers, claims and timestamps below are invented fixture content.
+This document is the original bundled source, not an external news article.
+
+{
+  "id": "report-demo-unknown",
+  "kind": "report",
+  "is_demo": true,
+  "status": "attributed-claim",
+  "freshness": "fixed-demo",
+  "category": "civic",
+  "title": "Civic coordination claim · location unknown",
+  "summary": "An invented publisher describes a civic coordination proposal without identifying a location or occurrence time. No location is inferred from the publisher, language or title.",
+  "source_name": "Common Ground Bulletin (fictional)",
+  "source_language": "en",
+  "source_url": "/reports/report-demo-unknown.txt",
+  "region": "Location not supplied",
+  "country": "",
+  "coordinates": null,
+  "location_precision": "unknown",
+  "occurred_at": null,
+  "published_at": "2026-10-04T22:00:00.000Z",
+  "updated_at": null,
+  "collected_at": "2026-10-08T16:00:00.000Z",
+  "translation": null,
+  "correction": null,
+  "uncertainty": "Invented attributed claim. No independent verification, numerical confidence or corroboration is supplied.",
+  "coverage_note": "Original GOSIP simulation. Regional markers are illustrative context, not incident positions. This small multilingual sample is not representative of global reporting."
+}

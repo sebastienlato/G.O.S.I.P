@@ -1,9 +1,12 @@
+import { reportLanguages, type ReportLanguage } from '../data/reports'
 import { categories, type Category, type WindowHours } from '../data/events'
 
 export const categoryKeys = Object.keys(categories) as Category[]
-export type Source = 'demo' | 'usgs' | 'nws' | 'fire-demo'
+export type Source = 'demo' | 'usgs' | 'nws' | 'fire-demo' | 'reports-demo'
 export interface ExplorerFilters {
   source: Source
+  language: ReportLanguage | 'all'
+  reportStatus: 'all' | 'corrected'
   query: string
   selectedCategories: Category[]
   hours: WindowHours
@@ -13,6 +16,8 @@ export interface ExplorerFilters {
 export const defaultFilters: ExplorerFilters = {
   source: 'demo',
   query: '',
+  language: 'all',
+  reportStatus: 'all',
   selectedCategories: categoryKeys,
   hours: 24,
   view: 'map',
@@ -31,9 +36,21 @@ export function parseFilters(search: string): ExplorerFilters {
     : categoryKeys
   const hours = params.get('hours')
   return {
-    source: ['usgs', 'nws', 'fire-demo'].includes(params.get('source') ?? '')
+    source: ['usgs', 'nws', 'fire-demo', 'reports-demo'].includes(
+      params.get('source') ?? '',
+    )
       ? (params.get('source') as Source)
       : 'demo',
+    language:
+      params.get('source') === 'reports-demo' &&
+      Object.hasOwn(reportLanguages, params.get('lang') ?? '')
+        ? (params.get('lang') as ReportLanguage)
+        : 'all',
+    reportStatus:
+      params.get('source') === 'reports-demo' &&
+      params.get('reports') === 'corrected'
+        ? 'corrected'
+        : 'all',
     query: (params.get('q') ?? '')
       .replace(/[\u0000-\u001f\u007f]/g, '')
       .slice(0, 200),
@@ -50,6 +67,11 @@ export function parseFilters(search: string): ExplorerFilters {
 export function serializeFilters(filters: ExplorerFilters): string {
   const params = new URLSearchParams()
   if (filters.source !== 'demo') params.set('source', filters.source)
+  if (filters.source === 'reports-demo') {
+    if (filters.language !== 'all') params.set('lang', filters.language)
+    if (filters.reportStatus !== 'all')
+      params.set('reports', filters.reportStatus)
+  }
   if (filters.query) params.set('q', filters.query)
   if (filters.hours !== 24) params.set('hours', String(filters.hours))
   if (filters.selectedCategories.length !== categoryKeys.length)
