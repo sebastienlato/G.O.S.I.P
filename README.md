@@ -1,70 +1,68 @@
 # G.O.S.I.P. — Global Open Source Intelligence Platform
 
-A free, local-first global event explorer. **Phase 1 is a working explorer: all 18 events are invented and labeled SIMULATED.** No live reports, warnings, or verified observations are provided.
+A free, local-first global event explorer. **Phase 2 adds USGS earthquake observations alongside a separate, explicitly SIMULATED demo.** This is a prototype, not an emergency or impact assessment service.
 
 ## Run locally
 
-Use Node **22.12+ (22.x), 24+, or newer** and npm. Phase 1 was checked with Node 26.8.1.
+Use Node **22.12+ (22.x), 24+, or newer** and npm. Checked with Node 26.8.1.
 
 ```sh
 npm ci
 npm run dev
 ```
 
-Open the local URL printed by Vite (normally http://127.0.0.1:5173). The server binds to loopback only. No credentials, account, backend, or environment file is needed.
+Open the loopback URL printed by Vite (normally http://127.0.0.1:5173). No credentials, account, backend, or environment file is needed.
 
 ## Explore
 
-- Interactive MapLibre world map with clickable, keyboard-accessible markers, zoom and reset.
-- Five independent category filters, country/region/text search, and 6-hour, 24-hour, 3-day, or 7-day windows.
-- Persistent selection across map/feed and detail dismissal, with explicit “Show on map,” “Find in feed,” and clear-selection actions. Filtering out an event clears its selection.
-- Full-width list mode, controls before results, keyboard focus return, larger mobile controls, and a single page scroll on mobile. Two fingers pan the interactive map; one finger scrolls the page.
-- Filter summary, search help, and targeted empty-state actions to restore layers, clear search, or widen the window.
-- Copyable, validated URL filters with reload and browser Back/Forward support.
-- Detail dialogs with source-demo labels, occurrence/publication/snapshot times, uncertainty, and coverage notes. Escape closes the dialog and restores focus.
-- A static SVG map with clickable markers if WebGL, map data, or the map worker fails. “Use static map” also selects it manually. The feed remains fully usable.
+- Choose **USGS earthquakes** for the M2.5+ past-week observation feed. The first selection requests it once; refresh/retry is manual. Map, list, search, time windows, selection, keyboard details and explicit “Show on map” / “Find in feed” work with observations.
+- Source details show occurrence, provider update, feed generation and retrieval times, provider ID/network/code, review status, magnitude/type and depth. Missing values remain “Not supplied.” Estimates and provider review do not establish damage, casualties or verified impacts.
+- The source panel identifies freshness, rejected/excluded records, coverage gaps and failures. Snapshots older than 15 minutes are marked stale; a failed refresh retains any prior snapshot with a stale warning. A successful refresh replaces it, including corrections/removals. There is no revision/deletion history.
+- **Simulated examples** is the default and explicit offline fallback. Its 18 invented events across five categories retain the fixed **2026-10-08 16:00 UTC** clock: 24h = 12 events, 7d = 18. Switching sources clears search/layers/selection; time/view/map preferences remain. Observations and fixtures are never merged or silently substituted.
+- USGS windows use the current device clock at minute resolution, not the demo clock. A shared USGS link requests a new snapshot and is not a historical permalink.
+- Interactive MapLibre map, persistent selection, regional focus and cooperative touch gestures; a local clickable SVG fallback when WebGL/map loading fails. Markers are estimates; overlapping markers can be explored in the full feed. Country search for USGS depends on provider place text; no country is inferred.
+- Full-width list mode, mobile controls and one page scroll, targeted empty-state recovery, native detail dialogs with focus return. Direct `?view=list` or `?map=static` avoids interactive map JS/CSS/worker/GeoJSON downloads. Add `source=usgs` to either for observations.
 
-Time filters are relative to **8 October 2026, 16:00 UTC**, not the current clock. Default 24-hour view: 12 events; seven days: all 18. Layers are toggles; “All events” restores all categories. Search and time filters apply to both map and feed.
+“Copy view link” preserves validated source, search, layers, window, map/list and static-map preferences. Typing replaces history; other changes push; Back/Forward restores. Selection/camera/data are not shared. Unknown parameters are removed, categories are whitelisted and search is capped at 200 characters. Clipboard failure exposes a manual copy field. Localhost links require the app at that address.
 
-“Copy view link” includes search text, layers, time window, map/list view, and static-map preference. It excludes the selected event and camera position. Search edits replace the current history entry; other filter changes create entries. Invalid URL choices fall back to defaults, search is capped at 200 characters, and unknown parameters are removed. If clipboard access is unavailable, select and copy the displayed link. A localhost link works only where the app is running at that address; nothing is uploaded or hosted. Use `?view=list` or `?map=static` to start without downloading the interactive map engine, worker, stylesheet, or GeoJSON.
-
-## Commands
+## Commands and checks
 
 | Command | Purpose |
 | --- | --- |
-| `npm run dev` | Local development with hot reload |
+| `npm run dev` | Loopback development server |
 | `npm run typecheck` | Strict TypeScript checking |
-| `npm run build` | Typecheck and production bundle in `dist/` |
-| `npm run preview` | Serve the production build locally |
-| `npm test` | 21 focused provider/filter/provenance/URL tests |
-| `npm run test:e2e` | Build, launch production preview, run desktop/mobile browser checks |
-| `npm run format:check` | Check source formatting |
-| `npm run format` | Format source files |
-| `npm run data:map` | Rebuild the committed local map assets |
+| `npm run build` | Typecheck and production bundle |
+| `npm run preview` | Loopback production preview |
+| `npm test` | 40 focused parser/provider/filter/URL tests |
+| `npm run test:e2e` | Build, fresh preview on port 4173, 26 desktop/mobile Chromium checks |
+| `npm run format:check` / `npm run format` | Check / apply source formatting |
+| `npm run data:map` | Rebuild committed local geography |
 
-Browser tests need Chromium: `PLAYWRIGHT_SKIP_BROWSER_GC=1 npx playwright install chromium`. Tests use port 4173 and require it to be available. The 16 checks cover filters, details, focus return, persistent selection, regional map focus, URL/history restoration, clipboard fallback, map-free list/static entry, 320px reflow, map-data failure, missing WebGL, and network loss after initial loading. Browser traces/screenshots go to ignored `test-results/`.
+Browser tests need Chromium: `PLAYWRIGHT_SKIP_BROWSER_GC=1 npx playwright install chromium`. Port 4173 must be available. Tests intercept the earthquake endpoint with invented test-only responses; no check depends on live feed availability. Coverage includes success, malformed/network failure, explicit fallback/retry, stale/retained data, corrections/removal, missing values, current versus demo time, map selection, URL/history, mobile reflow, keyboard access, and map-free list/static entry. Phase 2 screenshots in `docs/screenshots/` show mocked test responses, not actual earthquakes.
 
-## Stack and structure
+## Structure
 
-React 19.3, TypeScript 7.0, Vite 8.3, Tailwind 4.3, MapLibre 6.13; exact versions are locked in `package-lock.json`.
+React 19.3, TypeScript 7.0, Vite 8.3, Tailwind 4.3 and MapLibre 6.13; dependency versions are locked.
 
-- `src/App.tsx`: coordinated selection/details, controls, feed, sharing, about dialog.
-- `src/state/`: pure URL validation/serialization and browser history synchronization.
-- `src/components/`: map lifecycle/fallback and accessible event details.
-- `src/data/events.ts`: runtime-validated, fixed synthetic fixtures and pure filtering; a small replaceable provider interface.
-- `public/world.geojson`, `public/world.svg`: bundled geography; `scripts/build-map.mjs` rebuilds it with dateline clipping.
-- `tests/`: production browser checks; `src/data/events.test.ts` and `src/state/explorer.test.ts`: core unit tests.
+- `src/data/events.ts`: discriminated demo/observation contract, unchanged demo parser/fixtures and filtering.
+- `src/data/usgs.ts`: bounded USGS parser/provider, stream size limit, timeout, deduplication and cadence.
+- `src/state/`: source-aware URL/history and in-memory earthquake loading/freshness.
+- `src/components/`: source panel, accessible details, map lifecycle/fallback.
+- `public/`: bundled Natural Earth geography and notices.
+- `tests/`: deterministic production-browser checks and test-only transport fixtures.
 
 ## $0 and provenance
 
-Public core access must remain free, without mandatory accounts or paywalls. **No paid service, billing-enabled infrastructure, paid trial, deployment, or API is used.** The app makes no external requests during normal exploration. Dependencies need internet access for the initial install; runtime assets are served locally. Explicitly following an attribution link leaves the app.
+Public core access remains free and account-free. **No billing, paid service, hosting, trial, API key or account is used.** Selecting USGS makes a direct credential-free HTTPS request to `earthquake.usgs.gov`, which receives usual connection information including the visitor's IP. No analytics, external fonts or map tiles. Demo-only exploration makes no external requests; following source links leaves the app.
 
-Base geography is public-domain [Natural Earth data](https://www.naturalearthdata.com/about/terms-of-use/), bundled through [world-atlas 2.0.2](https://github.com/topojson/world-atlas) (Natural Earth 4.1.0, 1:110m). Redistribution/modification terms were reviewed on 2026-10-08; notices are in `public/`. This historical, generalized map is not authoritative for disputed borders. Event fixtures are original synthetic content, not redistributed third-party news.
+USGS scientific data are published at no cost. Source-specific attribution, use/redistribution basis, coverage, cadence and rate limits are recorded in [DATA_POLICY](docs/DATA_POLICY.md). Feed requests have a 12-second timeout, 2 MB body limit and 2,000-record envelope limit; no silent truncation. At least 60 seconds between attempts per page session, with 5-minute fallback backoff on HTTP 429 and longer exposed Retry-After respected. No polling, persistent cache or cross-tab/reload throttle. Provider service limits are not an unlimited-traffic guarantee. Future scale must use bounded caching/throttling or disable the layer; never upgrade to a paid service.
 
-Future feeds need source-specific permission/terms checks. Future hosting must work without billing, respect actual quotas, and throttle, cache, or disable layers instead of incurring charges. Free tiers do not guarantee unlimited scale.
+Base geography is public-domain [Natural Earth](https://www.naturalearthdata.com/about/terms-of-use/), via world-atlas 2.0.2 (Natural Earth 4.1.0, 1:110m), with local notices. Historical generalized boundaries are illustrative. Software remains `UNLICENSED` pending the owner's Apache-2.0 decision.
 
-## Known limits and next step
+## Limits and next phase
 
-This is a local prototype, not an operational intelligence or emergency service. There is no live data, server or local-storage persistence, account system, backend, deployment, service worker, or offline cold-start guarantee. Only filter/view preferences persist in the URL. After assets load, network loss does not prevent filtering or viewing fixtures. MapLibre remains a large lazy-loaded bundle (about 1.08 MB minified / 289 KB gzip, plus a 508 KB worker and 83 KB stylesheet); the build reports its size warning. List/static entry skips those map downloads. Initial app JS is about 257 KB / 81 KB gzip, with 28 KB / 7 KB gzip app CSS. No clustering is needed for 18 events. Chromium desktop/mobile checks are not a Safari/Firefox or assistive-technology audit. The original software license remains undecided (Apache-2.0 proposed); package metadata is `UNLICENSED` until the owner confirms it.
+No backend, deployment, persistence, automatic ingestion, service worker or offline cold-start guarantee. The loaded snapshot remains usable during network loss; returning to a previously loaded USGS view requires manual refresh to check for changes. Device clock accuracy affects live windows. Regional detection/reporting gaps, provider corrections and overlapping markers remain. No clustering, Safari/Firefox or screen-reader audit.
 
-Continue only in a fresh chat using `prompts/NEXT_PHASE_KICKOFF.md`. Phase 1 is committed and pushed to the owner-authorized [G.O.S.I.P. repository](https://github.com/sebastienlato/G.O.S.I.P); local `main` tracks `origin/main`.
+Initial app JS is ~267 KB / 85 KB gzip, app CSS ~29 KB / 7 KB gzip. Interactive-only MapLibre is ~1.08 MB / 289 KB gzip plus a ~508 KB worker and ~83 KB CSS. Its documented chunk warning is non-failing; list/static entry avoids those downloads.
+
+Phase 2 stops here. Continue in a fresh chat using `prompts/NEXT_PHASE_KICKOFF.md` for refresh and persistence. Local `main` tracks the owner-authorized [G.O.S.I.P. repository](https://github.com/sebastienlato/G.O.S.I.P).

@@ -2,6 +2,7 @@ import { categories, type Category, type WindowHours } from '../data/events'
 
 export const categoryKeys = Object.keys(categories) as Category[]
 export interface ExplorerFilters {
+  source: 'demo' | 'usgs'
   query: string
   selectedCategories: Category[]
   hours: WindowHours
@@ -9,6 +10,7 @@ export interface ExplorerFilters {
   mapMode: 'interactive' | 'static'
 }
 export const defaultFilters: ExplorerFilters = {
+  source: 'demo',
   query: '',
   selectedCategories: categoryKeys,
   hours: 24,
@@ -28,6 +30,7 @@ export function parseFilters(search: string): ExplorerFilters {
     : categoryKeys
   const hours = params.get('hours')
   return {
+    source: params.get('source') === 'usgs' ? 'usgs' : 'demo',
     query: (params.get('q') ?? '')
       .replace(/[\u0000-\u001f\u007f]/g, '')
       .slice(0, 200),
@@ -43,6 +46,7 @@ export function parseFilters(search: string): ExplorerFilters {
 
 export function serializeFilters(filters: ExplorerFilters): string {
   const params = new URLSearchParams()
+  if (filters.source === 'usgs') params.set('source', 'usgs')
   if (filters.query) params.set('q', filters.query)
   if (filters.hours !== 24) params.set('hours', String(filters.hours))
   if (filters.selectedCategories.length !== categoryKeys.length)

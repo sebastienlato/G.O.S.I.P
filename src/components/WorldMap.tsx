@@ -1,11 +1,16 @@
 import { useEffect, useRef, useState } from 'react'
 import type { Map as MapInstance, Marker } from 'maplibre-gl'
 import { Globe2, Minus, Plus, RotateCcw } from 'lucide-react'
-import { categories, type DemoEvent } from '../data/events'
+import {
+  categories,
+  eventBadge,
+  markerLabel,
+  type ExplorerEvent,
+} from '../data/events'
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url'
 
 type Props = {
-  events: DemoEvent[]
+  events: ExplorerEvent[]
   selectedId: string | null
   onSelect: (id: string) => void
   focusRequest: { id: string; sequence: number } | null
@@ -138,16 +143,13 @@ export default function WorldMap({
           '--marker-color',
           categories[event.category].color,
         )
-        button.setAttribute(
-          'aria-label',
-          `Simulated: ${event.title}, ${event.country}`,
-        )
+        button.setAttribute('aria-label', markerLabel(event))
         button.classList.toggle('selected', event.id === selected.current)
         button.setAttribute(
           'aria-pressed',
           String(event.id === selected.current),
         )
-        button.title = `${event.title} · SIMULATED`
+        button.title = `${event.title} · ${eventBadge(event)}`
         button.addEventListener('click', (clickEvent) => {
           clickEvent.stopPropagation()
           button.focus({ preventScroll: true })
@@ -223,7 +225,7 @@ export default function WorldMap({
                     '--marker-color': categories[event.category].color,
                   } as React.CSSProperties
                 }
-                aria-label={`Simulated: ${event.title}, ${event.country}`}
+                aria-label={markerLabel(event)}
                 aria-pressed={selectedId === event.id}
                 onClick={() => onSelect(event.id)}
               >
@@ -235,14 +237,18 @@ export default function WorldMap({
       )}
       <div className="map-heading">
         <span className="eyebrow">
-          {selectedEvent ? 'SELECTED · SIMULATED' : 'A WORLD IN CONTEXT'}
+          {selectedEvent
+            ? `SELECTED · ${eventBadge(selectedEvent)}`
+            : 'A WORLD IN CONTEXT'}
         </span>
         <h2>
-          {selectedEvent ? selectedEvent.country : 'Explore the signals.'}
+          {selectedEvent
+            ? selectedEvent.country || 'Earthquake observation'
+            : 'Explore the signals.'}
         </h2>
         <p>
           {selectedEvent
-            ? `${selectedEvent.region} · Approximate location`
+            ? `${selectedEvent.region} · ${selectedEvent.is_demo ? 'Approximate location' : 'Estimated epicentre'}`
             : 'Choose a marker or explore the event feed.'}
         </p>
       </div>

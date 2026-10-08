@@ -1592,3 +1592,60 @@ dialog::backdrop {
     grid-row: 2;
   }
 }
+
+/* Source and provenance remain visible above every map/list view. */
+.feed-source {
+  margin-bottom: 16px;
+  border: 1px solid #425658;
+  border-radius: 6px;
+  padding: 14px 18px;
+  background: #1a292c;
+  font-size: 12px;
+  line-height: 1.7;
+}
+.source-choice,
+.source-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px 18px;
+}
+.source-choice .view-switch {
+  flex-wrap: wrap;
+}
+.source-status {
+  margin-top: 14px;
+  color: #b9ccca;
+}
+.source-status strong {
+  color: #d6e7d4;
+}
+.source-status p {
+  margin: 8px 0;
+}
+.source-status a,
+.detail-content a {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.source-error {
+  color: #f3c29b;
+}
+.source-actions button {
+  min-height: 44px;
+  border: 1px solid #647e70;
+  border-radius: 5px;
+  padding: 8px 14px;
+  background: #2c4037;
+  color: #e0eed9;
+}
+.source-actions button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+.source-status,
+.detail-content,
+.event-card,
+.selection-context {
+  overflow-wrap: anywhere;
+}

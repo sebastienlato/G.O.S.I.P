@@ -20,8 +20,14 @@ import WorldMap from './components/WorldMap'
 import { categoryKeys } from './state/explorer'
 import { useExplorerFilters } from './state/useExplorerFilters'
 import EventDetail from './components/EventDetail'
+import FeedSource from './components/FeedSource'
+import { useEarthquakes } from './state/useEarthquakes'
 import {
   categories,
+  DEMO_TIME,
+  eventBadge,
+  formatTimestamp,
+  type ExplorerEvent,
   demoAge,
   demoProvider,
   filterEvents,
@@ -29,7 +35,8 @@ import {
   type WindowHours,
 } from './data/events'
 
-const allEvents = demoProvider.getEvents()
+const demoEvents = demoProvider.getEvents()
+const noEvents: ExplorerEvent[] = []
 const timeOptions: { value: WindowHours; label: string }[] = [
   { value: 6, label: '6 hours' },
   { value: 24, label: '24 hours' },
@@ -38,8 +45,22 @@ const timeOptions: { value: WindowHours; label: string }[] = [
 ]
 
 export default function App() {
-  const [{ query, selectedCategories, hours, view, mapMode }, updateFilters] =
-    useExplorerFilters()
+  const [
+    { query, selectedCategories, hours, view, mapMode, source },
+    updateFilters,
+  ] = useExplorerFilters()
+  const earthquakes = useEarthquakes(source === 'usgs')
+  const isDemo = source === 'demo'
+  const availableCategories: Category[] = isDemo ? categoryKeys : ['physical']
+  const activeCategoryCount = availableCategories.filter((key) =>
+    selectedCategories.includes(key),
+  ).length
+  const allEvents = isDemo
+    ? demoEvents
+    : (earthquakes.snapshot?.events ?? noEvents)
+  const referenceTime = isDemo
+    ? DEMO_TIME
+    : Math.floor(earthquakes.now / 60_000) * 60_000
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [detailId, setDetailId] = useState<string | null>(null)
   const [focusRequest, setFocusRequest] = useState<{
@@ -52,8 +73,9 @@ export default function App() {
   const search = useRef<HTMLInputElement>(null)
   const mapRegion = useRef<HTMLDivElement>(null)
   const events = useMemo(
-    () => filterEvents(allEvents, query, selectedCategories, hours),
-    [query, selectedCategories, hours],
+    () =>
+      filterEvents(allEvents, query, selectedCategories, hours, referenceTime),
+    [allEvents, query, selectedCategories, hours, referenceTime],
   )
   const selectedEvent = events.find((e) => e.id === selectedId)
   const detailEvent = events.find((e) => e.id === detailId)
@@ -73,7 +95,7 @@ export default function App() {
   useEffect(() => {
     setShareMessage('')
     setManualLink('')
-  }, [query, selectedCategories, hours, view, mapMode])
+  }, [query, selectedCategories, hours, view, mapMode, source])
   const reset = () =>
     updateFilters({ query: '', selectedCategories: categoryKeys, hours: 24 })
   const isFiltered =
@@ -164,29 +186,51 @@ export default function App() {
           <div className="snapshot">
             <Clock3 size={17} />
             <div>
-              <span>DEMO SNAPSHOT</span>
+              <span>{isDemo ? 'DEMO SNAPSHOT' : 'LIVE VIEW CLOCK'}</span>
               <strong>
-                08 OCT 2026 <span className="muted">/</span> 16:00 UTC
+                {isDemo ? (
+                  <>
+                    08 OCT 2026 <span className="muted">/</span> 16:00 UTC
+                  </>
+                ) : (
+                  formatTimestamp(referenceTime)
+                )}
               </strong>
             </div>
           </div>
         </div>
-        <div className="demo-banner">
-          <span className="demo-badge">
-            <Sparkles size={13} />
-            SIMULATED
-          </span>
-          <p>
-            You’re exploring an invented world of events.{' '}
-            <span>No live data or real alerts.</span>
-          </p>
-          <button
-            onClick={() => about.current?.showModal()}
-            aria-label="About simulated data"
-          >
-            <Info size={17} />
-          </button>
-        </div>
+        <FeedSource
+          source={source}
+          onChange={(nextSource) => {
+            updateFilters({
+              source: nextSource,
+              query: '',
+              selectedCategories: categoryKeys,
+            })
+            setSelectedId(null)
+            setDetailId(null)
+            setFocusRequest(null)
+          }}
+          {...earthquakes}
+        />
+        {isDemo && (
+          <div className="demo-banner">
+            <span className="demo-badge">
+              <Sparkles size={13} />
+              SIMULATED
+            </span>
+            <p>
+              You’re exploring an invented world of events.{' '}
+              <span>No live data or real alerts.</span>
+            </p>
+            <button
+              onClick={() => about.current?.showModal()}
+              aria-label="About simulated data"
+            >
+              <Info size={17} />
+            </button>
+          </div>
+        )}
         <div className="filter-bar" aria-label="Event filters">
           <div className="filter-label">
             <SlidersHorizontal size={16} />
@@ -194,15 +238,15 @@ export default function App() {
           </div>
           <div className="category-filters">
             <button
-              className={`category-pill ${selectedCategories.length === categoryKeys.length ? 'active' : ''}`}
-              aria-pressed={selectedCategories.length === categoryKeys.length}
+              className={`category-pill ${activeCategoryCount === availableCategories.length ? 'active' : ''}`}
+              aria-pressed={activeCategoryCount === availableCategories.length}
               onClick={() =>
                 updateFilters({ selectedCategories: categoryKeys })
               }
             >
               All events
             </button>
-            {categoryKeys.map((key) => (
+            {availableCategories.map((key) => (
               <button
                 key={key}
                 className={`category-pill ${selectedCategories.includes(key) ? 'active' : ''}`}
@@ -258,7 +302,11 @@ export default function App() {
                 <Clock3 size={17} />
                 <div>
                   <strong>Time window</strong>
-                  <span>Before the demo snapshot</span>
+                  <span>
+                    {isDemo
+                      ? 'Before the demo snapshot'
+                      : 'Before the current clock'}
+                  </span>
                 </div>
               </div>
               <div className="time-options" aria-label="Time window">
@@ -275,14 +323,15 @@ export default function App() {
               </div>
               <div className="time-snapshot">
                 <span className="status-dot" />
-                Fixed snapshot
+                {isDemo ? 'Fixed snapshot' : 'Current time · UTC'}
               </div>
             </div>
             <div className="filter-summary">
               <p>
-                {selectedCategories.length} of 5 layers ·{' '}
+                {activeCategoryCount} of {availableCategories.length} layers ·{' '}
                 {timeOptions.find((option) => option.value === hours)?.label}{' '}
-                before snapshot{query.trim() ? ` · “${query.trim()}”` : ''}
+                {isDemo ? 'before snapshot' : 'before now'}
+                {query.trim() ? ` · “${query.trim()}”` : ''}
               </p>
               <button onClick={() => void shareFilters()}>
                 <Link size={14} /> Copy view link
@@ -303,11 +352,16 @@ export default function App() {
             {selectedEvent && (
               <div className="selection-context" aria-label="Selected event">
                 <div>
-                  <span className="eyebrow">SELECTED · SIMULATED</span>
+                  <span className="eyebrow">
+                    SELECTED · {eventBadge(selectedEvent)}
+                  </span>
                   <strong>{selectedEvent.title}</strong>
                   <p>
-                    {selectedEvent.region} · {selectedEvent.country} ·
-                    Approximate location
+                    {selectedEvent.region}
+                    {selectedEvent.country
+                      ? ` · ${selectedEvent.country}`
+                      : ''}{' '}
+                    · {isDemo ? 'Approximate location' : 'Estimated epicentre'}
                   </p>
                 </div>
                 <div className="selection-actions">
@@ -397,7 +451,7 @@ export default function App() {
             </p>
             <div className="feed-meta">
               <span aria-live="polite" role="status">
-                {events.length} simulated{' '}
+                {events.length} {isDemo ? 'simulated' : 'USGS'}{' '}
                 {events.length === 1 ? 'event' : 'events'}
               </span>
               <span>
@@ -427,9 +481,14 @@ export default function App() {
                     </span>
                     <span
                       className="event-age"
-                      title="Before the fixed demo snapshot"
+                      title={
+                        isDemo
+                          ? 'Before the fixed demo snapshot'
+                          : 'Before the current clock'
+                      }
                     >
-                      {demoAge(event.occurred_at)} before snapshot
+                      {demoAge(event.occurred_at, referenceTime)}{' '}
+                      {isDemo ? 'before snapshot' : 'ago'}
                     </span>
                   </div>
                   <h3>
@@ -438,13 +497,18 @@ export default function App() {
                   </h3>
                   <p>
                     {event.region}
-                    <span> / </span>
-                    {event.country}
+                    {event.country && (
+                      <>
+                        <span> / </span>
+                        {event.country}
+                      </>
+                    )}
                   </p>
                   <div className="card-bottom">
-                    <span>SIMULATED</span>
+                    <span>{eventBadge(event)}</span>
                     <span>
-                      Demo source <ChevronRight size={12} />
+                      {isDemo ? 'Demo source' : 'Source details'}{' '}
+                      <ChevronRight size={12} />
                     </span>
                   </div>
                 </button>
@@ -458,11 +522,13 @@ export default function App() {
                       : 'All layers are off'}
                   </h3>
                   <p>
-                    {!selectedCategories.length
-                      ? 'Enable a layer to explore the simulated events.'
-                      : query.trim()
-                        ? `No examples match “${query.trim()}” with these layers and this time window. This is a small invented sample, not evidence of no activity.`
-                        : 'No examples in this time window. Try the full seven-day demo sample.'}
+                    {!isDemo
+                      ? 'No observations match this view. Check the source status above, enable Earth & activity, clear search or widen the window. An empty result does not mean no earthquakes occurred.'
+                      : !selectedCategories.length
+                        ? 'Enable a layer to explore the simulated events.'
+                        : query.trim()
+                          ? `No examples match “${query.trim()}” with these layers and this time window. This is a small invented sample, not evidence of no activity.`
+                          : 'No examples in this time window. Try the full seven-day demo sample.'}
                   </p>
                   <div className="empty-actions">
                     {!selectedCategories.length && (
@@ -496,7 +562,11 @@ export default function App() {
             </div>
             <div className="feed-footer">
               <span className="status-dot" />
-              Local fixtures · No live connection
+              {isDemo
+                ? 'Local fixtures · No live connection'
+                : earthquakes.snapshot
+                  ? 'USGS / ANSS · Estimates subject to revision'
+                  : 'USGS · No data loaded'}
             </div>
           </section>
         </div>
@@ -516,6 +586,7 @@ export default function App() {
           key={detailEvent.id}
           event={detailEvent}
           onShowOnMap={() => showOnMap(detailEvent.id)}
+          stale={earthquakes.stale}
           onClose={closeEvent}
         />
       )}
@@ -544,22 +615,25 @@ export default function App() {
             An honest starting point.
           </h2>
           <p>
-            GOSIP is a free global event explorer. This Phase 1 prototype
-            contains 18 invented events across five categories. They are not
-            reports of real activity.
+            GOSIP is a free global event explorer. Choose USGS earthquake
+            observations or 18 invented examples across five categories.
+            Simulated examples are never mixed with real observations.
           </p>
           <h3>Transparent by design</h3>
           <p>
-            Time filters use a fixed snapshot: 8 October 2026 at 16:00 UTC.
-            Every marker is approximate, every event is synthetic, and an empty
-            region does not mean nothing is happening there.
+            Demo time is fixed at 8 October 2026, 16:00 UTC. USGS filters use
+            the current device clock. Earthquake locations and magnitudes are
+            estimates that may change; provider review does not verify impacts.
+            An empty region does not mean nothing is happening there.
           </p>
           <h3>Local. Free. Account-free.</h3>
           <p>
-            The map, events, and interface are served locally. There are no
-            external data requests, analytics, paid services, or live feeds. If
-            the interactive map cannot render, a static map and the full event
-            feed remain available.
+            The map and interface are local. Selecting USGS sends a direct,
+            credential-free request to earthquake.usgs.gov; that provider
+            receives the usual connection information, including your IP
+            address. No analytics, billing, or account is used. Refresh is
+            manual and bounded. If the feed fails, explicitly choose the
+            simulated fallback. Static map and list access remain available.
           </p>
           <p className="muted text-sm">
             Base geography:{' '}

@@ -28,6 +28,33 @@ export interface DemoEvent {
   coverage_note: string
 }
 
+export interface EarthquakeEvent extends Omit<
+  DemoEvent,
+  'published_at' | 'status' | 'is_demo' | 'freshness'
+> {
+  is_demo: false
+  status: string | null
+  freshness: 'retrieved'
+  provider_id: string
+  source_url: string
+  network: string | null
+  provider_code: string | null
+  updated_at: string | null
+  feed_generated_at: string
+  magnitude: number | null
+  magnitude_type: string | null
+  depth_km: number | null
+}
+export type ExplorerEvent = DemoEvent | EarthquakeEvent
+export const eventBadge = (event: ExplorerEvent) =>
+  event.is_demo
+    ? 'SIMULATED'
+    : event.status === 'deleted'
+      ? 'WITHDRAWN · USGS'
+      : 'OBSERVATION · USGS'
+export const markerLabel = (event: ExplorerEvent) =>
+  `${event.is_demo ? 'Simulated' : 'USGS observation'}: ${event.title}, ${event.country || event.region}`
+
 type Seed = [Category, string, string, string, number, number, number, string]
 const seeds: Seed[] = [
   [
@@ -304,34 +331,38 @@ export interface EventProvider {
 export const demoProvider: EventProvider = { getEvents: () => demoEvents }
 
 export function filterEvents(
-  events: readonly DemoEvent[],
+  events: readonly ExplorerEvent[],
   query: string,
   selected: readonly Category[],
   hours: WindowHours,
-): DemoEvent[] {
+  referenceTime = DEMO_TIME,
+): ExplorerEvent[] {
   const q = query.trim().toLocaleLowerCase()
-  const cutoff = DEMO_TIME - hours * 3_600_000
+  const cutoff = referenceTime - hours * 3_600_000
   return events
     .filter(
       (e) =>
         selected.includes(e.category) &&
         Date.parse(e.occurred_at) >= cutoff &&
-        Date.parse(e.occurred_at) <= DEMO_TIME &&
+        Date.parse(e.occurred_at) <= referenceTime &&
         `${e.title} ${e.summary} ${e.region} ${e.country} ${categories[e.category].label}`
           .toLocaleLowerCase()
           .includes(q),
     )
     .sort((a, b) => Date.parse(b.occurred_at) - Date.parse(a.occurred_at))
 }
-export function demoAge(iso: string): string {
-  const minutes = Math.round((DEMO_TIME - Date.parse(iso)) / 60_000)
+export function demoAge(iso: string, referenceTime = DEMO_TIME): string {
+  const minutes = Math.max(
+    0,
+    Math.round((referenceTime - Date.parse(iso)) / 60_000),
+  )
   return minutes < 60
     ? `${minutes}m`
     : minutes < 1440
       ? `${Math.floor(minutes / 60)}h`
       : `${Math.floor(minutes / 1440)}d`
 }
-export function formatTimestamp(iso: string): string {
+export function formatTimestamp(iso: string | number): string {
   return (
     new Intl.DateTimeFormat('en-GB', {
       day: '2-digit',

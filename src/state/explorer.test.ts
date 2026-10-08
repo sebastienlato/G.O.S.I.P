@@ -24,6 +24,7 @@ describe('shareable explorer filters', () => {
         ['science', 'civic'] as const,
       ]) {
         const state = {
+          source: 'usgs' as const,
           query: 'South Africa & ocean',
           hours,
           selectedCategories: [...selectedCategories],

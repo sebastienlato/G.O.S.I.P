@@ -1,7 +1,7 @@
 {
   "name": "gosip",
   "version": "0.1.0",
-  "description": "Free, local-first global event explorer — simulated Phase 1 explorer",
+  "description": "Free, local-first global event explorer — USGS earthquakes and separate simulations",
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
