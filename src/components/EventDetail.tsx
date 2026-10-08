@@ -5,9 +5,11 @@ import { categories, formatTimestamp, type DemoEvent } from '../data/events'
 export default function EventDetail({
   event,
   onClose,
+  onShowOnMap,
 }: {
   event: DemoEvent
   onClose: () => void
+  onShowOnMap: () => void
 }) {
   const dialog = useRef<HTMLDialogElement>(null)
   useEffect(() => {
@@ -96,6 +98,9 @@ export default function EventDetail({
           {event.coverage_note} Coordinates are illustrative, not measured. No
           confidence estimate applies to synthetic content.
         </p>
+        <button className="show-on-map" onClick={onShowOnMap}>
+          <MapPin size={16} /> Show on map
+        </button>
         <div className="detail-footer">
           <CircleCheck size={15} /> Free to explore. No account required.
         </div>

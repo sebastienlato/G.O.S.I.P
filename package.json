@@ -1,7 +1,7 @@
 {
   "name": "gosip",
   "version": "0.1.0",
-  "description": "Free, local-first global event explorer — simulated Phase 0 prototype",
+  "description": "Free, local-first global event explorer — simulated Phase 1 explorer",
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",

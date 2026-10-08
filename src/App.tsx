@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   Activity,
   ArrowDown,
@@ -8,7 +8,7 @@ import {
   Compass,
   Globe2,
   Info,
-  Layers3,
+  Link,
   List,
   Map,
   Search,
@@ -17,6 +17,8 @@ import {
   X,
 } from 'lucide-react'
 import WorldMap from './components/WorldMap'
+import { categoryKeys } from './state/explorer'
+import { useExplorerFilters } from './state/useExplorerFilters'
 import EventDetail from './components/EventDetail'
 import {
   categories,
@@ -27,7 +29,6 @@ import {
   type WindowHours,
 } from './data/events'
 
-const categoryKeys = Object.keys(categories) as Category[]
 const allEvents = demoProvider.getEvents()
 const timeOptions: { value: WindowHours; label: string }[] = [
   { value: 6, label: '6 hours' },
@@ -37,35 +38,82 @@ const timeOptions: { value: WindowHours; label: string }[] = [
 ]
 
 export default function App() {
-  const [query, setQuery] = useState('')
-  const [selectedCategories, setSelectedCategories] =
-    useState<Category[]>(categoryKeys)
-  const [hours, setHours] = useState<WindowHours>(24)
+  const [{ query, selectedCategories, hours, view, mapMode }, updateFilters] =
+    useExplorerFilters()
   const [selectedId, setSelectedId] = useState<string | null>(null)
-  const [view, setView] = useState<'map' | 'list'>('map')
+  const [detailId, setDetailId] = useState<string | null>(null)
+  const [focusRequest, setFocusRequest] = useState<{
+    id: string
+    sequence: number
+  } | null>(null)
+  const [shareMessage, setShareMessage] = useState('')
+  const [manualLink, setManualLink] = useState('')
   const about = useRef<HTMLDialogElement>(null)
+  const search = useRef<HTMLInputElement>(null)
+  const mapRegion = useRef<HTMLDivElement>(null)
   const events = useMemo(
     () => filterEvents(allEvents, query, selectedCategories, hours),
     [query, selectedCategories, hours],
   )
   const selectedEvent = events.find((e) => e.id === selectedId)
-  const selectEvent = useCallback((id: string) => setSelectedId(id), [])
-  const closeEvent = useCallback(() => setSelectedId(null), [])
-  const reset = () => {
-    setQuery('')
-    setSelectedCategories(categoryKeys)
-    setHours(24)
-  }
+  const detailEvent = events.find((e) => e.id === detailId)
+  const selectEvent = useCallback((id: string) => {
+    setSelectedId(id)
+    setFocusRequest(null)
+    setDetailId(id)
+  }, [])
+  const closeEvent = useCallback(() => setDetailId(null), [])
+  useEffect(() => {
+    if (selectedId && !events.some((event) => event.id === selectedId)) {
+      setSelectedId(null)
+      setDetailId(null)
+      setFocusRequest(null)
+    }
+  }, [events, selectedId])
+  useEffect(() => {
+    setShareMessage('')
+    setManualLink('')
+  }, [query, selectedCategories, hours, view, mapMode])
+  const reset = () =>
+    updateFilters({ query: '', selectedCategories: categoryKeys, hours: 24 })
   const isFiltered =
     query.trim() !== '' ||
     selectedCategories.length !== categoryKeys.length ||
     hours !== 24
   function toggleCategory(category: Category) {
-    setSelectedCategories((current) =>
-      current.includes(category)
-        ? current.filter((c) => c !== category)
-        : [...current, category],
-    )
+    updateFilters({
+      selectedCategories: selectedCategories.includes(category)
+        ? selectedCategories.filter((c) => c !== category)
+        : [...selectedCategories, category],
+    })
+  }
+  function showOnMap(id: string) {
+    setDetailId(null)
+    updateFilters({ view: 'map' })
+    setFocusRequest((previous) => ({
+      id,
+      sequence: (previous?.sequence ?? 0) + 1,
+    }))
+    // Wait until dialog cleanup has restored focus and the map region is mounted.
+    requestAnimationFrame(() => {
+      mapRegion.current?.focus({ preventScroll: true })
+      mapRegion.current?.scrollIntoView({ block: 'nearest' })
+    })
+  }
+  function showInFeed() {
+    const card = document.getElementById(`card-${selectedId}`)
+    card?.focus({ preventScroll: true })
+    card?.scrollIntoView({ block: 'nearest' })
+  }
+  async function shareFilters() {
+    const url = window.location.href
+    try {
+      await navigator.clipboard.writeText(url)
+      setShareMessage('Link copied. Search text is included; selection is not.')
+    } catch {
+      setManualLink(url)
+      setShareMessage('Copy this link to share the current filters.')
+    }
   }
 
   return (
@@ -148,7 +196,9 @@ export default function App() {
             <button
               className={`category-pill ${selectedCategories.length === categoryKeys.length ? 'active' : ''}`}
               aria-pressed={selectedCategories.length === categoryKeys.length}
-              onClick={() => setSelectedCategories(categoryKeys)}
+              onClick={() =>
+                updateFilters({ selectedCategories: categoryKeys })
+              }
             >
               All events
             </button>
@@ -176,6 +226,133 @@ export default function App() {
           </button>
         </div>
         <div className={`explorer ${view === 'list' ? 'list-view' : ''}`}>
+          <div className="explorer-controls">
+            <div className="map-toolbar">
+              <div className="map-toolbar-title">
+                <Globe2 size={15} />
+                <span>WORLD OVERVIEW</span>
+                <span className="separator">/</span>
+                <span>{events.length} signals</span>
+              </div>
+              <div className="view-switch" aria-label="Explorer view">
+                <button
+                  className={view === 'map' ? 'active' : ''}
+                  aria-pressed={view === 'map'}
+                  onClick={() => updateFilters({ view: 'map' })}
+                >
+                  <Map size={14} />
+                  Map
+                </button>
+                <button
+                  className={view === 'list' ? 'active' : ''}
+                  aria-pressed={view === 'list'}
+                  onClick={() => updateFilters({ view: 'list' })}
+                >
+                  <List size={14} />
+                  List
+                </button>
+              </div>
+            </div>
+            <div className="time-panel">
+              <div className="time-label">
+                <Clock3 size={17} />
+                <div>
+                  <strong>Time window</strong>
+                  <span>Before the demo snapshot</span>
+                </div>
+              </div>
+              <div className="time-options" aria-label="Time window">
+                {timeOptions.map((option) => (
+                  <button
+                    key={option.value}
+                    className={hours === option.value ? 'active' : ''}
+                    aria-pressed={hours === option.value}
+                    onClick={() => updateFilters({ hours: option.value })}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+              <div className="time-snapshot">
+                <span className="status-dot" />
+                Fixed snapshot
+              </div>
+            </div>
+            <div className="filter-summary">
+              <p>
+                {selectedCategories.length} of 5 layers ·{' '}
+                {timeOptions.find((option) => option.value === hours)?.label}{' '}
+                before snapshot{query.trim() ? ` · “${query.trim()}”` : ''}
+              </p>
+              <button onClick={() => void shareFilters()}>
+                <Link size={14} /> Copy view link
+              </button>
+              <a className="feed-jump" href="#event-feed">
+                Jump to results ↓
+              </a>
+              <span aria-live="polite">{shareMessage}</span>
+              {manualLink && (
+                <input
+                  aria-label="Shareable view link"
+                  readOnly
+                  value={manualLink}
+                  onFocus={(e) => e.target.select()}
+                />
+              )}
+            </div>
+            {selectedEvent && (
+              <div className="selection-context" aria-label="Selected event">
+                <div>
+                  <span className="eyebrow">SELECTED · SIMULATED</span>
+                  <strong>{selectedEvent.title}</strong>
+                  <p>
+                    {selectedEvent.region} · {selectedEvent.country} ·
+                    Approximate location
+                  </p>
+                </div>
+                <div className="selection-actions">
+                  <button onClick={() => setDetailId(selectedEvent.id)}>
+                    Read details
+                  </button>
+                  <button onClick={() => showOnMap(selectedEvent.id)}>
+                    Show on map
+                  </button>
+                  <button onClick={showInFeed}>Find in feed</button>
+                  <button
+                    aria-label="Clear selection"
+                    onClick={() => {
+                      showInFeed()
+                      setSelectedId(null)
+                      setFocusRequest(null)
+                    }}
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+          {view === 'map' && (
+            <div
+              className="map-column"
+              ref={mapRegion}
+              tabIndex={-1}
+              aria-label="Map and selected event"
+            >
+              <WorldMap
+                events={events}
+                selectedId={selectedEvent?.id ?? null}
+                onSelect={selectEvent}
+                focusRequest={focusRequest}
+                staticView={mapMode === 'static'}
+                onModeChange={(staticView) =>
+                  updateFilters({
+                    mapMode: staticView ? 'static' : 'interactive',
+                  })
+                }
+              />
+            </div>
+          )}
           <section
             id="event-feed"
             tabIndex={-1}
@@ -197,19 +374,31 @@ export default function App() {
               <input
                 aria-label="Search events"
                 placeholder="Search events, regions, countries…"
+                ref={search}
+                aria-describedby="search-help"
                 value={query}
-                onChange={(e) => setQuery(e.target.value)}
+                onChange={(e) => updateFilters({ query: e.target.value }, true)}
                 maxLength={200}
               />
               {query && (
-                <button aria-label="Clear search" onClick={() => setQuery('')}>
+                <button
+                  aria-label="Clear search"
+                  onClick={() => {
+                    updateFilters({ query: '' }, true)
+                    search.current?.focus()
+                  }}
+                >
                   <X size={15} />
                 </button>
               )}
             </div>
+            <p id="search-help" className="search-help">
+              Search titles, descriptions, regions and countries.
+            </p>
             <div className="feed-meta">
               <span aria-live="polite" role="status">
-                {events.length} simulated events
+                {events.length} simulated{' '}
+                {events.length === 1 ? 'event' : 'events'}
               </span>
               <span>
                 Most recent <ArrowDown size={12} />
@@ -219,6 +408,8 @@ export default function App() {
               {events.map((event) => (
                 <button
                   className={`event-card ${event.id === selectedId ? 'is-selected' : ''}`}
+                  id={`card-${event.id}`}
+                  aria-current={event.id === selectedId ? 'true' : undefined}
                   key={event.id}
                   onClick={() => selectEvent(event.id)}
                   aria-label={`View ${event.title}`}
@@ -261,12 +452,45 @@ export default function App() {
               {!events.length && (
                 <div className="empty-state">
                   <Search size={30} />
-                  <h3>No matching signals</h3>
+                  <h3>
+                    {selectedCategories.length
+                      ? 'No matching signals'
+                      : 'All layers are off'}
+                  </h3>
                   <p>
-                    Try another place or keyword, enable more layers, or widen
-                    the time window.
+                    {!selectedCategories.length
+                      ? 'Enable a layer to explore the simulated events.'
+                      : query.trim()
+                        ? `No examples match “${query.trim()}” with these layers and this time window. This is a small invented sample, not evidence of no activity.`
+                        : 'No examples in this time window. Try the full seven-day demo sample.'}
                   </p>
-                  <button onClick={reset}>Reset filters</button>
+                  <div className="empty-actions">
+                    {!selectedCategories.length && (
+                      <button
+                        onClick={() =>
+                          updateFilters({ selectedCategories: categoryKeys })
+                        }
+                      >
+                        Enable all layers
+                      </button>
+                    )}
+                    {query && (
+                      <button
+                        onClick={() => {
+                          updateFilters({ query: '' }, true)
+                          search.current?.focus()
+                        }}
+                      >
+                        Clear search
+                      </button>
+                    )}
+                    {hours !== 168 && (
+                      <button onClick={() => updateFilters({ hours: 168 })}>
+                        Explore 7 days
+                      </button>
+                    )}
+                    <button onClick={reset}>Reset filters</button>
+                  </div>
                 </div>
               )}
             </div>
@@ -275,78 +499,6 @@ export default function App() {
               Local fixtures · No live connection
             </div>
           </section>
-          <div className="map-column">
-            <div className="map-toolbar">
-              <div className="map-toolbar-title">
-                <Globe2 size={15} />
-                <span>WORLD OVERVIEW</span>
-                <span className="separator">/</span>
-                <span>{events.length} signals</span>
-              </div>
-              <div className="view-switch" aria-label="Explorer view">
-                <button
-                  className={view === 'map' ? 'active' : ''}
-                  aria-pressed={view === 'map'}
-                  onClick={() => setView('map')}
-                >
-                  <Map size={14} />
-                  Map
-                </button>
-                <button
-                  className={view === 'list' ? 'active' : ''}
-                  aria-pressed={view === 'list'}
-                  onClick={() => setView('list')}
-                >
-                  <List size={14} />
-                  List
-                </button>
-              </div>
-            </div>
-            {view === 'map' ? (
-              <WorldMap
-                events={events}
-                selectedId={selectedId}
-                onSelect={selectEvent}
-              />
-            ) : (
-              <div className="list-context">
-                <Layers3 size={32} />
-                <h2>The world, one story at a time.</h2>
-                <p>
-                  The feed shows every matching event. Select a story to explore
-                  its context and provenance.
-                </p>
-                <button onClick={() => setView('map')}>
-                  Return to map <ArrowUpRight size={15} />
-                </button>
-              </div>
-            )}
-            <div className="time-panel">
-              <div className="time-label">
-                <Clock3 size={17} />
-                <div>
-                  <strong>Time window</strong>
-                  <span>Before the demo snapshot</span>
-                </div>
-              </div>
-              <div className="time-options" aria-label="Time window">
-                {timeOptions.map((option) => (
-                  <button
-                    key={option.value}
-                    className={hours === option.value ? 'active' : ''}
-                    aria-pressed={hours === option.value}
-                    onClick={() => setHours(option.value)}
-                  >
-                    {option.label}
-                  </button>
-                ))}
-              </div>
-              <div className="time-snapshot">
-                <span className="status-dot" />
-                Fixed snapshot
-              </div>
-            </div>
-          </div>
         </div>
         <footer className="page-footer">
           <p>
@@ -359,10 +511,11 @@ export default function App() {
           </span>
         </footer>
       </main>
-      {selectedEvent && (
+      {detailEvent && (
         <EventDetail
-          key={selectedEvent.id}
-          event={selectedEvent}
+          key={detailEvent.id}
+          event={detailEvent}
+          onShowOnMap={() => showOnMap(detailEvent.id)}
           onClose={closeEvent}
         />
       )}
@@ -391,7 +544,7 @@ export default function App() {
             An honest starting point.
           </h2>
           <p>
-            GOSIP is a free global event explorer. This Phase 0 prototype
+            GOSIP is a free global event explorer. This Phase 1 prototype
             contains 18 invented events across five categories. They are not
             reports of real activity.
           </p>

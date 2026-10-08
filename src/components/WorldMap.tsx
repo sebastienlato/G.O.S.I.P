@@ -2,24 +2,37 @@ import { useEffect, useRef, useState } from 'react'
 import type { Map as MapInstance, Marker } from 'maplibre-gl'
 import { Globe2, Minus, Plus, RotateCcw } from 'lucide-react'
 import { categories, type DemoEvent } from '../data/events'
-import 'maplibre-gl/dist/maplibre-gl.css'
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url'
 
 type Props = {
   events: DemoEvent[]
   selectedId: string | null
   onSelect: (id: string) => void
+  focusRequest: { id: string; sequence: number } | null
+  staticView: boolean
+  onModeChange: (staticView: boolean) => void
 }
 type MapState = 'loading' | 'ready' | 'fallback'
 const overviewZoom = (width: number) =>
   Math.min(1.2, Math.log2(Math.max(width, 280) / 512) - 0.12)
 
-export default function WorldMap({ events, selectedId, onSelect }: Props) {
+export default function WorldMap({
+  events,
+  selectedId,
+  onSelect,
+  focusRequest,
+  staticView,
+  onModeChange,
+}: Props) {
   const container = useRef<HTMLDivElement>(null)
   const map = useRef<MapInstance | null>(null)
   const markers = useRef<Marker[]>([])
   const [state, setState] = useState<MapState>('loading')
-  const [staticView, setStaticView] = useState(false)
+  const currentEvents = useRef(events)
+  currentEvents.current = events
+  const selected = useRef(selectedId)
+  selected.current = selectedId
+  const selectedEvent = events.find((event) => event.id === selectedId)
 
   useEffect(() => {
     if (staticView || !container.current) return
@@ -33,8 +46,11 @@ export default function WorldMap({ events, selectedId, onSelect }: Props) {
     }
     const timeout = window.setTimeout(fail, 12000)
     setState('loading')
-    void import('maplibre-gl')
-      .then(({ Map, setWorkerUrl }) => {
+    void Promise.all([
+      import('maplibre-gl'),
+      import('maplibre-gl/dist/maplibre-gl.css'),
+    ])
+      .then(([{ Map, setWorkerUrl }]) => {
         if (disposed || !container.current) return
         // Vite relocates the main module; explicitly bundle its adjacent worker.
         setWorkerUrl(workerUrl)
@@ -48,6 +64,7 @@ export default function WorldMap({ events, selectedId, onSelect }: Props) {
           attributionControl: false,
           dragRotate: false,
           pitchWithRotate: false,
+          cooperativeGestures: true,
           style: {
             version: 8,
             sources: {
@@ -125,7 +142,11 @@ export default function WorldMap({ events, selectedId, onSelect }: Props) {
           'aria-label',
           `Simulated: ${event.title}, ${event.country}`,
         )
-        button.setAttribute('aria-pressed', 'false')
+        button.classList.toggle('selected', event.id === selected.current)
+        button.setAttribute(
+          'aria-pressed',
+          String(event.id === selected.current),
+        )
         button.title = `${event.title} · SIMULATED`
         button.addEventListener('click', (clickEvent) => {
           clickEvent.stopPropagation()
@@ -155,6 +176,26 @@ export default function WorldMap({ events, selectedId, onSelect }: Props) {
       element.setAttribute('aria-pressed', String(selected))
     })
   }, [selectedId])
+
+  useEffect(() => {
+    if (!focusRequest || staticView || state !== 'ready' || !map.current) return
+    const event = currentEvents.current.find(
+      (event) => event.id === focusRequest.id,
+    )
+    if (event) {
+      // A wider viewport needs a closer regional view to keep eastern/western
+      // markers away from the camera's single-world longitude constraint.
+      const width = container.current?.clientWidth ?? 800
+      const edgeDegrees = Math.max(1, 180 - Math.abs(event.coordinates[0]))
+      const zoom = Math.min(
+        5,
+        Math.max(2, Math.log2((width * 180) / (512 * edgeDegrees)) + 0.1),
+      )
+      map.current.jumpTo({ center: event.coordinates, zoom })
+    }
+    // Only an explicit request (or newly ready map) changes the camera.
+    // Filtering must not take over a camera the reader has moved themselves.
+  }, [focusRequest, state, staticView])
 
   const useFallback = staticView || state !== 'ready'
   return (
@@ -193,12 +234,17 @@ export default function WorldMap({ events, selectedId, onSelect }: Props) {
         </div>
       )}
       <div className="map-heading">
-        <span className="eyebrow">A WORLD IN CONTEXT</span>
+        <span className="eyebrow">
+          {selectedEvent ? 'SELECTED · SIMULATED' : 'A WORLD IN CONTEXT'}
+        </span>
         <h2>
-          Every signal.
-          <br />A wider perspective.
+          {selectedEvent ? selectedEvent.country : 'Explore the signals.'}
         </h2>
-        <p>Explore the world. Understand the source.</p>
+        <p>
+          {selectedEvent
+            ? `${selectedEvent.region} · Approximate location`
+            : 'Choose a marker or explore the event feed.'}
+        </p>
       </div>
       <div className="map-controls">
         <button
@@ -242,7 +288,7 @@ export default function WorldMap({ events, selectedId, onSelect }: Props) {
         <button
           className="map-switch"
           aria-pressed={staticView}
-          onClick={() => setStaticView((v) => !v)}
+          onClick={() => onModeChange(!staticView)}
         >
           {staticView ? 'Use interactive map' : 'Use static map'}
         </button>
