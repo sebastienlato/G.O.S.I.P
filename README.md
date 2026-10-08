@@ -1,6 +1,6 @@
 # G.O.S.I.P. — Global Open Source Intelligence Platform
 
-A free, local-first global event explorer. **Phase 3 adds bounded earthquake caching and refresh coordination alongside a separate, explicitly SIMULATED demo.** This is a prototype, not an emergency or impact assessment service.
+A free, local-first global event explorer. **Phase 4 adds a small live NWS weather forecast view and separate synthetic fire exploration, alongside cached USGS earthquakes and the original demo.** This is a prototype, not an emergency or impact assessment service.
 
 ## Run locally
 
@@ -14,6 +14,10 @@ npm run dev
 Open the loopback URL printed by Vite (normally http://127.0.0.1:5173). No credentials, account, backend, or environment file is needed.
 
 ## Explore
+
+- **NWS weather · New York** (`?source=nws`): one forecast grid cell near Lower Manhattan, not global weather. Periods show temperature/unit, precipitation chance, wind and unaltered forecast text. Windows look **forward** for overlapping validity intervals, with soonest periods first; expired periods disappear. Update, generation, retrieval and validity times stay distinct. These are predictions, not measurements, official alerts or confirmed impacts. One map marker represents the selected or earliest period; use the feed to explore all periods.
+- Weather loads once on first eligible selection, then refreshes manually no more than hourly in this page. Two requests resolve the current grid and load its forecast; 12 seconds total, 100 KB per response, maximum 32 periods. Missing values remain missing; invalid periods are counted, all-invalid/oversized responses fail. A failed refresh retains prior data as stale; success replaces it. Six-hour staleness is measured from the oldest provider/retrieval time. Weather is **memory only**: no saved cache, reload/tab coordination or automatic retries. Offline/hidden attempts pause; reconnect requires manual refresh.
+- **Fire examples · simulated** (`?source=fire-demo`): four separate original sensor scenarios with invented radiative power (MW), brightness temperature (K) and detection confidence labels. They explain clouds, overpass gaps, industrial heat and why a hot pixel does not establish wildfire perimeter, burned area or impact. Broad locations and all values are explicitly synthetic. Fixed demo clock; 24h = 2 examples, 7d = 4. No NASA feed, account or API key is used.
 
 - Choose **USGS earthquakes** for the M2.5+ past-week observation feed. The first selection restores a validated saved snapshot, or requests it once when online, visible and outside cooldown; refresh/retry is manual. Restored snapshots are explicitly labeled cached with their original timestamps, even when stale. Map, list, search, time windows, selection, keyboard details and explicit “Show on map” / “Find in feed” work with observations.
 - Source details show occurrence, provider update, feed generation and retrieval times, provider ID/network/code, review status, magnitude/type and depth. Missing values remain “Not supplied.” Estimates and provider review do not establish damage, casualties or verified impacts.
@@ -35,12 +39,12 @@ Open the loopback URL printed by Vite (normally http://127.0.0.1:5173). No crede
 | `npm run typecheck` | Strict TypeScript checking |
 | `npm run build` | Typecheck and production bundle |
 | `npm run preview` | Loopback production preview |
-| `npm test` | 57 focused cache/refresh/parser/provider/filter/URL tests |
-| `npm run test:e2e` | Build, fresh preview on port 4173, 44 desktop/mobile Chromium checks |
+| `npm test` | 83 focused environment/cache/refresh/parser/provider/filter/URL tests |
+| `npm run test:e2e` | Build, fresh preview on port 4173, 58 desktop/mobile Chromium checks |
 | `npm run format:check` / `npm run format` | Check / apply source formatting |
 | `npm run data:map` | Rebuild committed local geography |
 
-Browser tests need Chromium: `PLAYWRIGHT_SKIP_BROWSER_GC=1 npx playwright install chromium`. Port 4173 must be available. Tests intercept the earthquake endpoint with invented test-only responses; no check depends on live feed availability. Coverage includes success, malformed/network failure, explicit fallback/retry, stale/retained data, corrections/removal, missing values, current versus demo time, map selection, URL/history, mobile reflow, keyboard access, and map-free list/static entry. Phase 2 and Phase 3 screenshots in `docs/screenshots/` show mocked test responses, not actual earthquakes.
+Browser tests need Chromium: `PLAYWRIGHT_SKIP_BROWSER_GC=1 npx playwright install chromium`. Port 4173 must be available. Tests intercept earthquake and weather endpoints with invented test-only responses; no check depends on live feed availability. Coverage includes success, malformed/network failure, explicit fallback/retry, stale/retained data, corrections/removal, missing values, current versus demo time, map selection, URL/history, mobile reflow, keyboard access, and map-free list/static entry. Screenshots in `docs/screenshots/` show mocked QA responses or labeled synthetic examples, never evidence of actual conditions. Phase 4 includes desktop/mobile weather lists and fire detail views.
 
 ## Structure
 
@@ -48,6 +52,7 @@ React 19.3, TypeScript 7.0, Vite 8.3, Tailwind 4.3 and MapLibre 6.13; dependency
 
 - `src/data/events.ts`: discriminated demo/observation contract, unchanged demo parser/fixtures and filtering.
 - `src/data/usgs.ts`: bounded USGS parser/provider, stream size limit, timeout, deduplication and cadence.
+- `src/data/weather.ts`, `fire.ts`: bounded NWS forecast adapter and separate validated thermal simulations.
 - `src/state/`: source-aware URL/history, versioned local cache, shared refresh store and loading/freshness.
 - `src/components/`: source panel, accessible details, map lifecycle/fallback.
 - `public/`: bundled Natural Earth geography and notices.
@@ -55,9 +60,9 @@ React 19.3, TypeScript 7.0, Vite 8.3, Tailwind 4.3 and MapLibre 6.13; dependency
 
 ## $0 and provenance
 
-Public core access remains free and account-free. **No billing, paid service, hosting, trial, API key or account is used.** Selecting USGS makes a direct credential-free HTTPS request to `earthquake.usgs.gov`, which receives usual connection information including the visitor's IP. No analytics, external fonts or map tiles. Demo-only exploration makes no external requests; following source links leaves the app.
+Public core access remains free and account-free. **No billing, paid service, hosting, trial, API key or account is used.** Selecting USGS makes a direct credential-free HTTPS request to `earthquake.usgs.gov`, which receives usual connection information including the visitor's IP. Selecting NWS similarly requests `api.weather.gov` directly; no weather imagery or external icons are downloaded. No analytics, external fonts or map tiles. Demo-only exploration makes no external requests; following source links leaves the app.
 
-USGS scientific data are published at no cost. Source-specific attribution, use/redistribution basis, coverage, cadence and rate limits are recorded in [DATA_POLICY](docs/DATA_POLICY.md). Feed requests have a 12-second timeout, 2 MB body limit and 2,000-record envelope limit; no silent truncation. At least 60 seconds between attempts, with 5-minute fallback backoff on HTTP 429 and longer exposed Retry-After respected. Cooldowns and last failure persist separately from the snapshot across reloads/tabs when storage works. No polling or automatic retry. Provider service limits are not an unlimited-traffic guarantee. Future scale must use bounded caching/throttling or disable the layer; never upgrade to a paid service.
+NWS forecast use is independently scoped and documented in [DATA_POLICY](docs/DATA_POLICY.md); this does not extend USGS permissions to other products. Weather limits are local per page, not a global traffic allowance. USGS scientific data are published at no cost. Source-specific attribution, use/redistribution basis, coverage, cadence and rate limits are recorded in [DATA_POLICY](docs/DATA_POLICY.md). Feed requests have a 12-second timeout, 2 MB body limit and 2,000-record envelope limit; no silent truncation. At least 60 seconds between attempts, with 5-minute fallback backoff on HTTP 429 and longer exposed Retry-After respected. Cooldowns and last failure persist separately from the snapshot across reloads/tabs when storage works. No polling or automatic retry. Provider service limits are not an unlimited-traffic guarantee. Future scale must use bounded caching/throttling or disable the layer; never upgrade to a paid service.
 
 Base geography is public-domain [Natural Earth](https://www.naturalearthdata.com/about/terms-of-use/), via world-atlas 2.0.2 (Natural Earth 4.1.0, 1:110m), with local notices. Historical generalized boundaries are illustrative. Software remains `UNLICENSED` pending the owner's Apache-2.0 decision.
 
@@ -65,6 +70,8 @@ Base geography is public-domain [Natural Earth](https://www.naturalearthdata.com
 
 No backend, deployment, automatic ingestion, service worker or offline cold-start guarantee. The loaded snapshot remains usable during network loss, but the application assets still need to load before a saved snapshot can be read. Cache is per origin/browser profile, can be evicted by the browser, and is not authenticated historical evidence. Returning to a loaded/cached USGS view requires manual refresh to check for changes. Device clock accuracy affects live windows. Regional detection/reporting gaps, provider corrections and overlapping markers remain. No clustering, Safari/Firefox or screen-reader audit.
 
-Initial app JS is ~273 KB / 87 KB gzip, app CSS ~28 KB / 7 KB gzip. Interactive-only MapLibre is ~1.08 MB / 289 KB gzip plus a ~508 KB worker and ~83 KB CSS. Its documented chunk warning is non-failing; list/static entry avoids those downloads.
+Initial app JS is ~287 KB / 91 KB gzip, app CSS ~28 KB / 7 KB gzip. Interactive-only MapLibre is ~1.08 MB / 289 KB gzip plus a ~508 KB worker and ~83 KB CSS. Its documented chunk warning is non-failing; list/static entry avoids those downloads.
 
-Phase 3 stops here. Continue in a fresh chat using `prompts/NEXT_PHASE_KICKOFF.md` for the environment phase. Local `main` tracks the owner-authorized [G.O.S.I.P. repository](https://github.com/sebastienlato/G.O.S.I.P).
+Weather covers one New York grid cell only; live fires, weather alerts, weather persistence and global weather coverage are not implemented.
+
+Phase 4 stops here. Continue in a fresh chat using `prompts/NEXT_PHASE_KICKOFF.md` for Phase 5 global reports. Local `main` tracks the owner-authorized [G.O.S.I.P. repository](https://github.com/sebastienlato/G.O.S.I.P).

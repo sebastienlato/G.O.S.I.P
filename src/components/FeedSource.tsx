@@ -1,9 +1,10 @@
+import type { Source } from '../state/explorer'
 import { formatTimestamp } from '../data/events'
 import { COVERAGE, type EarthquakeSnapshot } from '../data/usgs'
 
 type Props = {
-  source: 'demo' | 'usgs'
-  onChange: (source: 'demo' | 'usgs') => void
+  source: Source
+  onChange: (source: Source) => void
   snapshot: EarthquakeSnapshot | null
   loading: boolean
   error: string
@@ -51,6 +52,20 @@ export default function FeedSource({
             onClick={() => onChange('usgs')}
           >
             USGS earthquakes
+          </button>
+          <button
+            aria-pressed={source === 'nws'}
+            className={source === 'nws' ? 'active' : ''}
+            onClick={() => onChange('nws')}
+          >
+            NWS weather · New York
+          </button>
+          <button
+            aria-pressed={source === 'fire-demo'}
+            className={source === 'fire-demo' ? 'active' : ''}
+            onClick={() => onChange('fire-demo')}
+          >
+            Fire examples · simulated
           </button>
         </div>
       </div>

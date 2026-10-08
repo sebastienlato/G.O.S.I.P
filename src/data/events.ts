@@ -1,3 +1,5 @@
+import { isForecast, type ForecastEvent } from './weather'
+import type { ThermalEvent } from './fire'
 export const categories = {
   environment: { label: 'Environment', color: '#addc8d' },
   physical: { label: 'Earth & activity', color: '#f3b67c' },
@@ -45,15 +47,18 @@ export interface EarthquakeEvent extends Omit<
   magnitude_type: string | null
   depth_km: number | null
 }
-export type ExplorerEvent = DemoEvent | EarthquakeEvent
+export type ExplorerEvent =
+  DemoEvent | EarthquakeEvent | ForecastEvent | ThermalEvent
 export const eventBadge = (event: ExplorerEvent) =>
   event.is_demo
     ? 'SIMULATED'
-    : event.status === 'deleted'
-      ? 'WITHDRAWN · USGS'
-      : 'OBSERVATION · USGS'
+    : isForecast(event)
+      ? 'FORECAST · NWS'
+      : event.status === 'deleted'
+        ? 'WITHDRAWN · USGS'
+        : 'OBSERVATION · USGS'
 export const markerLabel = (event: ExplorerEvent) =>
-  `${event.is_demo ? 'Simulated' : 'USGS observation'}: ${event.title}, ${event.country || event.region}`
+  `${event.is_demo ? 'Simulated' : isForecast(event) ? 'NWS forecast' : 'USGS observation'}: ${event.title}, ${event.country || event.region}`
 
 type Seed = [Category, string, string, string, number, number, number, string]
 const seeds: Seed[] = [
@@ -343,13 +348,20 @@ export function filterEvents(
     .filter(
       (e) =>
         selected.includes(e.category) &&
-        Date.parse(e.occurred_at) >= cutoff &&
-        Date.parse(e.occurred_at) <= referenceTime &&
+        (isForecast(e)
+          ? Date.parse(e.valid_until) > referenceTime &&
+            Date.parse(e.occurred_at) < referenceTime + hours * 3_600_000
+          : Date.parse(e.occurred_at) >= cutoff &&
+            Date.parse(e.occurred_at) <= referenceTime) &&
         `${e.title} ${e.summary} ${e.region} ${e.country} ${categories[e.category].label}`
           .toLocaleLowerCase()
           .includes(q),
     )
-    .sort((a, b) => Date.parse(b.occurred_at) - Date.parse(a.occurred_at))
+    .sort((a, b) =>
+      isForecast(a) && isForecast(b)
+        ? Date.parse(a.occurred_at) - Date.parse(b.occurred_at)
+        : Date.parse(b.occurred_at) - Date.parse(a.occurred_at),
+    )
 }
 export function demoAge(iso: string, referenceTime = DEMO_TIME): string {
   const minutes = Math.max(
@@ -374,3 +386,10 @@ export function formatTimestamp(iso: string | number): string {
     }).format(new Date(iso)) + ' UTC'
   )
 }
+
+export const locationMeaning = (event: ExplorerEvent) =>
+  event.is_demo
+    ? 'Approximate location'
+    : isForecast(event)
+      ? 'Forecast location'
+      : 'Estimated epicentre'

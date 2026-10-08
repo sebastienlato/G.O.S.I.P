@@ -1,3 +1,7 @@
+import EnvironmentSource from './components/EnvironmentSource'
+import { useWeather } from './state/useWeather'
+import { isForecast } from './data/weather'
+import { fireExamples } from './data/fire'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   Activity,
@@ -26,6 +30,7 @@ import {
   categories,
   DEMO_TIME,
   eventBadge,
+  locationMeaning,
   formatTimestamp,
   type ExplorerEvent,
   demoAge,
@@ -50,17 +55,29 @@ export default function App() {
     updateFilters,
   ] = useExplorerFilters()
   const earthquakes = useEarthquakes(source === 'usgs')
-  const isDemo = source === 'demo'
-  const availableCategories: Category[] = isDemo ? categoryKeys : ['physical']
+  const weather = useWeather(source === 'nws')
+  const isDemo = source === 'demo' || source === 'fire-demo'
+  const availableCategories: Category[] =
+    source === 'demo'
+      ? categoryKeys
+      : source === 'usgs'
+        ? ['physical']
+        : ['environment']
   const activeCategoryCount = availableCategories.filter((key) =>
     selectedCategories.includes(key),
   ).length
-  const allEvents = isDemo
-    ? demoEvents
-    : (earthquakes.snapshot?.events ?? noEvents)
+  const allEvents =
+    source === 'demo'
+      ? demoEvents
+      : source === 'fire-demo'
+        ? fireExamples
+        : source === 'nws'
+          ? (weather.snapshot?.events ?? noEvents)
+          : (earthquakes.snapshot?.events ?? noEvents)
   const referenceTime = isDemo
     ? DEMO_TIME
-    : Math.floor(earthquakes.now / 60_000) * 60_000
+    : Math.floor((source === 'nws' ? weather.now : earthquakes.now) / 60_000) *
+      60_000
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [detailId, setDetailId] = useState<string | null>(null)
   const [focusRequest, setFocusRequest] = useState<{
@@ -78,6 +95,15 @@ export default function App() {
     [allEvents, query, selectedCategories, hours, referenceTime],
   )
   const selectedEvent = events.find((e) => e.id === selectedId)
+  const mapEvents = useMemo(
+    () =>
+      source === 'nws'
+        ? selectedEvent
+          ? [selectedEvent]
+          : events.slice(0, 1)
+        : events,
+    [source, selectedEvent, events],
+  )
   const detailEvent = events.find((e) => e.id === detailId)
   const selectEvent = useCallback((id: string) => {
     setSelectedId(id)
@@ -213,6 +239,17 @@ export default function App() {
           }}
           {...earthquakes}
         />
+        <EnvironmentSource
+          source={source}
+          weather={weather}
+          fallback={() =>
+            updateFilters({
+              source: 'fire-demo',
+              query: '',
+              selectedCategories: categoryKeys,
+            })
+          }
+        />
         {isDemo && (
           <div className="demo-banner">
             <span className="demo-badge">
@@ -305,7 +342,9 @@ export default function App() {
                   <span>
                     {isDemo
                       ? 'Before the demo snapshot'
-                      : 'Before the current clock'}
+                      : source === 'nws'
+                        ? 'Forecast valid in the next…'
+                        : 'Before the current clock'}
                   </span>
                 </div>
               </div>
@@ -330,7 +369,11 @@ export default function App() {
               <p>
                 {activeCategoryCount} of {availableCategories.length} layers ·{' '}
                 {timeOptions.find((option) => option.value === hours)?.label}{' '}
-                {isDemo ? 'before snapshot' : 'before now'}
+                {isDemo
+                  ? 'before snapshot'
+                  : source === 'nws'
+                    ? 'ahead · overlapping periods'
+                    : 'before now'}
                 {query.trim() ? ` · “${query.trim()}”` : ''}
               </p>
               <button onClick={() => void shareFilters()}>
@@ -361,7 +404,7 @@ export default function App() {
                     {selectedEvent.country
                       ? ` · ${selectedEvent.country}`
                       : ''}{' '}
-                    · {isDemo ? 'Approximate location' : 'Estimated epicentre'}
+                    · {locationMeaning(selectedEvent)}
                   </p>
                 </div>
                 <div className="selection-actions">
@@ -394,7 +437,7 @@ export default function App() {
               aria-label="Map and selected event"
             >
               <WorldMap
-                events={events}
+                events={mapEvents}
                 selectedId={selectedEvent?.id ?? null}
                 onSelect={selectEvent}
                 focusRequest={focusRequest}
@@ -451,11 +494,17 @@ export default function App() {
             </p>
             <div className="feed-meta">
               <span aria-live="polite" role="status">
-                {events.length} {isDemo ? 'simulated' : 'USGS'}{' '}
+                {events.length}{' '}
+                {isDemo
+                  ? 'simulated'
+                  : source === 'nws'
+                    ? 'NWS forecast'
+                    : 'USGS'}{' '}
                 {events.length === 1 ? 'event' : 'events'}
               </span>
               <span>
-                Most recent <ArrowDown size={12} />
+                {source === 'nws' ? 'Soonest first' : 'Most recent'}{' '}
+                <ArrowDown size={12} />
               </span>
             </div>
             <div className="event-cards">
@@ -482,13 +531,16 @@ export default function App() {
                     <span
                       className="event-age"
                       title={
-                        isDemo
-                          ? 'Before the fixed demo snapshot'
-                          : 'Before the current clock'
+                        source === 'nws'
+                          ? 'Forecast validity start (UTC)'
+                          : isDemo
+                            ? 'Before the fixed demo snapshot'
+                            : 'Before the current clock'
                       }
                     >
-                      {demoAge(event.occurred_at, referenceTime)}{' '}
-                      {isDemo ? 'before snapshot' : 'ago'}
+                      {isForecast(event)
+                        ? `Valid from ${formatTimestamp(event.occurred_at)}`
+                        : `${demoAge(event.occurred_at, referenceTime)} ${isDemo ? 'before snapshot' : 'ago'}`}
                     </span>
                   </div>
                   <h3>
@@ -504,6 +556,19 @@ export default function App() {
                       </>
                     )}
                   </p>
+                  {isForecast(event) && (
+                    <p className="environment-readout">
+                      {event.temperature == null
+                        ? 'Temperature not supplied'
+                        : `${event.temperature} °${event.temperature_unit}`}{' '}
+                      ·{' '}
+                      {event.precipitation_percent == null
+                        ? 'Precipitation chance not supplied'
+                        : `${event.precipitation_percent}% precipitation chance`}
+                      <br />
+                      Valid until {formatTimestamp(event.valid_until)}
+                    </p>
+                  )}
                   <div className="card-bottom">
                     <span>{eventBadge(event)}</span>
                     <span>
@@ -522,13 +587,15 @@ export default function App() {
                       : 'All layers are off'}
                   </h3>
                   <p>
-                    {!isDemo
-                      ? 'No observations match this view. Check the source status above, enable Earth & activity, clear search or widen the window. An empty result does not mean no earthquakes occurred.'
-                      : !selectedCategories.length
-                        ? 'Enable a layer to explore the simulated events.'
-                        : query.trim()
-                          ? `No examples match “${query.trim()}” with these layers and this time window. This is a small invented sample, not evidence of no activity.`
-                          : 'No examples in this time window. Try the full seven-day demo sample.'}
+                    {source === 'nws'
+                      ? 'No forecast periods overlap this view. Check source status, enable Environment, clear search or widen the future window. This is not evidence of safe weather.'
+                      : !isDemo
+                        ? 'No observations match this view. Check the source status above, enable Earth & activity, clear search or widen the window. An empty result does not mean no earthquakes occurred.'
+                        : !selectedCategories.length
+                          ? 'Enable a layer to explore the simulated events.'
+                          : query.trim()
+                            ? `No examples match “${query.trim()}” with these layers and this time window. This is a small invented sample, not evidence of no activity.`
+                            : 'No examples in this time window. Try the full seven-day demo sample.'}
                   </p>
                   <div className="empty-actions">
                     {!selectedCategories.length && (
@@ -564,9 +631,11 @@ export default function App() {
               <span className="status-dot" />
               {isDemo
                 ? 'Local fixtures · No live connection'
-                : earthquakes.snapshot
-                  ? 'USGS / ANSS · Estimates subject to revision'
-                  : 'USGS · No data loaded'}
+                : source === 'nws'
+                  ? 'NWS · Predictions, not observations or alerts'
+                  : earthquakes.snapshot
+                    ? 'USGS / ANSS · Estimates subject to revision'
+                    : 'USGS · No data loaded'}
             </div>
           </section>
         </div>
@@ -586,7 +655,7 @@ export default function App() {
           key={detailEvent.id}
           event={detailEvent}
           onShowOnMap={() => showOnMap(detailEvent.id)}
-          stale={earthquakes.stale}
+          stale={source === 'nws' ? weather.stale : earthquakes.stale}
           onClose={closeEvent}
         />
       )}
@@ -616,8 +685,9 @@ export default function App() {
           </h2>
           <p>
             GOSIP is a free global event explorer. Choose USGS earthquake
-            observations or 18 invented examples across five categories.
-            Simulated examples are never mixed with real observations.
+            observations, New York NWS forecasts, four synthetic fire examples
+            or 18 invented examples across five categories. Simulated examples
+            are never mixed with real observations.
           </p>
           <h3>Transparent by design</h3>
           <p>
@@ -628,8 +698,11 @@ export default function App() {
           </p>
           <h3>Local. Free. Account-free.</h3>
           <p>
-            The map and interface are local. Selecting USGS reuses a saved
-            snapshot or sends a direct, credential-free request to
+            The map and interface are local. Selecting NWS makes two bounded
+            requests to api.weather.gov, which receives your IP address; weather
+            is held only in memory with manual hourly refresh. Forecast windows
+            look forward; earthquake windows look back. Selecting USGS reuses a
+            saved snapshot or sends a direct, credential-free request to
             earthquake.usgs.gov; that provider receives the usual connection
             information, including your IP address. No analytics, billing, or
             account is used. Refresh is manual and bounded. One validated

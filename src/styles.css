@@ -1649,3 +1649,19 @@ dialog::backdrop {
 .selection-context {
   overflow-wrap: anywhere;
 }
+
+.environment-source {
+  margin-top: -8px;
+}
+.source-status {
+  min-width: 0;
+}
+.event-age {
+  overflow-wrap: anywhere;
+}
+
+.event-card .environment-readout {
+  color: #cbdcc4;
+  line-height: 1.7;
+  margin: 8px 0;
+}

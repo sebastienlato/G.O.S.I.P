@@ -1,3 +1,4 @@
+import { locationMeaning } from '../data/events'
 import { useEffect, useRef, useState } from 'react'
 import type { Map as MapInstance, Marker } from 'maplibre-gl'
 import { Globe2, Minus, Plus, RotateCcw } from 'lucide-react'
@@ -248,7 +249,7 @@ export default function WorldMap({
         </h2>
         <p>
           {selectedEvent
-            ? `${selectedEvent.region} · ${selectedEvent.is_demo ? 'Approximate location' : 'Estimated epicentre'}`
+            ? `${selectedEvent.region} · ${locationMeaning(selectedEvent)}`
             : 'Choose a marker or explore the event feed.'}
         </p>
       </div>
