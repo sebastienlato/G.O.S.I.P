@@ -1786,3 +1786,150 @@ dialog::backdrop {
   margin-top: 10px;
   line-height: 1.6;
 }
+
+/* Local timestamp exploration and supplied place context. */
+.history-panel {
+  margin: 20px 0;
+  padding: 22px;
+  border: 1px solid var(--border, #303b3b);
+  border-radius: 12px;
+  background: #151e20;
+}
+.history-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.history-heading h2 {
+  margin: 6px 0 12px;
+  font-size: 20px;
+}
+.history-mode {
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: #b5d99e;
+  border: 1px solid #445242;
+  padding: 7px 10px;
+  border-radius: 5px;
+}
+.history-clock {
+  font-size: 13px;
+  margin: 8px 0;
+}
+.history-range,
+.history-endpoints,
+.scrub-label {
+  font-size: 12px;
+  color: #b9c6c4;
+}
+.scrub-label {
+  display: block;
+  margin-top: 18px;
+}
+.history-panel input[type='range'] {
+  width: 100%;
+  accent-color: #b5d99e;
+  min-height: 36px;
+  cursor: pointer;
+}
+.history-endpoints {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+.history-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 16px 0;
+}
+.history-actions button,
+.place-controls button,
+.relationship-card button {
+  padding: 10px 13px;
+  min-height: 42px;
+  border: 1px solid #465552;
+  background: #202d2d;
+  border-radius: 6px;
+  font-size: 12px;
+  text-align: left;
+}
+.history-panel button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.history-note {
+  font-size: 12px;
+  line-height: 1.7;
+  color: #a9b9b6;
+  margin: 12px 0 0;
+  overflow-wrap: anywhere;
+}
+.place-controls {
+  display: flex;
+  align-items: end;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px solid #34413f;
+}
+.place-controls label {
+  display: flex;
+  flex: 1 1 200px;
+  min-width: 0;
+  flex-direction: column;
+  gap: 7px;
+  font-size: 12px;
+}
+.place-controls select {
+  width: 100%;
+  min-width: 0;
+  color: #e2eae7;
+  background: #202b2d;
+  border: 1px solid #465552;
+  border-radius: 6px;
+  padding: 10px;
+  min-height: 42px;
+}
+.relationships {
+  border-top: 1px solid #34413f;
+  margin-top: 24px;
+  padding-top: 6px;
+}
+.relationship-card {
+  padding: 16px;
+  margin: 12px 0;
+  background: #202b2d;
+  border: 1px solid #465552;
+  border-radius: 8px;
+  overflow-wrap: anywhere;
+}
+.relationship-card strong {
+  color: #b5d99e;
+  font-size: 13px;
+}
+.relationship-card p {
+  font-size: 13px;
+  line-height: 1.7;
+}
+.relationship-card button {
+  margin-top: 12px;
+  width: 100%;
+}
+@media (max-width: 600px) {
+  .history-panel {
+    padding: 16px;
+  }
+  .history-actions button {
+    flex: 1 1 40%;
+  }
+  .history-range {
+    line-height: 1.8;
+  }
+  .place-controls label {
+    flex-basis: 100%;
+  }
+}

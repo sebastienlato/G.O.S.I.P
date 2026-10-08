@@ -27,9 +27,9 @@ export default function DigitalSource({
         <p>{DIGITAL_COVERAGE}</p>
         <p>
           Explore reachability and web-test scenarios. Windows include
-          measurement intervals overlapping the time before the fixed demo
-          snapshot, ordered by interval end. Every number is invented; no
-          provider data is loaded.
+          measurement intervals overlapping the time before the selected fixture
+          clock (snapshot or playback cursor), ordered by interval end. Every
+          number is invented; no provider data is loaded.
         </p>
         <details>
           <summary>Coverage, privacy & source research</summary>

@@ -1,6 +1,6 @@
 # G.O.S.I.P. — Global Open Source Intelligence Platform
 
-A free, local-first global event explorer. **Phase 6 adds digital-world exploration: six explicit simulations of internet reachability and censorship measurements, with sample coverage and uncertainty.** Cached USGS earthquakes, NWS New York forecasts and separate environment/original demos remain available. This is a prototype, not an emergency or impact assessment service.
+A free, local-first global event explorer. **Phase 7 adds simulated timeline playback, supplied country/region filters and evidence-backed fixture relationships.** Cached USGS earthquakes, NWS New York forecasts and separate environment/original demos remain available. This is a prototype, not an emergency or impact assessment service.
 
 ## Run locally
 
@@ -14,6 +14,12 @@ npm run dev
 Open the loopback URL printed by Vite (normally http://127.0.0.1:5173). No credentials, account, backend, or environment file is needed.
 
 ## Explore
+
+- **Time & place:** scrub the simulation clock hourly across 1–8 October 2026, step six hours, or play six-hour increments every 1.2 seconds. Playback stops at the fixed snapshot, on hidden pages/history navigation, source/place/window changes, and opening details. Reduced motion disables automatic playback; stepping and keyboard slider controls remain available. Return to snapshot restores the original counts.
+- Playback explores occurrence, report publication or overlapping digital intervals in the **latest fixtures**, not what was known at an earlier time. Corrections and full interval totals remain visible; intervals extending after the cursor are explicitly labeled. Visible UTC cursor/range and source coverage explain this limit. USGS week/cache snapshots and current NWS predictions have no historical playback; their live clocks and manual refresh remain unchanged.
+- Country and region filters match **exact supplied labels**, including country not supplied/withheld. No reverse geocoding, inferred country/nationality or nationwide impact. A broad region can exist without a country; unknown/withheld coordinates remain feed-only. Filters apply together; clear place filters or Reset to recover empty views.
+- Details now expose **Evidence & relationships**: the report’s supplied correction is one version relationship; two GOSIP-authored digital teaching comparisons explain measured drop versus near-baseline/missing samples. Each comparison identifies its fixture evidence and author and opens the related example, explicitly resetting to the full seven-day snapshot. No inferred real-event links, causal claims, recovery claims or independent corroboration. Records without supplied links say so; completeness is not claimed.
+- Shared links add canonical hourly `at=<ISO UTC>`, `country=<supplied label>` (`~unknown` for missing country) and `region=<supplied label>`. Cursors are simulation-only, bounded to seven days; place text is bounded to 300 characters with control/directional characters rejected. Steps and discrete filters push history; scrub/play ticks replace it. Source switches reset cursor/place filters, retaining window/view. Selection and actual snapshots are never shared.
 
 - **Digital world · simulated** (`?source=digital-demo`): six original scenarios covering reachability drops, web-test anomalies, missing samples, an incomplete summary and samples without anomalies. Filter by **Outage signals / Censorship measurements** and sample result; search method, result, fictional ASN, region or country. Filters survive shared links, reload and Back/Forward. No live digital feed is connected.
 - Digital windows overlap measurement intervals before the fixed **2026-10-08 16:00 UTC** fixture clock, sorted by interval end: 6h = 1 / 24h = 3 / 3d = 4 / 7d = 6. Publication/update/retrieval are distinct from measurement time. Details show synthetic responding-block values and prior-day baseline, or anomalous tests and their denominator, with missing samples and absent values explicit. Tests are not people; a signal is not a confirmed outage or intentional censorship. No cause, actor, affected-user estimate or independent corroboration is claimed.
@@ -37,7 +43,7 @@ Open the loopback URL printed by Vite (normally http://127.0.0.1:5173). No crede
 - Interactive MapLibre map, persistent selection, regional focus and cooperative touch gestures; a local clickable SVG fallback when WebGL/map loading fails. Markers are estimates; overlapping markers can be explored in the full feed. Country search for USGS depends on provider place text; no country is inferred.
 - Full-width list mode, mobile controls and one page scroll, targeted empty-state recovery, native detail dialogs with focus return. Direct `?view=list` or `?map=static` avoids interactive map JS/CSS/worker/GeoJSON downloads. Add `source=usgs` to either for observations.
 
-“Copy view link” preserves validated source, search, layers, window, report language/correction and digital family/result filters, map/list and static-map preferences. Typing replaces history; other changes push; Back/Forward restores. Selection/camera/data are not shared. Unknown parameters are removed, categories are whitelisted and search is capped at 200 characters. Clipboard failure exposes a manual copy field. Localhost links require the app at that address.
+“Copy view link” preserves validated source, simulation cursor, country/region, search, layers, window, report language/correction and digital family/result filters, map/list and static-map preferences. Typing replaces history; other changes push; Back/Forward restores. Selection/camera/data are not shared. Unknown parameters are removed, categories are whitelisted and search is capped at 200 characters. Clipboard failure exposes a manual copy field. Localhost links require the app at that address.
 
 ## Commands and checks
 
@@ -47,13 +53,13 @@ Open the loopback URL printed by Vite (normally http://127.0.0.1:5173). No crede
 | `npm run typecheck` | Strict TypeScript checking |
 | `npm run build` | Typecheck and production bundle |
 | `npm run preview` | Loopback production preview |
-| `npm test` | 124 focused digital/report/environment/cache/refresh/parser/provider/filter/URL tests |
-| `npm run test:e2e` | Build, fresh preview on port 4173, 78 desktop/mobile Chromium checks |
+| `npm test` | 135 focused history/relationship/place/digital/report/environment/cache/refresh/parser/provider/filter/URL tests |
+| `npm run test:e2e` | Build, fresh preview on port 4173, 94 desktop/mobile Chromium checks |
 | `npm run format:check` / `npm run format` | Check / apply source formatting |
 | `npm run data:reports` | Rebuild bundled original report source documents |
 | `npm run data:map` | Rebuild committed local geography |
 
-Browser tests need Chromium: `PLAYWRIGHT_SKIP_BROWSER_GC=1 npx playwright install chromium`. Port 4173 must be available. Tests intercept earthquake and weather endpoints with invented test-only responses; no check depends on live feed availability. Coverage includes success, malformed/network failure, explicit fallback/retry, stale/retained data, corrections/removal, missing values, current versus demo time, map selection, URL/history, mobile reflow, keyboard access, and map-free list/static entry. Screenshots in `docs/screenshots/` show mocked QA responses or labeled synthetic examples, never evidence of actual conditions. Phase 6 screenshots show desktop/mobile digital lists, details and maps. Tests also cover digital interval boundaries, null positions, sample denominators, safe schema rejection, URL/history, keyboard focus, 320px offline reflow and zero external/map-engine requests for list/static entries. Original report documents remain consistency-checked against fixtures.
+Browser tests need Chromium: `PLAYWRIGHT_SKIP_BROWSER_GC=1 npx playwright install chromium`. Port 4173 must be available. Tests intercept earthquake and weather endpoints with invented test-only responses; no check depends on live feed availability. Coverage includes success, malformed/network failure, explicit fallback/retry, stale/retained data, corrections/removal, missing values, current versus demo time, map selection, URL/history, mobile reflow, keyboard access, and map-free list/static entry. Screenshots in `docs/screenshots/` show mocked QA responses or labeled synthetic examples, never evidence of actual conditions. Phase 6 screenshots show desktop/mobile digital lists, details and maps. Tests also cover digital interval boundaries, null positions, sample denominators, safe schema rejection, URL/history, keyboard focus, 320px offline reflow and zero external/map-engine requests for list/static entries. Original report documents remain consistency-checked against fixtures. Phase 7 screenshots show timeline, relationship evidence and 320px list/static exploration; browser checks cover timer bounds/cleanup, reduced motion, keyboard scrubbing, URL/history, supplied/unknown place contexts, relationship navigation and current-source isolation.
 
 ## Structure
 
@@ -64,6 +70,7 @@ React 19.3, TypeScript 7.0, Vite 8.3, Tailwind 4.3 and MapLibre 6.13; dependency
 - `src/data/weather.ts`, `fire.ts`: bounded NWS forecast adapter and separate validated thermal simulations.
 - `src/data/digital.ts`, `digitalExamples.json`: bounded fixture-only measurement schema, interval semantics, nullable sample counts/baselines/locations and digital filters. No live-source adapter.
 - `src/data/reports.ts`, `reportExamples.json`: bounded original report fixtures, nullable locations/times, language/translation metadata and one supplied correction. `public/reports/` contains their generated plain-text originals.
+- `src/data/history.ts`, `relationships.json`: bounded simulation cursors, exact supplied place filters and validated authored comparison references. `HistoryControls` and `Relationships` present controls and evidence without a new feed or cache.
 - `src/state/`: source-aware URL/history, versioned local cache, shared refresh store and loading/freshness.
 - `src/components/`: source panel, accessible details, map lifecycle/fallback.
 - `public/`: bundled Natural Earth geography and notices.
@@ -81,10 +88,10 @@ Base geography is public-domain [Natural Earth](https://www.naturalearthdata.com
 
 No backend, deployment, automatic ingestion, service worker or offline cold-start guarantee. The loaded snapshot remains usable during network loss, but the application assets still need to load before a saved snapshot can be read. Cache is per origin/browser profile, can be evicted by the browser, and is not authenticated historical evidence. Returning to a loaded/cached USGS view requires manual refresh to check for changes. Device clock accuracy affects live windows. Regional detection/reporting gaps, provider corrections and overlapping markers remain. No clustering, Safari/Firefox or screen-reader audit.
 
-Initial app JS is ~328 KB / 101 KB gzip, app CSS ~31 KB / 8 KB gzip. Interactive-only MapLibre is ~1.08 MB / 289 KB gzip plus a ~508 KB worker and ~83 KB CSS. Its documented chunk warning is non-failing; list/static entry avoids those downloads.
+Initial app JS is ~339 KB / 104 KB gzip, app CSS ~33 KB / 8 KB gzip. Interactive-only MapLibre is ~1.08 MB / 289 KB gzip plus a ~508 KB worker and ~83 KB CSS. Its documented chunk warning is non-failing; list/static entry avoids those downloads.
 
 Weather covers one New York grid cell only; live fires, weather alerts, weather persistence and global weather coverage are not implemented.
 
 Digital-world content is entirely synthetic; no live outage/censorship coverage or historical archive is claimed.
 
-Phase 6 stops here. Continue in a fresh chat using `prompts/NEXT_PHASE_KICKOFF.md` for Phase 7 history, regional exploration and evidence-backed relationships. Local `main` tracks the owner-authorized [G.O.S.I.P. repository](https://github.com/sebastienlato/G.O.S.I.P).
+Phase 7 stops here. Continue in a fresh chat using `prompts/NEXT_PHASE_KICKOFF.md` for Phase 8 additional layers (space, aviation and maritime where free/legal feasible). Local `main` tracks the owner-authorized [G.O.S.I.P. repository](https://github.com/sebastienlato/G.O.S.I.P).

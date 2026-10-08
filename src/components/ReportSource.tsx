@@ -29,10 +29,10 @@ export default function ReportSource({
           read-only. No account, request, cache or translation service is used.
         </p>
         <p>
-          Windows use scenario publication time before the fixed demo snapshot.
-          Original text stays in its source language; translations appear only
-          when supplied in the fixture. Each original link opens a local
-          plain-text fixture, not a real publisher.
+          Windows use scenario publication time before the selected fixture
+          clock (snapshot or playback cursor). Original text stays in its source
+          language; translations appear only when supplied in the fixture. Each
+          original link opens a local plain-text fixture, not a real publisher.
         </p>
         <div className="report-filters">
           <label>

@@ -1,0 +1,18 @@
+[
+  {
+    "id": "reachability-contrast",
+    "from": "digital-demo-drop",
+    "to": "digital-demo-baseline",
+    "kind": "teaching-comparison",
+    "evidence": "Authored comparison of two active-probing fixtures: the drop example supplies 40 responsive blocks against a baseline of 100; the near-baseline example supplies 98 against 100. These are different invented samples, not a before/after sequence or evidence of recovery.",
+    "author": "GOSIP fixture authors"
+  },
+  {
+    "id": "sample-gap-contrast",
+    "from": "digital-demo-drop",
+    "to": "digital-demo-gap",
+    "kind": "teaching-comparison",
+    "evidence": "Authored comparison of an invented measured drop with an interval containing zero returned samples. The missing interval supplies no signal value or baseline and cannot establish an outage or recovery. No shared network or location is asserted.",
+    "author": "GOSIP fixture authors"
+  }
+]

@@ -1,3 +1,4 @@
+import Relationships from './Relationships'
 import { isDigital } from '../data/digital'
 import DigitalBody from './DigitalBody'
 import { isReport } from '../data/reports'
@@ -12,8 +13,12 @@ export default function EventDetail({
   stale,
   onClose,
   onShowOnMap,
+  onExploreRelated,
+  playback,
 }: {
   event: ExplorerEvent
+  playback: boolean
+  onExploreRelated: (id: string) => void
   stale: boolean
   onClose: () => void
   onShowOnMap: () => void
@@ -105,6 +110,13 @@ export default function EventDetail({
                     : 'Provider estimate subject to revision. Review status concerns source parameters, not verified damage, casualties or an emergency alert.'}
           </span>
         </div>
+        {playback && (
+          <p className="report-label">
+            SIMULATED PLAYBACK · Latest fixture content, including later
+            corrections and full interval totals. Not a record of what was known
+            at the cursor.
+          </p>
+        )}
         <>
           {digital ? (
             <DigitalBody event={event} />
@@ -273,6 +285,7 @@ export default function EventDetail({
             </>
           )}
         </>
+        <Relationships event={event} onExplore={onExploreRelated} />
         {event.coordinates ? (
           <button className="show-on-map" onClick={onShowOnMap}>
             <MapPin size={16} /> Show on map

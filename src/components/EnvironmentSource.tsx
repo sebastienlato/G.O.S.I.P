@@ -21,9 +21,9 @@ export default function EnvironmentSource({
           <strong>SIMULATED · Fire & thermal anomalies</strong>
           <p>{FIRE_NOTE}</p>
           <p>
-            Four original examples · fixed 08 Oct 2026, 16:00 UTC clock · broad
-            illustrative locations. All sensor values and confidence labels are
-            invented. No live fire feed is connected.
+            Four original examples · fixture snapshot 08 Oct 2026, 16:00 UTC ·
+            broad illustrative locations. All sensor values and confidence
+            labels are invented. No live fire feed is connected.
           </p>
           <p>
             NASA FIRMS area API requires a key; no account or key was created.{' '}

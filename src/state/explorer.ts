@@ -1,3 +1,4 @@
+import { parseCursor, parsePlace, supportsPlayback } from '../data/history'
 import {
   digitalFamilies,
   digitalResults,
@@ -12,6 +13,9 @@ export type Source =
   'demo' | 'usgs' | 'nws' | 'fire-demo' | 'reports-demo' | 'digital-demo'
 export interface ExplorerFilters {
   source: Source
+  cursor: number | null
+  country: string
+  region: string
   digitalFamily: DigitalFamily | 'all'
   digitalResult: DigitalResult | 'all'
   language: ReportLanguage | 'all'
@@ -24,6 +28,9 @@ export interface ExplorerFilters {
 }
 export const defaultFilters: ExplorerFilters = {
   source: 'demo',
+  cursor: null,
+  country: '',
+  region: '',
   digitalFamily: 'all',
   digitalResult: 'all',
   query: '',
@@ -47,6 +54,11 @@ export function parseFilters(search: string): ExplorerFilters {
     : categoryKeys
   const hours = params.get('hours')
   return {
+    cursor: supportsPlayback(params.get('source') ?? 'demo')
+      ? parseCursor(params.get('at'))
+      : null,
+    country: parsePlace(params.get('country')),
+    region: parsePlace(params.get('region')),
     source: [
       'usgs',
       'nws',
@@ -91,6 +103,10 @@ export function parseFilters(search: string): ExplorerFilters {
 
 export function serializeFilters(filters: ExplorerFilters): string {
   const params = new URLSearchParams()
+  if (supportsPlayback(filters.source) && filters.cursor !== null)
+    params.set('at', new Date(filters.cursor).toISOString())
+  if (filters.country) params.set('country', filters.country)
+  if (filters.region) params.set('region', filters.region)
   if (filters.source !== 'demo') params.set('source', filters.source)
   if (filters.source === 'digital-demo') {
     if (filters.digitalFamily !== 'all')

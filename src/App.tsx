@@ -1,3 +1,5 @@
+import HistoryControls from './components/HistoryControls'
+import { matchesPlace } from './data/history'
 import {
   isDigital,
   digitalExamples,
@@ -75,6 +77,9 @@ export default function App() {
       reportStatus,
       digitalFamily,
       digitalResult,
+      cursor,
+      country,
+      region,
     },
     updateFilters,
   ] = useExplorerFilters()
@@ -109,7 +114,7 @@ export default function App() {
             ? (weather.snapshot?.events ?? noEvents)
             : (earthquakes.snapshot?.events ?? noEvents)
   const referenceTime = isDemo
-    ? DEMO_TIME
+    ? (cursor ?? DEMO_TIME)
     : Math.floor((source === 'nws' ? weather.now : earthquakes.now) / 60_000) *
       60_000
   const [selectedId, setSelectedId] = useState<string | null>(null)
@@ -126,6 +131,7 @@ export default function App() {
   const events = useMemo(
     () =>
       filterEvents(allEvents, query, selectedCategories, hours, referenceTime)
+        .filter((event) => matchesPlace(event, country, region))
         .filter(
           (event) =>
             !isReport(event) ||
@@ -139,6 +145,8 @@ export default function App() {
         ),
     [
       allEvents,
+      country,
+      region,
       query,
       selectedCategories,
       hours,
@@ -179,6 +187,9 @@ export default function App() {
     setManualLink('')
   }, [
     query,
+    cursor,
+    country,
+    region,
     selectedCategories,
     hours,
     view,
@@ -192,6 +203,9 @@ export default function App() {
   const reset = () =>
     updateFilters({
       query: '',
+      cursor: null,
+      country: '',
+      region: '',
       selectedCategories: categoryKeys,
       hours: 24,
       language: 'all',
@@ -200,6 +214,9 @@ export default function App() {
       digitalResult: 'all',
     })
   const isFiltered =
+    cursor !== null ||
+    country !== '' ||
+    region !== '' ||
     query.trim() !== '' ||
     selectedCategories.length !== categoryKeys.length ||
     hours !== 24 ||
@@ -292,9 +309,15 @@ export default function App() {
           <div className="snapshot">
             <Clock3 size={17} />
             <div>
-              <span>{isDemo ? 'DEMO SNAPSHOT' : 'LIVE VIEW CLOCK'}</span>
+              <span>
+                {isDemo
+                  ? cursor === null
+                    ? 'DEMO SNAPSHOT'
+                    : 'SIMULATED PLAYBACK'
+                  : 'LIVE VIEW CLOCK'}
+              </span>
               <strong>
-                {isDemo ? (
+                {isDemo && cursor === null ? (
                   <>
                     08 OCT 2026 <span className="muted">/</span> 16:00 UTC
                   </>
@@ -364,6 +387,17 @@ export default function App() {
             </button>
           </div>
         )}
+        <HistoryControls
+          key={source}
+          source={source}
+          cursor={cursor}
+          country={country}
+          region={region}
+          hours={hours}
+          events={allEvents}
+          suspended={!!detailId}
+          update={updateFilters}
+        />
         <div className="filter-bar" aria-label="Event filters">
           <div className="filter-label">
             <SlidersHorizontal size={16} />
@@ -456,8 +490,12 @@ export default function App() {
                       ? digital
                         ? 'Measurement intervals overlapping the past…'
                         : reports
-                          ? 'Published before the demo snapshot'
-                          : 'Before the demo snapshot'
+                          ? cursor === null
+                            ? 'Published before the demo snapshot'
+                            : 'Published before the playback cursor'
+                          : cursor === null
+                            ? 'Before the demo snapshot'
+                            : 'Before the playback cursor'
                       : source === 'nws'
                         ? 'Forecast valid in the next…'
                         : 'Before the current clock'}
@@ -478,7 +516,11 @@ export default function App() {
               </div>
               <div className="time-snapshot">
                 <span className="status-dot" />
-                {isDemo ? 'Fixed snapshot' : 'Current time · UTC'}
+                {isDemo
+                  ? cursor === null
+                    ? 'Fixed snapshot'
+                    : 'Simulated cursor · UTC'
+                  : 'Current time · UTC'}
               </div>
             </div>
             <div className="filter-summary">
@@ -487,11 +529,18 @@ export default function App() {
                 {timeOptions.find((option) => option.value === hours)?.label}{' '}
                 {isDemo
                   ? digital
-                    ? 'overlapping intervals before snapshot'
-                    : 'before snapshot'
+                    ? cursor === null
+                      ? 'overlapping intervals before snapshot'
+                      : 'overlapping intervals before cursor'
+                    : cursor === null
+                      ? 'before snapshot'
+                      : 'before cursor'
                   : source === 'nws'
                     ? 'ahead · overlapping periods'
                     : 'before now'}
+                {country &&
+                  ` · Country: ${country === '~unknown' ? 'Not supplied / withheld' : country}`}
+                {region && ` · Region: ${region}`}
                 {query.trim() ? ` · “${query.trim()}”` : ''}
                 {digital &&
                   ` · ${digitalFamily === 'all' ? 'All digital measurements' : digitalFamilies[digitalFamily]} · ${digitalResult === 'all' ? 'All results' : digitalResults[digitalResult]}`}
@@ -673,13 +722,18 @@ export default function App() {
                         source === 'nws'
                           ? 'Forecast validity start (UTC)'
                           : isDemo
-                            ? 'Before the fixed demo snapshot'
+                            ? cursor === null
+                              ? 'Before the fixed demo snapshot'
+                              : 'Relative to the simulated cursor'
                             : 'Before the current clock'
                       }
                     >
                       {isForecast(event)
                         ? `Valid from ${formatTimestamp(event.occurred_at)}`
-                        : `${isDigital(event) ? 'Interval ended ' : isReport(event) ? 'Published ' : ''}${demoAge(eventTime(event), referenceTime)} ${isDemo ? 'before snapshot' : 'ago'}`}
+                        : isDigital(event) &&
+                            Date.parse(event.interval_end) > referenceTime
+                          ? `Interval extends to ${formatTimestamp(event.interval_end)} · full fixture totals`
+                          : `${isDigital(event) ? 'Interval ended ' : isReport(event) ? 'Published ' : ''}${demoAge(eventTime(event), referenceTime)} ${isDemo ? (cursor === null ? 'before snapshot' : 'before cursor') : 'ago'}`}
                     </span>
                   </div>
                   <h3
@@ -778,6 +832,13 @@ export default function App() {
                                 ? `No examples match “${query.trim()}” with these layers and this time window. This is a small invented sample, not evidence of no activity.`
                                 : 'No examples in this time window. Try the full seven-day demo sample.'}
                   </p>
+                  {(country || region || cursor !== null) && (
+                    <p>
+                      Try clearing place filters or returning to the fixture
+                      snapshot. The selected time or supplied location context
+                      may have no records.
+                    </p>
+                  )}
                   <div className="empty-actions">
                     {!selectedCategories.length && (
                       <button
@@ -835,6 +896,24 @@ export default function App() {
         <EventDetail
           key={detailEvent.id}
           event={detailEvent}
+          playback={cursor !== null}
+          onExploreRelated={(id) => {
+            updateFilters({
+              cursor: null,
+              hours: 168,
+              country: '',
+              region: '',
+              query: '',
+              selectedCategories: categoryKeys,
+              digitalFamily: 'all',
+              digitalResult: 'all',
+              language: 'all',
+              reportStatus: 'all',
+            })
+            setSelectedId(id)
+            setDetailId(id)
+            setFocusRequest(null)
+          }}
           onShowOnMap={() => showOnMap(detailEvent.id)}
           stale={source === 'nws' ? weather.stale : earthquakes.stale}
           onClose={closeEvent}
