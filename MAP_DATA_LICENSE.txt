@@ -1,0 +1,9 @@
+Natural Earth 1:110m countries, version 4.1.0, distributed via world-atlas 2.0.2.
+Source: https://github.com/topojson/world-atlas
+Terms reviewed 2026-10-08: https://www.naturalearthdata.com/about/terms-of-use/
+All versions of Natural Earth raster and vector map data are in the public domain.
+Electronic dissemination and modification are permitted without a fee or account.
+Derived files: world.geojson, world.svg. Rebuild with npm run data:map.
+Package notice preserved separately in WORLD_ATLAS_LICENSE.txt.
+This generalized and historical geography is illustrative, not authoritative for borders.
+No remote tile or map service is used. No provider quota, billing account, or runtime fee.
