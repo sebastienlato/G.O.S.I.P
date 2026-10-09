@@ -1,10 +1,7 @@
 import { firmsAvailable } from '../state/explorer'
-import {
-  fireCellSteps,
-  hazardColors,
-  magnitudeSize,
-  magnitudeSteps,
-} from '../state/encoding'
+import { heatGradientCss } from '../state/heat'
+import { hazardColors, magnitudeSize, magnitudeSteps } from '../state/encoding'
+import KindIcon from './KindIcon'
 
 const samples = [3, 4.5, 5.5, 6.5]
 
@@ -21,42 +18,44 @@ export default function MapLegend() {
         <p className="legend-row" aria-label="Earthquake magnitude scale">
           <span className="legend-scale" aria-hidden="true">
             {samples.map((m, i) => (
-              <i
+              <span
                 key={m}
-                style={{
-                  width: magnitudeSize(m),
-                  height: magnitudeSize(m),
-                  background: magnitudeSteps[i].color,
-                }}
-              />
+                className="event-marker kind-quake legend-mark"
+                style={
+                  {
+                    '--marker-color': magnitudeSteps[i].color,
+                    '--size': `${magnitudeSize(m)}px`,
+                  } as React.CSSProperties
+                }
+              >
+                <span />
+              </span>
             ))}
           </span>
-          <span>Quake M2.5 → 6+, fades over 7 d</span>
+          <span>Earthquake M2.5 → 6+, fades over 7 days</span>
         </p>
         <p className="legend-row">
-          <span
-            className="glyph glyph-volcano"
-            style={{ '--mark': hazardColors.volcanoes } as React.CSSProperties}
-            aria-hidden="true"
-          />
+          <span className="legend-badge" aria-hidden="true">
+            <KindIcon kind="volcano" color={hazardColors.volcanoes} size={15} />
+          </span>
           <span>Volcano</span>
-          <span
-            className="glyph glyph-storm"
-            style={
-              { '--mark': hazardColors.severeStorms } as React.CSSProperties
-            }
-            aria-hidden="true"
-          />
+          <span className="legend-badge" aria-hidden="true">
+            <KindIcon
+              kind="storm"
+              color={hazardColors.severeStorms}
+              size={15}
+            />
+          </span>
           <span>Storm</span>
         </p>
         {firmsAvailable && (
-          <p className="legend-row" aria-label="Thermal detections per 2° cell">
-            <span className="legend-heat" aria-hidden="true">
-              {fireCellSteps.map((step) => (
-                <i key={step.label} style={{ background: step.color }} />
-              ))}
-            </span>
-            <span>Thermal detections / 2° cell, 24 h</span>
+          <p className="legend-row" aria-label="Thermal detection density">
+            <span
+              className="legend-heat"
+              aria-hidden="true"
+              style={{ background: heatGradientCss }}
+            />
+            <span>Thermal detections, 24 h (low → high)</span>
           </p>
         )}
       </div>

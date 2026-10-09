@@ -22,11 +22,11 @@ export const magnitudeColor = (magnitude: number | null) =>
     ? '#a9b8bc'
     : [...magnitudeSteps].reverse().find((step) => magnitude >= step.min)!.color
 
-/** Diameter in px: M2.5 ≈ 7px, M4.5 ≈ 15px, M6.5 ≈ 26px, M7.5 ≈ 33px. */
+/** Ring diameter in px: M2.5 ≈ 11px, M4.5 ≈ 19px, M6.5 ≈ 31px, M7.5 ≈ 38px. */
 export const magnitudeSize = (magnitude: number | null) =>
   magnitude === null
-    ? 8
-    : Math.round(Math.min(36, 7 + Math.max(0, magnitude - 2.5) ** 1.3 * 3.2))
+    ? 11
+    : Math.round(Math.min(40, 11 + Math.max(0, magnitude - 2.5) ** 1.3 * 3.4))
 
 export type MarkerKind =
   'news' | 'quake' | 'volcano' | 'storm' | 'warning' | 'fire' | 'example'
@@ -76,7 +76,7 @@ export function encode(
     return {
       kind: volcano ? 'volcano' : 'storm',
       color: volcano ? hazardColors.volcanoes : hazardColors.severeStorms,
-      size: 16,
+      size: 26,
       freshness: Math.max(freshness, 0.7),
       recent: false,
     }
@@ -93,21 +93,11 @@ export function encode(
   return {
     kind: 'example',
     color: categories[event.category].color,
-    size: 13,
+    size: 24,
     freshness: 1,
     recent: false,
   }
 }
-
-/** Thermal detection count per 2° cell → translucent heat on the globe. */
-export const fireCellSteps = [
-  { min: 1, label: '1–9', color: 'rgba(255, 210, 63, 0.32)' },
-  { min: 10, label: '10–99', color: 'rgba(255, 176, 46, 0.5)' },
-  { min: 100, label: '100–999', color: 'rgba(255, 112, 40, 0.62)' },
-  { min: 1000, label: '1,000+', color: 'rgba(255, 58, 48, 0.72)' },
-] as const
-export const fireCellColor = (count: number) =>
-  [...fireCellSteps].reverse().find((step) => count >= step.min)!.color
 
 /** Larger and older markers first so small, fresh ones stay on top. */
 export const drawOrder = (a: Encoding, b: Encoding) =>

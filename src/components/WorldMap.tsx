@@ -1,10 +1,13 @@
 import { assetPath } from '../state/assetPath'
+import { drawOrder, encode, type Encoding } from '../state/encoding'
+import { iconSvg } from '../state/icons'
 import {
-  drawOrder,
-  encode,
-  fireCellColor,
-  type Encoding,
-} from '../state/encoding'
+  buildHeatCanvas,
+  heatAlpha,
+  HEAT_HEIGHT,
+  HEAT_WIDTH,
+} from '../state/heat'
+import KindIcon from './KindIcon'
 import MapLegend from './MapLegend'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type * as CesiumModule from '@cesium/engine'
@@ -105,9 +108,10 @@ type Globe = {
   widget: CesiumModule.CesiumWidget
   overlay: HTMLDivElement
   markers: { el: HTMLButtonElement; cart: CesiumModule.Cartesian3 }[]
-  cells: CesiumModule.GroundPrimitive | null
+  /** FIRMS cell centre "lon,lat" → record id, for picking the heat field. */
+  cells: Map<string, string>
   layers: Partial<
-    Record<'base' | 'night' | 'labels', CesiumModule.ImageryLayer>
+    Record<'base' | 'night' | 'labels' | 'heat', CesiumModule.ImageryLayer>
   >
   tileset: CesiumModule.Cesium3DTileset | null
   stages: Record<'nvg' | 'ir', CesiumModule.PostProcessStage>
@@ -195,13 +199,14 @@ export default function WorldMap({
         const g = scene.globe
         scene.backgroundColor = C.Color.BLACK
         g.baseColor = C.Color.fromCssColorString('#06121a')
-        g.enableLighting = true
-        g.showGroundAtmosphere = true
+        g.enableLighting = false
+        // Limb glow only, no ground haze: imagery and data colours stay vivid.
+        g.showGroundAtmosphere = false
         g.depthTestAgainstTerrain = false
         scene.fog.enabled = true
         if (scene.skyAtmosphere) scene.skyAtmosphere.show = true
         scene.postProcessStages.fxaa.enabled = true
-        // Real sun position: the terminator and night lights follow UTC now.
+        // Keep the scene clock on real UTC (sun/moon/sky positions).
         const tick = () => {
           widget.clock.currentTime = C.JulianDate.fromDate(new Date())
           scene.requestRender()
@@ -250,7 +255,7 @@ export default function WorldMap({
           widget,
           overlay,
           markers: [],
-          cells: null,
+          cells: new Map(),
           layers: {},
           tileset: null,
           stages,
@@ -286,6 +291,15 @@ export default function WorldMap({
             if (current.target) place(reticle.current, current.target)
             else reticle.current.hidden = true
           }
+          const heat = current.layers.heat
+          if (heat) {
+            const alpha = heatAlpha(camera.positionCartographic.height)
+            if (Math.abs(heat.alpha - alpha) > 0.01) {
+              heat.alpha = heat.dayAlpha = alpha
+              heat.nightAlpha = Math.min(1, alpha + 0.08)
+              scene.requestRender()
+            }
+          }
           if (altitude.current) {
             const h = camera.positionCartographic.height
             altitude.current.textContent =
@@ -299,7 +313,17 @@ export default function WorldMap({
         handler.setInputAction((e: { position: CesiumModule.Cartesian2 }) => {
           const picked = scene.pick(e.position)
           const id = picked?.id
-          if (typeof id === 'string') select.current(id)
+          if (typeof id === 'string') return select.current(id)
+          // The heat field is imagery; resolve clicks to the 2° cell beneath.
+          const cart = camera.pickEllipsoid(e.position)
+          const cells = globe.current?.cells
+          if (!cart || !cells?.size) return
+          const c = C.Cartographic.fromCartesian(cart)
+          const cell = (deg: number) => 2 * Math.floor(deg / 2) + 1
+          const hit = cells.get(
+            `${cell(C.Math.toDegrees(c.longitude))},${cell(C.Math.toDegrees(c.latitude))}`,
+          )
+          if (hit) select.current(hit)
         }, C.ScreenSpaceEventType.LEFT_CLICK)
         let frame = 0
         handler.setInputAction(
@@ -388,15 +412,7 @@ export default function WorldMap({
                 'Imagery: Esri, Maxar, Earthstar Geographics and the GIS User Community',
                 19,
               )
-    if (imagery !== 'night') {
-      base.nightAlpha = 0.18
-      const night = gibs('VIIRS_Black_Marble', '2016-01-01', 8, 'png')
-      night.dayAlpha = 0
-      night.nightAlpha = 0.95
-      list.add(base)
-      list.add(night)
-      layers.night = night
-    } else list.add(base)
+    list.add(base)
     layers.base = base
     if (labels) {
       const ref = template(
@@ -408,7 +424,12 @@ export default function WorldMap({
       list.add(ref)
       layers.labels = ref
     }
-    widget.scene.globe.enableLighting = imagery !== 'night'
+    if (layers.heat) {
+      list.raiseToTop(layers.heat)
+      if (layers.labels) list.raiseToTop(layers.labels)
+    }
+    // Evenly lit globe: a hard day/night terminator hid data and imagery.
+    widget.scene.globe.enableLighting = false
     widget.scene.requestRender()
     store('imagery', imagery)
     store('labels', labels ? 'on' : 'off')
@@ -452,52 +473,49 @@ export default function WorldMap({
     store('sensor', sensor)
   }, [sensor, state])
 
-  // Data: thermal cells as translucent ground rectangles, everything else as
-  // accessible DOM markers projected from the globe.
+  // Data: thermal cells as a smooth heat field draped on the globe, every
+  // other record as an accessible DOM marker projected from the globe.
   useEffect(() => {
     const current = globe.current
     if (state !== 'ready' || !current) return
-    const { C, widget, overlay } = current
+    const { C, widget, overlay, layers } = current
     overlay.replaceChildren()
     current.markers = []
-    if (current.cells) {
-      widget.scene.groundPrimitives.remove(current.cells)
-      current.cells = null
+    current.cells = new Map()
+    if (layers.heat) {
+      widget.imageryLayers.remove(layers.heat, true)
+      delete layers.heat
     }
-    const cells = encoded.filter(({ event }) => isFireSummary(event))
+    const cells = encoded.flatMap(({ event }) =>
+      isFireSummary(event)
+        ? [
+            {
+              id: event.id,
+              lon: event.coordinates[0],
+              lat: event.coordinates[1],
+              count: event.detection_count,
+            },
+          ]
+        : [],
+    )
     if (cells.length) {
-      current.cells = widget.scene.groundPrimitives.add(
-        new C.GroundPrimitive({
-          geometryInstances: cells.map(
-            ({ event }) =>
-              new C.GeometryInstance({
-                id: event.id,
-                geometry: new C.RectangleGeometry({
-                  rectangle: C.Rectangle.fromDegrees(
-                    event.coordinates[0] - 1,
-                    event.coordinates[1] - 1,
-                    event.coordinates[0] + 1,
-                    event.coordinates[1] + 1,
-                  ),
-                }),
-                attributes: {
-                  color: C.ColorGeometryInstanceAttribute.fromColor(
-                    C.Color.fromCssColorString(
-                      fireCellColor(
-                        isFireSummary(event) ? event.detection_count : 1,
-                      ),
-                    ),
-                  ),
-                },
-              }),
-          ),
-          appearance: new C.PerInstanceColorAppearance({
-            flat: true,
-            translucent: true,
-          }),
-          classificationType: C.ClassificationType.BOTH,
+      for (const c of cells) current.cells.set(`${c.lon},${c.lat}`, c.id)
+      const heat = new C.ImageryLayer(
+        new C.SingleTileImageryProvider({
+          url: buildHeatCanvas(cells).toDataURL('image/png'),
+          tileWidth: HEAT_WIDTH,
+          tileHeight: HEAT_HEIGHT,
+          rectangle: C.Rectangle.fromDegrees(-180, -90, 180, 90),
+          credit: 'Thermal: NASA FIRMS, aggregated by GOSIP',
         }),
       )
+      heat.alpha = heat.dayAlpha = heatAlpha(
+        widget.camera.positionCartographic.height,
+      )
+      heat.nightAlpha = Math.min(1, heat.alpha + 0.08)
+      widget.imageryLayers.add(heat)
+      if (layers.labels) widget.imageryLayers.raiseToTop(layers.labels)
+      layers.heat = heat
     }
     for (const { event, enc } of encoded) {
       if (isFireSummary(event)) continue
@@ -515,7 +533,10 @@ export default function WorldMap({
         el.focus({ preventScroll: true })
         select.current(event.id)
       })
-      el.append(document.createElement('span'))
+      const mark = document.createElement('span')
+      // Constant local icon markup (src/state/icons.ts), never record data.
+      if (enc.kind !== 'quake') mark.innerHTML = iconSvg(enc.kind)
+      el.append(mark)
       overlay.append(el)
       current.markers.push({
         el,
@@ -628,7 +649,11 @@ export default function WorldMap({
                 title={`${event.title} · ${eventBadge(event)}`}
                 onClick={() => onSelect(event.id)}
               >
-                <span />
+                <span>
+                  {enc.kind !== 'quake' && enc.kind !== 'fire' && (
+                    <KindIcon kind={enc.kind} />
+                  )}
+                </span>
               </button>
             ))}
           </div>

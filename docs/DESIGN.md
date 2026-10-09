@@ -24,7 +24,14 @@ Screenshots in `docs/screenshots/globe/` use stand-in development data and the b
 | `--signal` / `--caution` / `--alarm` / `--lab` | `#6ff0c0` / `#ffb547` / `#ff5d5d` / `#b9a7f2` | Nominal, stale, failure, simulation |
 | Banner | `#0b5a33` | Classification-style status strip |
 
-Data colours (`encoding.ts`): magnitude <4 `#e9b44c`, 4–4.9 `#f08a3e`, 5–5.9 `#e8553a`, 6+ `#d42d55`; volcano `#f07cae` triangle; storm `#62c6e8` eye ring; thermal cells yellow→red translucent heat by count (`fireCellSteps`); DWD `#cfd8dc` square (feed-only); reports `#f3a77b` document (feed-only).
+Data colours (`encoding.ts`): magnitude <4 `#e9b44c`, 4–4.9 `#f08a3e`, 5–5.9 `#e8553a`, 6+ `#d42d55`; volcano `#f07cae`; storm `#62c6e8`; thermal heat ramp ember → red → orange → yellow (`heatStops` in `state/heat.ts`); DWD `#cfd8dc` (feed-only); reports `#f3a77b` (feed-only).
+
+## Marks (D55)
+
+- **Icons:** one line-icon set in `src/state/icons.ts` (24-unit grid, 2px round strokes): seismogram (quake), volcano, cyclone (storm), flame (thermal), warning triangle, document (reports), flask (simulation). The same icon appears in the layer panel, feed cards, globe badges and legend via `KindIcon`. New kinds add an icon there; never use plain dots/squares/triangles as symbols.
+- **Earthquakes:** seismic beacons, a white-hot core, magnitude-coloured inner disc, a translucent halo and a crisp ring whose diameter scales with magnitude (`magnitudeSize`); last-hour quakes emit a double ripple.
+- **Other point records:** dark glass badges (26px) with a 1.5px ring and the kind icon in the kind colour, soft glow.
+- **Dense/area data:** smooth fields, never grids of squares. FIRMS 2° counts render as a 4096×2048 equirectangular heat texture (`buildHeatCanvas`) draped as an imagery layer; opacity fades from 0.92 in orbit to 0.3 below ~1,200 km (`heatAlpha`) so the ground stays readable. Clicks resolve to the 2° cell beneath. Future density layers (aviation/maritime aggregates) follow this pattern.
 
 ## Type
 
@@ -36,8 +43,8 @@ Data colours (`encoding.ts`): magnitude <4 `#e9b44c`, 4–4.9 `#f08a3e`, 5–5.9
 ## Globe (`src/components/WorldMap.tsx`)
 
 - CesiumJS via `@cesium/engine` only (the widgets bundle needs `eval`). Runtime assets copied by `scripts/copy-cesium.mjs` into `public/cesium/` (gitignored). Loaded lazily; `?view=list` and `?map=static` never load it.
-- Imagery: Satellite = Cesium ion Bing aerial with a token, else Esri World Imagery (keyless); NASA today = GIBS VIIRS true colour (latest complete day); Night = GIBS Black Marble. Night lights blend on the dark side under real-time sun lighting. Bundled Natural Earth II stays underneath as the offline base. Optional labels (Esri reference) and, with a token, world terrain + Google photorealistic 3D cities via ion.
-- Point records = accessible DOM buttons projected each render (hidden on the far side). Dense area data (FIRMS 2° cells) = one `GroundPrimitive`, pickable, reached by keyboard through the feed.
+- Imagery: Satellite = Cesium ion Bing aerial with a token, else Esri World Imagery (keyless); NASA today = GIBS VIIRS true colour (latest complete day); Night = GIBS Black Marble. The globe is evenly lit with no ground haze (D55): a live day/night terminator turned half the planet black and the haze washed out data colours. Bundled Natural Earth II stays underneath as the offline base. Optional labels (Esri reference) and, with a token, world terrain + Google photorealistic 3D cities via ion.
+- Point records = accessible DOM buttons projected each render (hidden on the far side). Dense area data (FIRMS 2° cells) = a heat imagery layer (see Marks), clickable, reached by keyboard through the feed.
 - Selection draws a target reticle with coordinates. Feed selection and Show on map fly the camera (instant under reduced motion). Filtering never moves the camera.
 - WebGL failure falls back to the static SVG map automatically.
 
@@ -58,7 +65,7 @@ Data colours (`encoding.ts`): magnitude <4 `#e9b44c`, 4–4.9 `#f08a3e`, 5–5.9
 ## Adding a live layer (Phases 16+)
 
 1. Add kind, colour and glyph in `encoding.ts` (distinct hue *and* shape; avoid the magnitude ramp and status colours).
-2. Points → they automatically become DOM markers. Dense grids/areas → add a pickable primitive like the FIRMS cells. Tracks/orbits (space, aviation, maritime) → Cesium polylines/billboards, aggregated/delayed per safety rules.
+2. Points → they automatically become DOM markers (beacon or icon badge). Dense grids/areas → a smooth heat/density imagery layer like FIRMS, never square cells. Tracks/orbits (space, aviation, maritime) → Cesium polylines/billboards, aggregated/delayed per safety rules.
 3. Add a row in `LayerToggles` (`components/FeedSource.tsx`): `aria-label` must contain the visible label; add its `LiveStatus` block; extend `MapLegend` only if drawn on the globe.
 4. Feed card: lead with the most scannable value in the left column, title second, mono meta (age, key measure, provider).
 5. Check 1440×900, 390 and 320 wide; the control panel must show every layer without scrolling at 1440×1000.

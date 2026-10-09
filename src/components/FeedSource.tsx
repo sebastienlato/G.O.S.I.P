@@ -14,7 +14,9 @@ import {
   type Source,
 } from '../state/explorer'
 import { formatTimestamp } from '../data/events'
+import KindIcon from './KindIcon'
 import {
+  type MarkerKind,
   hazardColors,
   magnitudeSteps,
   warningColor,
@@ -57,6 +59,16 @@ const layerMeta: Record<
     name: 'EONET global hazards · Storms / volcanoes',
     provider: 'NASA EONET',
   },
+}
+
+const layerIcon: Record<
+  Exclude<LiveLayer, 'eonet'>,
+  { kind: MarkerKind; color: string }
+> = {
+  usgs: { kind: 'quake', color: magnitudeSteps[1].color },
+  dwd: { kind: 'warning', color: warningColor },
+  news: { kind: 'news', color: newsColor },
+  firms: { kind: 'fire', color: fireColor },
 }
 
 /** Live layer switches with per-layer counts and freshness. */
@@ -113,26 +125,25 @@ export function LayerToggles({
               onChange={() => onToggle(key)}
             />
             <span className={`layer-glyph glyph-${key}`} aria-hidden="true">
-              {key === 'usgs' ? (
-                magnitudeSteps.map((step) => (
-                  <i key={step.label} style={{ background: step.color }} />
-                ))
-              ) : key === 'dwd' || key === 'firms' || key === 'news' ? (
-                <i
-                  style={{
-                    background:
-                      key === 'news'
-                        ? newsColor
-                        : key === 'dwd'
-                          ? warningColor
-                          : fireColor,
-                  }}
-                />
-              ) : (
+              {key === 'eonet' ? (
                 <>
-                  <i style={{ background: hazardColors.severeStorms }} />
-                  <i style={{ background: hazardColors.volcanoes }} />
+                  <KindIcon
+                    kind="storm"
+                    color={hazardColors.severeStorms}
+                    size={15}
+                  />
+                  <KindIcon
+                    kind="volcano"
+                    color={hazardColors.volcanoes}
+                    size={15}
+                  />
                 </>
+              ) : (
+                <KindIcon
+                  kind={layerIcon[key].kind}
+                  color={layerIcon[key].color}
+                  size={17}
+                />
               )}
             </span>
             <span className="layer-name">{layerMeta[key].label}</span>

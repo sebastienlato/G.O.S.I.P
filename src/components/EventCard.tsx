@@ -24,6 +24,7 @@ import {
   type ExplorerEvent,
 } from '../data/events'
 import { encode } from '../state/encoding'
+import KindIcon from './KindIcon'
 
 type Props = {
   event: ExplorerEvent
@@ -94,7 +95,9 @@ export default function EventCard({
         ) : isFireSummary(event) ? (
           <span className="card-magnitude">{event.detection_count}</span>
         ) : (
-          <span className={`glyph glyph-${enc.kind}`} />
+          <span className="card-icon">
+            <KindIcon kind={enc.kind} color={enc.color} size={18} />
+          </span>
         )}
       </span>
       <span className="card-body">

@@ -437,7 +437,7 @@ select {
 }
 .layer-toggle {
   display: grid;
-  grid-template-columns: 16px 30px minmax(0, 1fr) auto;
+  grid-template-columns: 16px 34px minmax(0, 1fr) auto;
   align-items: center;
   gap: 10px;
   min-height: 40px;
@@ -482,53 +482,11 @@ select {
 .layer-glyph {
   display: inline-flex;
   align-items: center;
-  gap: 2px;
+  gap: 1px;
 }
-.layer-glyph i {
+.layer-glyph svg {
   display: block;
-  border-radius: 50%;
-}
-.glyph-usgs i:nth-child(1) {
-  width: 4px;
-  height: 4px;
-}
-.glyph-usgs i:nth-child(2) {
-  width: 6px;
-  height: 6px;
-}
-.glyph-usgs i:nth-child(3) {
-  width: 8px;
-  height: 8px;
-}
-.glyph-usgs i:nth-child(4) {
-  width: 10px;
-  height: 10px;
-}
-.glyph-eonet i {
-  width: 9px;
-  height: 9px;
-}
-.glyph-eonet i:last-child {
-  border-radius: 0;
-  clip-path: polygon(50% 0, 100% 100%, 0 100%);
-  width: 11px;
-  height: 10px;
-}
-.glyph-dwd i {
-  width: 10px;
-  height: 10px;
-  border-radius: 1px;
-}
-.glyph-firms i {
-  width: 9px;
-  height: 9px;
-  border-radius: 0;
-  transform: rotate(45deg);
-}
-.glyph-news i {
-  width: 9px;
-  height: 12px;
-  border-radius: 1px;
+  filter: drop-shadow(0 0 4px currentColor);
 }
 .layer-toggle:not(.on) .layer-glyph {
   opacity: 0.35;
@@ -1286,35 +1244,45 @@ select {
 .legend-scale {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  min-width: 84px;
+  gap: 3px;
+  min-width: 92px;
 }
-.legend-scale i,
-.legend-heat i {
-  display: block;
+.legend-mark {
+  --hit: auto;
+  width: auto;
+  height: auto;
+  cursor: default;
+}
+.legend-badge {
+  display: inline-grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
-  flex-shrink: 0;
+  background: rgba(3, 9, 13, 0.75);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14);
 }
 .legend-heat {
-  display: inline-flex;
-  min-width: 84px;
+  display: inline-block;
+  min-width: 92px;
+  height: 8px;
+  border-radius: 4px;
 }
-.legend-heat i {
-  width: 21px;
-  height: 11px;
-  border-radius: 0;
-}
-.legend-row .glyph + span {
+.legend-badge + span {
   margin-right: 8px;
 }
 
-/* Markers: one encoding for globe, static map, legend and cards */
+/* Markers: one encoding for globe, static map, legend and cards.
+   Quakes = seismic beacons (hot core, magnitude ring, soft halo).
+   Everything else = dark glass badges carrying a line icon in the kind
+   colour. Thermal detections are a heat field, never markers, on the globe. */
 .map-scene {
   --scale: 1;
 }
 .event-marker {
   --dot: calc(var(--size, 12px) * var(--scale, 1));
-  --hit: max(var(--dot), 18px);
+  --hit: max(var(--dot), 20px);
+  position: relative;
   width: var(--hit);
   height: var(--hit);
   display: grid;
@@ -1327,45 +1295,60 @@ select {
 }
 .event-marker > span {
   position: relative;
+  display: grid;
+  place-items: center;
   width: var(--dot);
   height: var(--dot);
   border-radius: 50%;
-  background: color-mix(in srgb, var(--marker-color) 78%, transparent);
+  color: var(--marker-color);
   opacity: var(--fresh, 1);
-  box-shadow:
-    inset 0 0 0 1.5px var(--marker-color),
-    0 0 0 1px rgba(0, 0, 0, 0.55),
-    0 0 12px color-mix(in srgb, var(--marker-color) 55%, transparent);
   pointer-events: none;
-  transition: transform 0.15s;
+  transition:
+    transform 0.18s ease,
+    opacity 0.18s ease;
 }
-.event-marker.kind-volcano > span {
-  border-radius: 0;
-  clip-path: polygon(50% 4%, 98% 92%, 2% 92%);
-  box-shadow: none;
-}
-.event-marker.kind-storm > span {
+.event-marker.kind-quake > span {
   background: radial-gradient(
     circle,
-    var(--marker-color) 0 20%,
-    transparent 22% 48%,
-    var(--marker-color) 50% 68%,
+    #fff 0 9%,
+    var(--marker-color) 13% 24%,
+    color-mix(in srgb, var(--marker-color) 22%, transparent) 30% 66%,
     transparent 70%
   );
-  box-shadow: none;
+  box-shadow:
+    inset 0 0 0 1.5px color-mix(in srgb, var(--marker-color) 85%, white),
+    0 0 14px color-mix(in srgb, var(--marker-color) 55%, transparent);
+}
+.event-marker:not(.kind-quake) > span {
+  --dot: calc(var(--size, 24px) * var(--scale, 1));
+  background: rgba(3, 9, 13, 0.78);
+  box-shadow:
+    inset 0 0 0 1.5px color-mix(in srgb, var(--marker-color) 70%, transparent),
+    0 0 12px color-mix(in srgb, var(--marker-color) 45%, transparent);
+  backdrop-filter: blur(2px);
+}
+.event-marker:not(.kind-quake) > span svg {
+  width: 62%;
+  height: 62%;
+  filter: drop-shadow(
+    0 0 3px color-mix(in srgb, var(--marker-color) 70%, transparent)
+  );
 }
 .event-marker.kind-fire > span {
-  border-radius: 0;
-  clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+  --dot: calc(12px * var(--scale, 1));
+  background: radial-gradient(
+    circle,
+    #fff6c4 0 18%,
+    var(--marker-color) 30%,
+    color-mix(in srgb, #ff5a2e 50%, transparent) 55%,
+    transparent 72%
+  );
   box-shadow: none;
-}
-.event-marker.kind-example > span {
-  background: color-mix(in srgb, var(--marker-color) 30%, var(--void));
-  border: 2px solid var(--marker-color);
+  backdrop-filter: none;
 }
 .event-marker:hover > span,
 .event-marker:focus-visible > span {
-  transform: scale(1.3);
+  transform: scale(1.25);
   opacity: 1;
 }
 .event-marker.selected {
@@ -1373,85 +1356,61 @@ select {
 }
 .event-marker.selected > span {
   opacity: 1;
-  transform: scale(1.25);
+  transform: scale(1.2);
+  box-shadow:
+    inset 0 0 0 2px #fff,
+    0 0 18px color-mix(in srgb, var(--marker-color) 80%, transparent);
 }
 .event-marker:focus-visible {
   z-index: 5;
 }
+/* Last-hour earthquakes emit a seismic ripple (off under reduced motion). */
+.event-marker.recent::before,
 .event-marker.recent::after {
   content: '';
   position: absolute;
+  inset: 0;
+  margin: auto;
   width: var(--dot);
   height: var(--dot);
   border-radius: 50%;
   border: 1.5px solid var(--marker-color);
+  opacity: 0;
   pointer-events: none;
 }
 @media (prefers-reduced-motion: no-preference) {
+  .event-marker.recent::before,
   .event-marker.recent::after {
-    animation: ping 2.4s cubic-bezier(0.2, 0.6, 0.3, 1) infinite;
+    animation: ripple 2.8s cubic-bezier(0.15, 0.6, 0.3, 1) infinite;
+  }
+  .event-marker.recent::after {
+    animation-delay: 1.4s;
   }
 }
-@keyframes ping {
+@keyframes ripple {
   from {
     transform: scale(1);
-    opacity: 0.9;
+    opacity: 0.85;
   }
   to {
-    transform: scale(3.4);
+    transform: scale(3.6);
     opacity: 0;
   }
 }
 
-/* Glyphs used in cards and legend */
-.glyph {
-  display: inline-block;
-  width: 13px;
-  height: 13px;
-  flex-shrink: 0;
-  background: var(--mark);
+/* Icons in cards */
+.card-icon {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  margin-top: 1px;
   border-radius: 50%;
+  background: rgba(255, 255, 255, 0.03);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
 }
-.glyph-volcano {
-  border-radius: 0;
-  clip-path: polygon(50% 4%, 98% 92%, 2% 92%);
-}
-.glyph-storm {
-  background: radial-gradient(
-    circle,
-    var(--mark) 0 20%,
-    transparent 22% 48%,
-    var(--mark) 50% 68%,
-    transparent 70%
-  );
-}
-.glyph-example {
-  background: transparent;
-  border: 2px solid var(--mark);
-}
-.glyph-warning {
-  width: 12px;
-  height: 12px;
-  background: transparent;
-  border: 2px solid var(--mark);
-  border-radius: 1px;
-}
-.glyph-fire {
-  width: 11px;
-  height: 11px;
-  border-radius: 0;
-  transform: rotate(45deg);
-}
-.glyph-news {
-  width: 12px;
-  height: 15px;
-  border: 2px solid var(--mark);
-  border-radius: 1px;
-  background: repeating-linear-gradient(
-    to bottom,
-    transparent 0 3px,
-    var(--mark) 3px 4px
-  );
+.card-icon svg {
+  filter: drop-shadow(0 0 4px currentColor);
 }
 
 /* Simulation lab (only while a lab source is selected) */
@@ -2092,10 +2051,8 @@ dialog::backdrop {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   .layer-toggle {
-    grid-template-columns: 16px minmax(0, 1fr) auto;
-  }
-  .layer-glyph {
-    display: none;
+    grid-template-columns: 16px 32px minmax(0, 1fr) auto;
+    gap: 8px;
   }
   .detail-dialog,
   .about-dialog {
