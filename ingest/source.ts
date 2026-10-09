@@ -107,7 +107,7 @@ export async function ingestSource<T extends SnapshotBase>(
       'HTTP 504',
     ]
     const detail =
-      failure instanceof Error && allowed.includes(failure.message)
+      failure instanceof Error && (allowed.includes(failure.message) || /^Unsupported FIRMS version [0-9.]{1,8}(NRT|RT|URT)?$/.test(failure.message))
         ? failure.message
         : 'unavailable or invalid data'
     error = `${adapter.source.toUpperCase()} ${stage} failed: ${detail}.`

@@ -72,7 +72,11 @@ function accumulator(now: number) {
       daynight: ['D', 'N'].includes(row[13]),
     }
     for (const [field, valid] of Object.entries(validFields))
-      if (!valid) throw Error(`Invalid FIRMS ${field}`)
+      if (!valid) {
+        // Only a short numeric version identifier can leave this runner; never a row or request URL.
+        if (field === 'version' && /^[0-9.]{1,8}(NRT|RT|URT)?$/.test(row[10])) throw Error(`Unsupported FIRMS version ${row[10]}`)
+        throw Error(`Invalid FIRMS ${field}`)
+      }
     for (const i of [2, 3, 4, 11, 12])
       if (
         !row[i] ||
