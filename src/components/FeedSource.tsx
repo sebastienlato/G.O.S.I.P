@@ -1,5 +1,7 @@
 import { localSourceAccess } from '../state/sourceAccess'
 import { additionalLayers, type AdditionalSource } from '../data/additional'
+import type { useHazards } from '../state/useEarthquakes'
+import type { LiveLayer } from '../state/explorer'
 import type { Source } from '../state/explorer'
 import { formatTimestamp } from '../data/events'
 import type { EarthquakeSnapshot } from '../data/usgs'
@@ -7,6 +9,10 @@ import type { SourceHealth } from '../data/published'
 
 type Props = {
   source: Source
+  liveLayers: LiveLayer[]
+  onToggle: (layer: LiveLayer) => void
+  hazards: ReturnType<typeof useHazards>
+  counts: Record<LiveLayer, number>
   onChange: (source: Source) => void
   snapshot: EarthquakeSnapshot | null
   health: SourceHealth | null
@@ -19,6 +25,10 @@ type Props = {
 }
 export default function FeedSource({
   source,
+  liveLayers,
+  onToggle,
+  hazards,
+  counts,
   onChange,
   snapshot,
   health,
@@ -44,16 +54,35 @@ export default function FeedSource({
   return (
     <section className="feed-source" aria-label="Data source">
       <div className="source-choice">
-        <span className="eyebrow">LIVE SOURCES</span>
-        <div className="view-switch">
-          <button
-            aria-pressed={source === 'usgs'}
-            className={source === 'usgs' ? 'active' : ''}
-            onClick={() => onChange('usgs')}
-          >
-            USGS earthquakes
+        <span className="eyebrow">LIVE LAYERS</span>
+        {source !== 'usgs' && (
+          <button onClick={() => onChange('usgs')}>
+            Return to live layers
           </button>
-        </div>
+        )}
+        {source === 'usgs' && (
+          <div className="live-layer-toggles">
+            {(['usgs', 'eonet'] as const).map((key) => (
+              <label key={key}>
+                <input
+                  type="checkbox"
+                  checked={liveLayers.includes(key)}
+                  onChange={() => onToggle(key)}
+                />
+                <strong>
+                  {key === 'usgs' ? 'USGS earthquakes' : 'EONET global hazards'}
+                </strong>
+                <span>
+                  {liveLayers.includes(key) ? `${counts[key]} in view` : 'Off'}
+                </span>
+              </label>
+            ))}
+          </div>
+        )}
+        <p className="muted text-sm">
+          Coming: floods, fire detections, weather warnings, news, digital,
+          space and movement.
+        </p>
         <details open={source !== 'usgs' ? true : undefined}>
           <summary>Simulation lab · invented examples</summary>
           <p>Separate demonstrations. Never live events.</p>
@@ -75,7 +104,7 @@ export default function FeedSource({
           )}
         </details>
       </div>
-      {source === 'usgs' && (
+      {source === 'usgs' && liveLayers.includes('usgs') && (
         <div className="source-status">
           <div aria-live="polite">
             <strong>
@@ -89,18 +118,18 @@ export default function FeedSource({
             </strong>
             {snapshot && (
               <p>
-                Last updated {formatTimestamp(snapshot.retrieved_at)} ·{' '}
+                Retrieved {formatTimestamp(snapshot.retrieved_at)} ·{' '}
                 {snapshot.events.length} earthquakes in the week snapshot.
               </p>
             )}
             {error && <p className="source-error">{error}</p>}
           </div>
-          <p>
-            M2.5+ earthquakes · USGS / ANSS · Estimates may change. Coverage
-            varies; no impact assessment.
-          </p>
           <details>
             <summary>Freshness & source details</summary>
+            <p>
+              M2.5+ earthquakes · USGS / ANSS · Estimates may change. Coverage
+              varies; no impact assessment.
+            </p>
             <p>
               Ingestion scheduled every 15 minutes; delays are possible. Stale
               after 45 minutes or a failed ingestion. This page checks published
@@ -127,16 +156,88 @@ export default function FeedSource({
             >
               U.S. Geological Survey / ANSS source ↗
             </a>
+            <div className="source-actions">
+              <button
+                onClick={() => void refresh()}
+                disabled={loading || offline || waitSeconds > 0}
+              >
+                Refresh published data
+              </button>
+              {offline && <span>Offline · refresh paused</span>}
+            </div>
           </details>
-          <div className="source-actions">
-            <button
-              onClick={() => void refresh()}
-              disabled={loading || offline || waitSeconds > 0}
+        </div>
+      )}
+      {source === 'usgs' && liveLayers.includes('eonet') && (
+        <div className="source-status" aria-label="EONET status">
+          <strong aria-live="polite">
+            {hazards.loading
+              ? 'Loading hazard snapshot…'
+              : !hazards.snapshot
+                ? 'EONET unavailable · no catalog loaded'
+                : hazards.stale
+                  ? 'STALE · last available EONET catalog'
+                  : 'Live EONET global hazards'}
+          </strong>
+          {hazards.snapshot && (
+            <p>
+              Retrieved {formatTimestamp(hazards.snapshot.retrieved_at)} ·{' '}
+              {hazards.snapshot.events.length} catalog entries in the 30-day
+              request.
+            </p>
+          )}
+          {hazards.error && <p className="source-error">{hazards.error}</p>}
+          {hazards.snapshot?.events.length === 0 && (
+            <p>
+              Valid empty catalog response. This does not mean there are no
+              hazards.
+            </p>
+          )}
+          <details>
+            <summary>EONET freshness & source details</summary>
+            <p>
+              NASA EONET · Curated storms and volcanoes. Approximate metadata,
+              not official warnings.
+            </p>
+            <p>
+              Shared ingestion and page checks every 15 minutes; delays
+              possible. Stale after 45 minutes from retrieval or a failed check.
+              Feed generation and publication times are not supplied; recent
+              retrieval does not prove recent curation.
+            </p>
+            {hazards.health && (
+              <p>
+                Last pipeline attempt{' '}
+                {formatTimestamp(hazards.health.attempted_at)} · Status:{' '}
+                {hazards.health.status}.
+              </p>
+            )}
+            <p>
+              Open and closed catalog entries; latest geometry date drives the
+              window. Dates and locations are approximate, not incident onset or
+              affected area. Polygon records are feed-only. No grouping or
+              corroboration across sources; the same hazard may appear in more
+              than one source.
+            </p>
+            <a
+              href="https://eonet.gsfc.nasa.gov/what-is-eonet"
+              target="_blank"
+              rel="noreferrer"
             >
-              Refresh published data
-            </button>
-            {offline && <span>Offline · refresh paused</span>}
-          </div>
+              NASA EONET scope & disclaimer ↗
+            </a>
+            <div className="source-actions">
+              <button
+                onClick={() => void hazards.refresh()}
+                disabled={
+                  hazards.loading || hazards.offline || hazards.waitSeconds > 0
+                }
+              >
+                Refresh EONET data
+              </button>
+              {hazards.offline && <span>Offline · refresh paused</span>}
+            </div>
+          </details>
         </div>
       )}
     </section>

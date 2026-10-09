@@ -6,14 +6,23 @@ const server = await createServer({
 })
 try {
   const { ingestUSGS } = await server.ssrLoadModule('/ingest/usgs.ts')
-  const result = await ingestUSGS()
+  const { ingestEONET } = await server.ssrLoadModule('/ingest/eonet.ts')
+  const results = await Promise.all([ingestUSGS(), ingestEONET()])
   await mkdir('public/data', { recursive: true })
-  await writeFile('public/data/usgs.json', JSON.stringify(result))
+  for (const result of results) {
+    await writeFile(
+      `public/data/${result.health.source}.json`,
+      JSON.stringify(result),
+    )
+    console.log(JSON.stringify(result.health))
+  }
   await writeFile(
     'public/data/health.json',
-    JSON.stringify({ version: 1, sources: [result.health] }),
+    JSON.stringify({
+      version: 1,
+      sources: results.map((result) => result.health),
+    }),
   )
-  console.log(JSON.stringify(result.health))
 } finally {
   await server.close()
 }

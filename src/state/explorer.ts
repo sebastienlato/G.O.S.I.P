@@ -18,7 +18,10 @@ export type Source =
   | 'fire-demo'
   | 'reports-demo'
   | 'digital-demo'
+export const liveLayerKeys = ['usgs', 'eonet'] as const
+export type LiveLayer = (typeof liveLayerKeys)[number]
 export interface ExplorerFilters {
+  liveLayers: LiveLayer[]
   source: Source
   cursor: number | null
   country: string
@@ -35,6 +38,7 @@ export interface ExplorerFilters {
 }
 export const defaultFilters: ExplorerFilters = {
   source: 'usgs',
+  liveLayers: [...liveLayerKeys],
   cursor: null,
   country: '',
   region: '',
@@ -60,7 +64,20 @@ export function parseFilters(search: string): ExplorerFilters {
     ? categoryKeys.filter((key) => requested.includes(key))
     : categoryKeys
   const hours = params.get('hours')
+  const live = params.getAll('live')
+  const requestedLive = live[0] === '' ? [] : live[0]?.split(',')
+  const liveLayers =
+    live.length === 1 &&
+    requestedLive?.every((key) => liveLayerKeys.includes(key as LiveLayer))
+      ? liveLayerKeys.filter((key) => requestedLive.includes(key))
+      : live.length === 0 && params.get('source') === 'usgs'
+        ? ['usgs' as const]
+        : [...liveLayerKeys]
   return {
+    liveLayers:
+      params.has('source') && params.get('source') !== 'usgs'
+        ? [...liveLayerKeys]
+        : liveLayers,
     cursor: supportsPlayback(params.get('source') ?? 'usgs')
       ? parseCursor(params.get('at'))
       : null,
@@ -112,6 +129,14 @@ export function parseFilters(search: string): ExplorerFilters {
 
 export function serializeFilters(filters: ExplorerFilters): string {
   const params = new URLSearchParams()
+  if (
+    filters.source === 'usgs' &&
+    filters.liveLayers.length !== liveLayerKeys.length
+  )
+    params.set(
+      'live',
+      liveLayerKeys.filter((key) => filters.liveLayers.includes(key)).join(','),
+    )
   if (supportsPlayback(filters.source) && filters.cursor !== null)
     params.set('at', new Date(filters.cursor).toISOString())
   if (filters.country) params.set('country', filters.country)

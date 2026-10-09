@@ -1,3 +1,5 @@
+import { eonetFixture } from './fixtures/eonet'
+import { parseEONET, publishEONET } from '../src/data/eonet'
 import { expect, test } from '@playwright/test'
 import recorded from './fixtures/usgs-recorded.json' with { type: 'json' }
 import { parseUSGS } from '../src/data/usgs'
@@ -12,6 +14,17 @@ const published = publish(snapshot, {
   fetched_at: snapshot.retrieved_at,
   generated_at: snapshot.generated_at,
   record_count: snapshot.events.length,
+})
+
+const hazardSnapshot = parseEONET(eonetFixture(now), now)
+const hazardPublished = publishEONET(hazardSnapshot, {
+  source: 'eonet',
+  status: 'ok',
+  error: null,
+  attempted_at: new Date(now).toISOString(),
+  fetched_at: hazardSnapshot.retrieved_at,
+  generated_at: null,
+  record_count: hazardSnapshot.events.length,
 })
 
 const base = '/G.O.S.I.P/'
@@ -30,6 +43,10 @@ test.beforeEach(async ({ context, page }) => {
     if (url.origin !== origin || !url.pathname.startsWith(base)) {
       failures.push(url.href)
       await route.abort()
+      return
+    }
+    if (url.pathname.endsWith('/data/eonet.json')) {
+      await route.fulfill({ json: hazardPublished })
       return
     }
     if (url.pathname.endsWith('/data/usgs.json')) {
@@ -56,7 +73,7 @@ test('repository map loads geography, worker and markers with production CSP', a
   await expect(page.getByText('Interactive map', { exact: true })).toBeVisible({
     timeout: 15000,
   })
-  await expect(page.locator('.map-canvas .event-marker')).toHaveCount(2)
+  await expect(page.locator('.map-canvas .event-marker')).toHaveCount(3)
   expect(resources.some((url) => url.endsWith(`${base}world.geojson`))).toBe(
     true,
   )
@@ -71,7 +88,7 @@ test('repository map loads geography, worker and markers with production CSP', a
   await expect(marker.first()).toBeFocused()
   await page.getByRole('link', { name: 'GOSIP home' }).click()
   await page.screenshot({
-    path: `test-results/phase-12-${info.project.name}-beta-map.png`,
+    path: `test-results/phase-13-${info.project.name}-beta-map.png`,
     fullPage: true,
   })
   await page.reload()
@@ -87,7 +104,7 @@ for (const mode of ['view=list', 'map=static']) {
     if (info.project.name === 'mobile')
       await page.setViewportSize({ width: 320, height: 740 })
     for (const [source, count] of [
-      ['demo', 17],
+      ['demo', 15],
       ['fire-demo', 4],
       ['reports-demo', 6],
       ['digital-demo', 6],
@@ -119,7 +136,7 @@ for (const mode of ['view=list', 'map=static']) {
     ).toBe(true)
     await page.getByRole('link', { name: 'GOSIP home' }).click()
     await page.screenshot({
-      path: `test-results/phase-12-${info.project.name}-${mode === 'view=list' ? 'list' : 'static'}-beta.png`,
+      path: `test-results/phase-13-${info.project.name}-${mode === 'view=list' ? 'list' : 'static'}-beta.png`,
       fullPage: true,
     })
   })
@@ -165,7 +182,7 @@ test('repository report originals, evidence, copied links and history keep subpa
   await page
     .getByRole('button', { name: 'Other examples · simulated', exact: true })
     .click()
-  await expect(page.locator('.event-card')).toHaveCount(17)
+  await expect(page.locator('.event-card')).toHaveCount(15)
   await page.goBack()
   await expect(page.locator('.event-card')).toHaveCount(1)
   await page.goto(shared)
@@ -200,7 +217,7 @@ for (const source of ['nws']) {
     await page
       .getByRole('button', { name: 'Explore simulated examples', exact: true })
       .click()
-    await expect(page.locator('.event-card')).toHaveCount(11)
+    await expect(page.locator('.event-card')).toHaveCount(9)
     expect(new URL(page.url()).pathname).toBe(base)
   })
 }
@@ -245,7 +262,7 @@ test('repository privacy licenses and keyboard navigation remain usable at 320px
     el.scrollTop = 0
   })
   await page.screenshot({
-    path: `test-results/phase-12-${info.project.name}-licensed-privacy.png`,
+    path: `test-results/phase-13-${info.project.name}-licensed-privacy.png`,
   })
   expect(await dialog.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(
     true,
@@ -278,7 +295,7 @@ for (const mode of ['view=list', 'map=static']) {
     page,
   }) => {
     await page.goto(`${origin}${base}?${mode}`)
-    await expect(page.locator('.event-card')).toHaveCount(2)
+    await expect(page.locator('.event-card')).toHaveCount(4)
     await expect(
       page.getByText('LIVE VIEW CLOCK', { exact: true }),
     ).toBeVisible()
@@ -297,7 +314,7 @@ for (const mode of ['view=list', 'map=static']) {
     )
     await page.keyboard.press('Escape')
     await page.reload()
-    await expect(page.locator('.event-card')).toHaveCount(2)
+    await expect(page.locator('.event-card')).toHaveCount(4)
     await page.clock.setFixedTime(now + 46 * 60_000)
     await expect(
       page.getByText('STALE · last available observations', { exact: true }),
@@ -321,7 +338,7 @@ test('pipeline failure retains observations with stale status and missing snapsh
     }),
   )
   await page.goto(`${origin}${base}?view=list`)
-  await expect(page.locator('.event-card')).toHaveCount(2)
+  await expect(page.locator('.event-card')).toHaveCount(4)
   await expect(
     page.getByText('STALE · last available observations', { exact: true }),
   ).toBeVisible()
@@ -329,16 +346,139 @@ test('pipeline failure retains observations with stale status and missing snapsh
     route.fulfill({ json: {} }),
   )
   await page.clock.setFixedTime(now + 61_000)
+  await page.getByText('Freshness & source details', { exact: true }).click()
   await page.getByRole('button', { name: 'Refresh published data' }).click()
   await expect(
     page.getByText('Published snapshot unavailable.', { exact: false }),
   ).toBeVisible()
-  await expect(page.locator('.event-card')).toHaveCount(2)
+  await expect(page.locator('.event-card')).toHaveCount(4)
   await page.reload()
   await expect(
     page.getByText('USGS unavailable · no observations loaded', {
       exact: true,
     }),
   ).toBeVisible()
+  await expect(page.locator('.event-card')).toHaveCount(2)
+})
+
+test('independent live layers combine map/feed, clear selection and survive share/reload/back', async ({
+  page,
+  context,
+}) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write'], {
+    origin,
+  })
+  await page.goto(`${origin}${base}?map=static`)
+  await expect(page.locator('.event-card')).toHaveCount(4)
+  await expect(page.locator('.static-marker')).toHaveCount(3)
+  const quakes = page.getByRole('checkbox', { name: /USGS earthquakes/ })
+  const hazards = page.getByRole('checkbox', { name: /EONET global hazards/ })
+  await quakes.uncheck()
+  await expect(page.locator('.event-card')).toHaveCount(2)
+  await page
+    .getByRole('button', { name: 'View Test volcanoes catalog entry' })
+    .click()
+  const dialog = page.getByRole('dialog')
+  await expect(dialog).toContainText('Latest geometry date')
+  await expect(dialog).toContainText('Occurrence / publication / update')
+  await expect(dialog.getByRole('button', { name: 'Show on map' })).toHaveCount(
+    0,
+  )
+  await page.keyboard.press('Escape')
+  await hazards.uncheck()
   await expect(page.locator('.event-card')).toHaveCount(0)
+  await expect(page.getByLabel('Selected event', { exact: true })).toHaveCount(
+    0,
+  )
+  await expect(
+    page.getByText('All live layers are off', { exact: true }),
+  ).toBeVisible()
+  await page.getByRole('button', { name: 'Copy view link' }).click()
+  const shared = await page.evaluate(() => navigator.clipboard.readText())
+  expect(new URL(shared).searchParams.get('live')).toBe('')
+  await page.reload()
+  await expect(quakes).not.toBeChecked()
+  await expect(hazards).not.toBeChecked()
+  await page.goBack()
+  await expect(hazards).toBeChecked()
+  await expect(page.locator('.event-card')).toHaveCount(2)
+  await quakes.check()
+  await expect(page.locator('.event-card')).toHaveCount(4)
+  await page.getByRole('button', { name: 'Environment', exact: true }).click()
+  await expect(page.locator('.event-card')).toHaveCount(3)
+  await page
+    .getByText('Simulation lab · invented examples', { exact: true })
+    .click()
+  await page
+    .getByRole('button', { name: 'Other examples · simulated', exact: true })
+    .click()
+  await expect(page.locator('.event-card')).toHaveCount(9)
+  await expect(
+    page.locator('.event-card').filter({ hasText: 'EONET' }),
+  ).toHaveCount(0)
+  await expect(
+    page
+      .locator('.event-card')
+      .filter({ hasText: 'Volcano monitoring scenario' }),
+  ).toHaveCount(0)
+})
+
+test('EONET failure is independent, browser failure retains memory and valid empty stays explicit', async ({
+  page,
+  context,
+}) => {
+  await context.route('**/data/eonet.json', (route) =>
+    route.fulfill({
+      json: {
+        ...hazardPublished,
+        health: {
+          ...hazardPublished.health,
+          status: 'stale',
+          error: 'EONET check failed.',
+        },
+      },
+    }),
+  )
+  await page.goto(`${origin}${base}?view=list`)
+  await expect(
+    page.getByText('Live USGS earthquakes', { exact: true }),
+  ).toBeVisible()
+  await expect(
+    page.getByText('STALE · last available EONET catalog', { exact: true }),
+  ).toBeVisible()
+  await expect(page.locator('.event-card')).toHaveCount(4)
+  await context.route('**/data/eonet.json', (route) =>
+    route.fulfill({ json: {} }),
+  )
+  await page.clock.setFixedTime(now + 61_000)
+  await page
+    .getByText('EONET freshness & source details', { exact: true })
+    .click()
+  await page.getByRole('button', { name: 'Refresh EONET data' }).click()
+  await expect(page.getByLabel('EONET status')).toContainText(
+    'Previously loaded records are retained',
+  )
+  await expect(page.locator('.event-card')).toHaveCount(4)
+  await page.reload()
+  await expect(
+    page.getByText('EONET unavailable · no catalog loaded', { exact: true }),
+  ).toBeVisible()
+  await expect(page.locator('.event-card')).toHaveCount(2)
+  await context.route('**/data/eonet.json', (route) =>
+    route.fulfill({
+      json: {
+        ...hazardPublished,
+        snapshot: {
+          ...hazardPublished.snapshot,
+          feed: { title: 'EONET Events', events: [] },
+        },
+        health: { ...hazardPublished.health, record_count: 0 },
+      },
+    }),
+  )
+  await page.reload()
+  await expect(
+    page.getByText('Valid empty catalog response.', { exact: false }),
+  ).toBeVisible()
+  await expect(page.locator('.event-card')).toHaveCount(2)
 })

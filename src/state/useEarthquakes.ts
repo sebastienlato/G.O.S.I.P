@@ -6,10 +6,25 @@ import {
   type SourceHealth,
 } from '../data/published'
 import type { EarthquakeSnapshot } from '../data/usgs'
+import { decodeEONET, EONET_MAX_BYTES } from '../data/eonet'
+import { MAX_BYTES } from '../data/usgs'
 import { assetPath } from './assetPath'
 
-export function useEarthquakes(enabled: boolean) {
-  const [snapshot, setSnapshot] = useState<EarthquakeSnapshot | null>(null)
+interface Snapshot {
+  events: readonly unknown[]
+  generated_at: string | null
+  retrieved_at: string
+}
+export function usePublished<T extends Snapshot>(
+  enabled: boolean,
+  source: 'usgs' | 'eonet',
+  decode: (
+    raw: string,
+    now: number,
+  ) => { snapshot: T | null; health: SourceHealth },
+  limit: number,
+) {
+  const [snapshot, setSnapshot] = useState<T | null>(null)
   const [health, setHealth] = useState<SourceHealth | null>(null)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -29,32 +44,34 @@ export function useEarthquakes(enabled: boolean) {
     setLoading(true)
     try {
       const raw = await readBounded(
-        await fetch(assetPath('/data/usgs.json'), {
+        await fetch(assetPath(`/data/${source}.json`), {
           signal: AbortSignal.timeout(12_000),
           cache: 'no-cache',
           credentials: 'omit',
           redirect: 'error',
         }),
+        limit,
       )
-      const next = decodePublished(raw, Date.now())
-      setSnapshot(next.snapshot)
+      const next = decode(raw, Date.now())
+      setSnapshot((previous) => next.snapshot ?? previous)
       setHealth(next.health)
       setError(next.health.error ?? '')
     } catch {
       setError(
-        'Published snapshot unavailable. Previously loaded observations are retained.',
+        'Published snapshot unavailable. Previously loaded records are retained.',
       )
     } finally {
       pending.current = false
       setLoading(false)
       setNow(Date.now())
     }
-  }, [])
+  }, [source, decode, limit])
   useEffect(() => {
-    if (!enabled) return
-    void refresh()
+    if (enabled) void refresh()
     const clock = window.setInterval(() => setNow(Date.now()), 1000)
-    const poll = window.setInterval(() => void refresh(), 15 * 60_000)
+    const poll = enabled
+      ? window.setInterval(() => void refresh(), 15 * 60_000)
+      : undefined
     return () => {
       clearInterval(clock)
       clearInterval(poll)
@@ -75,9 +92,21 @@ export function useEarthquakes(enabled: boolean) {
         health?.status !== 'ok' ||
         now -
           Math.min(
-            Date.parse(snapshot.generated_at),
+            Date.parse(snapshot.generated_at ?? snapshot.retrieved_at),
             Date.parse(snapshot.retrieved_at),
           ) >
           LIVE_STALE_MS),
   }
+}
+
+export function useEarthquakes(enabled: boolean) {
+  return usePublished<EarthquakeSnapshot>(
+    enabled,
+    'usgs',
+    decodePublished,
+    MAX_BYTES,
+  )
+}
+export function useHazards(enabled: boolean) {
+  return usePublished(enabled, 'eonet', decodeEONET, EONET_MAX_BYTES)
 }

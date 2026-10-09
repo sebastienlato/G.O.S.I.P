@@ -1,6 +1,6 @@
 # G.O.S.I.P. — Global Open Source Intelligence Platform
 
-A free public event explorer. **Live USGS earthquakes**, a world map, searchable feed, source details and freshness status. No account, payment, analytics or remote map tiles. Estimates can change; this is not an emergency service.
+A free public event explorer. **Live USGS earthquakes and NASA EONET hazards**, a world map, searchable feed, source details and freshness status. No account, payment, analytics or remote map tiles. Estimates can change; this is not an emergency service.
 
 **[Open GOSIP](https://sebastienlato.github.io/G.O.S.I.P/)** · [Lightweight list](https://sebastienlato.github.io/G.O.S.I.P/?view=list)
 
@@ -18,9 +18,11 @@ Ingestion writes ignored `public/data/` snapshots. Without a snapshot, the explo
 
 ## Sources
 
-USGS / ANSS M2.5+ past-week earthquakes, fetched by GitHub Actions approximately every 15 minutes. Visitors read same-origin snapshots, never the provider API. Last-good observations survive ingestion failure with a stale label. Real device clock, separate source-generation/retrieval times, 45-minute stale threshold. Schedules and reporting can be delayed; coverage is incomplete.
+Independent **USGS / ANSS earthquakes** and **NASA EONET storms/volcanoes** toggles share the map/feed. Both are on by default. USGS observations use occurrence time; EONET curated metadata uses the latest geometry date, with approximate locations/times and no official-alert or corroboration claim. EONET requests the past 30 days; visible windows remain 6 hours–7 days. It may contain no recent volcano entries. Unknown values stay unknown.
 
-Other live layers are coming. An explicitly separate **Simulation lab** remains during the transition; its invented examples and fixed clock are never the default. Native iOS work is paused. [Roadmap](ROADMAP.md) · [Data rights and limits](docs/DATA_POLICY.md) · [Deployment and $0 safeguards](docs/BETA_READINESS.md)
+GitHub Actions fetches bounded snapshots approximately every 15 minutes. Visitors read same-origin JSON. Each layer shows its own retrieval, count and failure/stale state; retained data keeps original times. Stale after 45 minutes or failure. USGS supplies feed generation; EONET does not, so recent retrieval cannot prove recent curation.
+
+Other live layers are coming. An explicitly separate **Simulation lab** remains; replaced seismic, coastal-weather and volcano examples are hidden from web. Native iOS is paused. [Roadmap](ROADMAP.md) · [Data rights and limits](docs/DATA_POLICY.md) · [Deployment and $0 safeguards](docs/BETA_READINESS.md)
 
 ## Checks & deployment
 

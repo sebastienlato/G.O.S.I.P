@@ -1,3 +1,4 @@
+import { isHazard, type HazardEvent } from './eonet'
 import {
   isAdditional,
   additionalBases,
@@ -60,6 +61,7 @@ export interface EarthquakeEvent extends Omit<
   depth_km: number | null
 }
 export type ExplorerEvent =
+  | HazardEvent
   | DemoEvent
   | EarthquakeEvent
   | ForecastEvent
@@ -68,21 +70,23 @@ export type ExplorerEvent =
   | DigitalEvent
   | AdditionalEvent
 export const eventBadge = (event: ExplorerEvent) =>
-  isAdditional(event)
-    ? `SIMULATED · ${event.family.toUpperCase()}`
-    : isDigital(event)
-      ? 'SIMULATED · DIGITAL MEASUREMENT'
-      : isReport(event)
-        ? 'SIMULATED · ATTRIBUTED CLAIM'
-        : event.is_demo
-          ? 'SIMULATED'
-          : isForecast(event)
-            ? 'FORECAST · NWS'
-            : event.status === 'deleted'
-              ? 'WITHDRAWN · USGS'
-              : 'OBSERVATION · USGS'
+  isHazard(event)
+    ? 'CURATED HAZARD · EONET'
+    : isAdditional(event)
+      ? `SIMULATED · ${event.family.toUpperCase()}`
+      : isDigital(event)
+        ? 'SIMULATED · DIGITAL MEASUREMENT'
+        : isReport(event)
+          ? 'SIMULATED · ATTRIBUTED CLAIM'
+          : event.is_demo
+            ? 'SIMULATED'
+            : isForecast(event)
+              ? 'FORECAST · NWS'
+              : event.status === 'deleted'
+                ? 'WITHDRAWN · USGS'
+                : 'OBSERVATION · USGS'
 export const markerLabel = (event: ExplorerEvent) =>
-  `${isAdditional(event) ? `Simulated ${event.family} example` : isDigital(event) ? 'Simulated digital measurement' : isReport(event) ? 'Simulated report' : event.is_demo ? 'Simulated' : isForecast(event) ? 'NWS forecast' : 'USGS observation'}: ${event.title}, ${event.country || event.region}`
+  `${isHazard(event) ? 'EONET curated hazard' : isAdditional(event) ? `Simulated ${event.family} example` : isDigital(event) ? 'Simulated digital measurement' : isReport(event) ? 'Simulated report' : event.is_demo ? 'Simulated' : isForecast(event) ? 'NWS forecast' : 'USGS observation'}: ${event.title}${event.country || event.region ? `, ${event.country || event.region}` : ''}`
 
 type Seed = [Category, string, string, string, number, number, number, string]
 const seeds: Seed[] = [
@@ -392,13 +396,15 @@ export function filterEvents(
 }
 // Reports and additional summaries use publication; digital uses interval end.
 export const eventTime = (event: ExplorerEvent): string =>
-  isAdditional(event)
-    ? event.published_at
-    : isDigital(event)
-      ? event.interval_end
-      : isReport(event)
-        ? event.published_at
-        : event.occurred_at
+  isHazard(event)
+    ? event.geometry_at
+    : isAdditional(event)
+      ? event.published_at
+      : isDigital(event)
+        ? event.interval_end
+        : isReport(event)
+          ? event.published_at
+          : event.occurred_at
 export type MappedEvent = ExplorerEvent & { coordinates: [number, number] }
 export const hasCoordinates = (event: ExplorerEvent): event is MappedEvent =>
   event.coordinates !== null
@@ -428,26 +434,30 @@ export function formatTimestamp(iso: string | number): string {
 }
 
 export const locationMeaning = (event: ExplorerEvent) =>
-  isAdditional(event)
-    ? event.location_precision === 'region'
-      ? 'Broad illustrative context · not a vehicle or orbital position'
-      : event.location_precision === 'withheld'
-        ? 'Location withheld for safety · not mapped'
-        : 'Location not supplied · not mapped'
-    : isDigital(event)
+  isHazard(event)
+    ? event.coordinates
+      ? 'Approximate latest geometry · not hazard extent'
+      : 'Polygon retained in source · feed only'
+    : isAdditional(event)
       ? event.location_precision === 'region'
-        ? 'Broad illustrative region · not a probe or outage extent'
+        ? 'Broad illustrative context · not a vehicle or orbital position'
         : event.location_precision === 'withheld'
           ? 'Location withheld for safety · not mapped'
           : 'Location not supplied · not mapped'
-      : isReport(event)
+      : isDigital(event)
         ? event.location_precision === 'region'
-          ? 'Broad illustrative region · not an incident position'
+          ? 'Broad illustrative region · not a probe or outage extent'
           : event.location_precision === 'withheld'
             ? 'Location withheld for safety · not mapped'
             : 'Location not supplied · not mapped'
-        : event.is_demo
-          ? 'Approximate location'
-          : isForecast(event)
-            ? 'Forecast location'
-            : 'Estimated epicentre'
+        : isReport(event)
+          ? event.location_precision === 'region'
+            ? 'Broad illustrative region · not an incident position'
+            : event.location_precision === 'withheld'
+              ? 'Location withheld for safety · not mapped'
+              : 'Location not supplied · not mapped'
+          : event.is_demo
+            ? 'Approximate location'
+            : isForecast(event)
+              ? 'Forecast location'
+              : 'Estimated epicentre'

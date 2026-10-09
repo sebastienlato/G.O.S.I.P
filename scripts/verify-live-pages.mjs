@@ -48,11 +48,31 @@ try {
     assert(body.health.record_count > 0)
     assert(Date.now() - Date.parse(body.health.fetched_at) < 45 * 60_000)
     assert(Date.now() - Date.parse(body.health.generated_at) < 45 * 60_000)
-    assert.deepEqual((await health.json()).sources[0], body.health)
+    const sourceHealth = (await health.json()).sources
+    assert.deepEqual(
+      sourceHealth.find((h) => h.source === 'usgs'),
+      body.health,
+    )
+    const hazardResponse = await context.request.get(
+      new URL('data/eonet.json', site).href,
+    )
+    assert.equal(hazardResponse.status(), 200)
+    const hazards = await hazardResponse.json()
+    assert.equal(hazards.health.status, 'ok')
+    assert(hazards.health.record_count > 0)
+    assert.equal(hazards.health.generated_at, null)
+    assert(Date.now() - Date.parse(hazards.health.fetched_at) < 45 * 60_000)
+    assert.deepEqual(
+      sourceHealth.find((h) => h.source === 'eonet'),
+      hazards.health,
+    )
     for (const mode of ['?view=list', '?map=static', '']) {
       await page.goto(site + mode)
       await expect(
         page.getByText('Live USGS earthquakes', { exact: true }),
+      ).toBeVisible()
+      await expect(
+        page.getByText('Live EONET global hazards', { exact: true }),
       ).toBeVisible()
       await expect(page.locator('.event-card').first()).toBeVisible()
       await expect(page.locator('.demo-banner')).toHaveCount(0)
@@ -72,11 +92,44 @@ try {
         fullPage: true,
       })
     }
-    await page.locator('.event-card').first().click()
+    await page
+      .locator('.event-card')
+      .filter({ hasText: 'OBSERVATION · USGS' })
+      .first()
+      .click()
     await expect(page.getByRole('dialog')).toContainText(
       'U.S. Geological Survey / ANSS',
     )
     await page.keyboard.press('Escape')
+    await page.getByRole('button', { name: '7 days', exact: true }).click()
+    const quakes = page.getByRole('checkbox', { name: /USGS earthquakes/ })
+    const hazardToggle = page.getByRole('checkbox', {
+      name: /EONET global hazards/,
+    })
+    await quakes.uncheck()
+    await expect(
+      page.locator('.event-card').filter({ hasText: 'OBSERVATION · USGS' }),
+    ).toHaveCount(0)
+    await page
+      .locator('.event-card')
+      .filter({ hasText: 'CURATED HAZARD · EONET' })
+      .first()
+      .click()
+    await expect(page.getByRole('dialog')).toContainText('Latest geometry date')
+    await expect(page.getByRole('dialog')).toContainText(
+      'Occurrence / publication / update',
+    )
+    await page.keyboard.press('Escape')
+    await page.reload()
+    await expect(quakes).not.toBeChecked()
+    await expect(hazardToggle).toBeChecked()
+    await hazardToggle.uncheck()
+    await expect(page.locator('.event-card')).toHaveCount(0)
+    await expect(
+      page.getByText('All live layers are off', { exact: true }),
+    ).toBeVisible()
+    await quakes.check()
+    await hazardToggle.check()
     await page
       .getByRole('button', { name: 'Privacy & source licenses' })
       .click()
@@ -90,7 +143,7 @@ try {
     ).toBeVisible()
     assert.deepEqual(failures, [])
     console.log(
-      `${name}: live release ${source}, ${body.health.record_count} real records, generated ${body.health.generated_at}, fetched ${body.health.fetched_at}; map/list/static/details/privacy/reload and same-origin-only requests passed.`,
+      `${name}: live release ${source}, ${body.health.record_count} USGS records + ${hazards.health.record_count} EONET catalog entries; EONET fetched ${hazards.health.fetched_at}; USGS generated ${body.health.generated_at}, fetched ${body.health.fetched_at}; map/list/static/details/privacy, independent layer toggles, empty/reload and same-origin-only requests passed.`,
     )
     await context.close()
   }

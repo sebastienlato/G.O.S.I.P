@@ -16,14 +16,14 @@ export default function PrivacySources() {
       <p>
         {localSourceAccess
           ? 'On this loopback host, selecting the development NWS source can contact that provider directly, revealing your IP address and browser connection information. No credentials are sent.'
-          : 'Earthquakes are read from snapshots on this host. Your browser does not contact USGS. Public NWS is not connected yet.'}{' '}
+          : 'Live layers are read from snapshots on this host. Your browser does not contact USGS or EONET. Public NWS is not connected yet.'}{' '}
         Opening an external source link leaves GOSIP and contacts that site.
       </p>
       <p>
-        Earthquake snapshots remain in page memory. Your browser may cache
-        hosted files normally. Old local USGS storage from earlier versions is
-        no longer read; browser site-data controls can remove it. NWS stays in
-        page memory.
+        Live snapshots remain in page memory. Your browser may cache hosted
+        files normally. Old local USGS storage from earlier versions is no
+        longer read; browser site-data controls can remove it. NWS stays in page
+        memory.
       </p>
       <h3>Sources & licenses</h3>
       <ul>
@@ -37,6 +37,21 @@ export default function PrivacySources() {
             rel="noreferrer"
           >
             USGS terms ↗
+          </a>
+        </li>
+        <li>
+          <strong>NASA EONET:</strong> curated public natural-event metadata,
+          credited with catalog IDs and original source references. Only titles,
+          categories, dates, geometry and magnitude parameters; no imagery or
+          linked reports copied. General-information display under EONET's
+          documented purpose; approximate spatial/temporal extents, no
+          endorsement.{' '}
+          <a
+            href="https://eonet.gsfc.nasa.gov/what-is-eonet"
+            target="_blank"
+            rel="noreferrer"
+          >
+            EONET scope & disclaimer ↗
           </a>
         </li>
         <li>
@@ -115,11 +130,11 @@ export default function PrivacySources() {
         </a>
       </p>
       <p>
-        No paid fallback or automatic upgrade. Scheduled ingestion fetches USGS
-        once for all visitors. Schedules can be delayed or disabled after 60
-        days without repository activity. Stale timestamps remain visible even
-        if the pipeline stops. This is not an emergency service. No provider
-        endorsement.
+        No paid fallback or automatic upgrade. Scheduled ingestion fetches each
+        provider once per run for all visitors. Schedules can be delayed or
+        disabled after 60 days without repository activity. Stale timestamps
+        remain visible even if the pipeline stops. This is not an emergency
+        service. No provider endorsement.
       </p>
     </div>
   )

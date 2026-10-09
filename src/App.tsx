@@ -1,3 +1,4 @@
+import { isHazard, hazardKinds } from './data/eonet'
 import PrivacySources from './components/PrivacySources'
 import { localSourceAccess, PUBLIC_SOURCE_NOTE } from './state/sourceAccess'
 import {
@@ -49,7 +50,7 @@ import { categoryKeys } from './state/explorer'
 import { useExplorerFilters } from './state/useExplorerFilters'
 import EventDetail from './components/EventDetail'
 import FeedSource from './components/FeedSource'
-import { useEarthquakes } from './state/useEarthquakes'
+import { useEarthquakes, useHazards } from './state/useEarthquakes'
 import {
   categories,
   eventTime,
@@ -68,7 +69,7 @@ import {
 
 const demoEvents = demoProvider
   .getEvents()
-  .filter((event) => event.id !== 'demo-001')
+  .filter((event) => !['demo-001', 'demo-005', 'demo-008'].includes(event.id))
 const noEvents: ExplorerEvent[] = []
 const timeOptions: { value: WindowHours; label: string }[] = [
   { value: 6, label: '6 hours' },
@@ -86,6 +87,7 @@ export default function App() {
       view,
       mapMode,
       source,
+      liveLayers,
       language,
       reportStatus,
       digitalFamily,
@@ -96,7 +98,19 @@ export default function App() {
     },
     updateFilters,
   ] = useExplorerFilters()
-  const earthquakes = useEarthquakes(source === 'usgs')
+  const earthquakes = useEarthquakes(
+    source === 'usgs' && liveLayers.includes('usgs'),
+  )
+  const hazards = useHazards(source === 'usgs' && liveLayers.includes('eonet'))
+  const liveEvents = useMemo(
+    () => [
+      ...(liveLayers.includes('usgs')
+        ? (earthquakes.snapshot?.events ?? [])
+        : []),
+      ...(liveLayers.includes('eonet') ? (hazards.snapshot?.events ?? []) : []),
+    ],
+    [liveLayers, earthquakes.snapshot, hazards.snapshot],
+  )
   const weather = useWeather(source === 'nws')
   const additional = isAdditionalSource(source) ? source : null
   const digital = source === 'digital-demo'
@@ -113,7 +127,7 @@ export default function App() {
     : source === 'demo'
       ? categoryKeys
       : source === 'usgs'
-        ? ['physical']
+        ? ['physical', 'environment']
         : digital
           ? ['digital']
           : reports
@@ -134,11 +148,14 @@ export default function App() {
             ? fireExamples
             : source === 'nws'
               ? (weather.snapshot?.events ?? noEvents)
-              : (earthquakes.snapshot?.events ?? noEvents)
+              : liveEvents
   const referenceTime = isDemo
     ? (cursor ?? DEMO_TIME)
-    : Math.floor((source === 'nws' ? weather.now : earthquakes.now) / 60_000) *
-      60_000
+    : Math.floor(
+        (source === 'nws'
+          ? weather.now
+          : Math.max(earthquakes.now, hazards.now)) / 60_000,
+      ) * 60_000
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [detailId, setDetailId] = useState<string | null>(null)
   const [focusRequest, setFocusRequest] = useState<{
@@ -223,6 +240,7 @@ export default function App() {
     view,
     mapMode,
     source,
+    liveLayers,
     language,
     reportStatus,
     digitalFamily,
@@ -236,12 +254,14 @@ export default function App() {
       region: '',
       selectedCategories: categoryKeys,
       hours: 24,
+      liveLayers: ['usgs', 'eonet'],
       language: 'all',
       reportStatus: 'all',
       digitalFamily: 'all',
       digitalResult: 'all',
     })
   const isFiltered =
+    (source === 'usgs' && liveLayers.length !== 2) ||
     cursor !== null ||
     country !== '' ||
     region !== '' ||
@@ -369,6 +389,19 @@ export default function App() {
         </div>
         <FeedSource
           source={source}
+          liveLayers={liveLayers}
+          onToggle={(layer) =>
+            updateFilters({
+              liveLayers: liveLayers.includes(layer)
+                ? liveLayers.filter((key) => key !== layer)
+                : [...liveLayers, layer],
+            })
+          }
+          hazards={hazards}
+          counts={{
+            usgs: events.filter((e) => !e.is_demo && !isHazard(e)).length,
+            eonet: events.filter(isHazard).length,
+          }}
           onChange={(nextSource) => {
             updateFilters({
               source: nextSource,
@@ -477,7 +510,7 @@ export default function App() {
         <div className="filter-bar" aria-label="Event filters">
           <div className="filter-label">
             <SlidersHorizontal size={16} />
-            <span>Layers</span>
+            <span>Categories</span>
           </div>
           <div className="category-filters">
             <button
@@ -516,6 +549,13 @@ export default function App() {
         </div>
         <div className={`explorer ${view === 'list' ? 'list-view' : ''}`}>
           <div className="explorer-controls">
+            {source === 'usgs' && (
+              <p className="report-map-note">
+                {mapEvents.length} markers · {events.length - mapEvents.length}{' '}
+                feed-only records. Windows use earthquake occurrence or EONET
+                geometry dates.
+              </p>
+            )}
             {additional && (
               <p className="report-map-note">
                 {mapEvents.length} broad context markers ·{' '}
@@ -610,8 +650,9 @@ export default function App() {
             </div>
             <div className="filter-summary">
               <p>
-                {activeCategoryCount} of {availableCategories.length} layers ·{' '}
-                {timeOptions.find((option) => option.value === hours)?.label}{' '}
+                {source === 'usgs' && `${liveLayers.length} live layers · `}
+                {activeCategoryCount} of {availableCategories.length} categories
+                · {timeOptions.find((option) => option.value === hours)?.label}{' '}
                 {isDemo
                   ? digital
                     ? cursor === null
@@ -768,7 +809,7 @@ export default function App() {
                         ? 'simulated'
                         : source === 'nws'
                           ? 'NWS forecast'
-                          : 'USGS'}{' '}
+                          : 'live'}{' '}
                 {events.length === 1 ? 'event' : 'events'}
               </span>
               <span>
@@ -822,7 +863,7 @@ export default function App() {
                         : isDigital(event) &&
                             Date.parse(event.interval_end) > referenceTime
                           ? `Interval extends to ${formatTimestamp(event.interval_end)} · full fixture totals`
-                          : `${isDigital(event) ? 'Interval ended ' : isReport(event) || isAdditional(event) ? 'Published ' : ''}${demoAge(eventTime(event), referenceTime)} ${isDemo ? (cursor === null ? 'before snapshot' : 'before cursor') : 'ago'}`}
+                          : `${isHazard(event) ? 'Geometry dated ' : isDigital(event) ? 'Interval ended ' : isReport(event) || isAdditional(event) ? 'Published ' : ''}${demoAge(eventTime(event), referenceTime)} ${isDemo ? (cursor === null ? 'before snapshot' : 'before cursor') : 'ago'}`}
                     </span>
                   </div>
                   <h3
@@ -833,7 +874,11 @@ export default function App() {
                     <ArrowUpRight size={15} />
                   </h3>
                   <p>
-                    {event.region}
+                    {isHazard(event)
+                      ? event.hazard_categories
+                          .map((key) => hazardKinds[key])
+                          .join(' / ')
+                      : event.region}
                     {event.country && (
                       <>
                         <span> / </span>
@@ -925,9 +970,11 @@ export default function App() {
                   <h3>
                     {sourceDisabled
                       ? 'Source disabled on this host'
-                      : selectedCategories.length
-                        ? 'No matching signals'
-                        : 'All layers are off'}
+                      : source === 'usgs' && !liveLayers.length
+                        ? 'All live layers are off'
+                        : selectedCategories.length
+                          ? 'No matching signals'
+                          : 'All layers are off'}
                   </h3>
                   <p>
                     {sourceDisabled
@@ -939,7 +986,7 @@ export default function App() {
                           : source === 'nws'
                             ? 'No forecast periods overlap this view. Check source status, enable Environment, clear search or widen the future window. This is not evidence of safe weather.'
                             : !isDemo
-                              ? 'No observations match this view. Check the source status above, enable Earth & activity, clear search or widen the window. An empty result does not mean no earthquakes occurred.'
+                              ? 'No records match this view. Check each source status, enable live layers and categories, clear search or widen the window. Missing data does not mean no hazards occurred.'
                               : !selectedCategories.length
                                 ? 'Enable a layer to explore the simulated events.'
                                 : query.trim()
@@ -989,9 +1036,7 @@ export default function App() {
                 ? 'Local fixtures · No live connection'
                 : source === 'nws'
                   ? 'NWS · Predictions, not observations or alerts'
-                  : earthquakes.snapshot
-                    ? 'USGS / ANSS · Estimates subject to revision'
-                    : 'USGS · No data loaded'}
+                  : 'USGS / ANSS + NASA EONET · Distinct sources, no corroboration claim'}
             </div>
           </section>
         </div>
@@ -1029,7 +1074,13 @@ export default function App() {
             setFocusRequest(null)
           }}
           onShowOnMap={() => showOnMap(detailEvent.id)}
-          stale={source === 'nws' ? weather.stale : earthquakes.stale}
+          stale={
+            isHazard(detailEvent)
+              ? hazards.stale
+              : source === 'nws'
+                ? weather.stale
+                : earthquakes.stale
+          }
           onClose={closeEvent}
         />
       )}
@@ -1063,17 +1114,18 @@ export default function App() {
                 An honest starting point.
               </h2>
               <p>
-                GOSIP shows live USGS earthquakes from scheduled public
-                snapshots. Other live layers are coming. The separate simulation
-                lab contains invented examples, never mixed with observations.
+                GOSIP combines USGS earthquakes and NASA EONET curated hazards
+                from scheduled public snapshots, with independent layers and
+                freshness. The separate simulation lab contains invented
+                examples, never mixed with observations.
               </p>
               <h3>Transparent by design</h3>
               <p>
-                Demo time is fixed at 8 October 2026, 16:00 UTC. USGS filters
-                use the current device clock. Earthquake locations and
-                magnitudes are estimates that may change; provider review does
-                not verify impacts. An empty region does not mean nothing is
-                happening there.
+                Demo time is fixed at 8 October 2026, 16:00 UTC. Live filters
+                use the current device clock and source-specific dates.
+                Earthquake locations and magnitudes are estimates that may
+                change; provider review does not verify impacts. An empty region
+                does not mean nothing is happening there.
               </p>
             </>
           )}

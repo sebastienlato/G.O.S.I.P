@@ -1,3 +1,5 @@
+import { isHazard } from '../data/eonet'
+import HazardBody from './HazardBody'
 import { isAdditional, additionalLayers } from '../data/additional'
 import AdditionalBody from './AdditionalBody'
 import Relationships from './Relationships'
@@ -29,7 +31,8 @@ export default function EventDetail({
   const digital = isDigital(event)
   const report = isReport(event)
   const forecast = isForecast(event)
-  const quake = !event.is_demo && !forecast
+  const hazard = isHazard(event)
+  const quake = !event.is_demo && !forecast && !hazard
   const thermal = 'kind' in event && event.kind === 'thermal'
   const dialog = useRef<HTMLDialogElement>(null)
   useEffect(() => {
@@ -86,33 +89,41 @@ export default function EventDetail({
         </h2>
         <p className="detail-region">
           <MapPin size={15} />
-          {event.region}
+          {hazard
+            ? event.coordinates
+              ? 'Approximate catalog geometry'
+              : 'No point location'
+            : event.region}
           {event.country ? ` · ${event.country}` : ''}
         </p>
         <div className="simulation-note">
           <strong>
-            {digital
-              ? 'SIMULATED · DIGITAL MEASUREMENT'
-              : report
-                ? 'SIMULATED · ATTRIBUTED CLAIM'
-                : event.is_demo
-                  ? 'SIMULATED EVENT'
-                  : forecast
-                    ? 'WEATHER FORECAST · NWS'
-                    : event.status === 'deleted'
-                      ? 'WITHDRAWN BY PROVIDER'
-                      : 'EARTHQUAKE OBSERVATION'}
+            {hazard
+              ? 'CURATED HAZARD · NASA EONET'
+              : digital
+                ? 'SIMULATED · DIGITAL MEASUREMENT'
+                : report
+                  ? 'SIMULATED · ATTRIBUTED CLAIM'
+                  : event.is_demo
+                    ? 'SIMULATED EVENT'
+                    : forecast
+                      ? 'WEATHER FORECAST · NWS'
+                      : event.status === 'deleted'
+                        ? 'WITHDRAWN BY PROVIDER'
+                        : 'EARTHQUAKE OBSERVATION'}
           </strong>
           <span>
-            {digital
-              ? 'Invented measurement scenario. Not a confirmed outage, intentional censorship or real provider observation.'
-              : report
-                ? 'An invented publisher’s claim, not a verified incident. No real-world event or independent corroboration is asserted.'
-                : event.is_demo
-                  ? 'Invented for this prototype. Not a real-world report, alert, or verified observation.'
-                  : forecast
-                    ? 'Prediction for a future validity interval. Not a measurement, official alert, or confirmed impact. Check the current NWS source for warnings.'
-                    : 'Provider estimate subject to revision. Review status concerns source parameters, not verified damage, casualties or an emergency alert.'}
+            {hazard
+              ? 'Curated natural-event metadata for general information. Not an official warning, sensor detection or verified impact.'
+              : digital
+                ? 'Invented measurement scenario. Not a confirmed outage, intentional censorship or real provider observation.'
+                : report
+                  ? 'An invented publisher’s claim, not a verified incident. No real-world event or independent corroboration is asserted.'
+                  : event.is_demo
+                    ? 'Invented for this prototype. Not a real-world report, alert, or verified observation.'
+                    : forecast
+                      ? 'Prediction for a future validity interval. Not a measurement, official alert, or confirmed impact. Check the current NWS source for warnings.'
+                      : 'Provider estimate subject to revision. Review status concerns source parameters, not verified damage, casualties or an emergency alert.'}
           </span>
         </div>
         {playback && (
@@ -123,7 +134,9 @@ export default function EventDetail({
           </p>
         )}
         <>
-          {additional ? (
+          {hazard ? (
+            <HazardBody event={event} stale={stale} />
+          ) : additional ? (
             <AdditionalBody event={event} />
           ) : digital ? (
             <DigitalBody event={event} />
