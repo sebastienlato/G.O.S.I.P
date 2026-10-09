@@ -66,7 +66,7 @@ function accumulator(now: number) {
       !['1', 'N20', 'NOAA-20'].includes(row[7]) ||
       row[8] !== 'VIIRS' ||
       !['l', 'n', 'h'].includes(row[9]) ||
-      !/^2\.0NRT$/.test(row[10]) ||
+      !/^2\.0(NRT|RT|URT)$/.test(row[10]) ||
       !['D', 'N'].includes(row[13])
     )
       throw Error('Invalid observation')

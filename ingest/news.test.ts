@@ -165,3 +165,10 @@ it('streams global rows across chunk boundaries, drops old rows and never emits 
     ),
   ).rejects.toThrow('Response too large')
 })
+
+it('accepts the documented NRT product RT/URT versions without retaining precise positions', () => {
+  for (const version of ['2.0NRT', '2.0RT', '2.0URT']) {
+    const feed = aggregateFIRMS(firmsCSV('2026-10-09').replaceAll('2.0NRT',version), now)
+    expect(parseFIRMS(feed,now).events[0].detection_count).toBe(2)
+  }
+})
