@@ -11,8 +11,9 @@ export default function PrivacySources() {
         tracking. App files and maps come from this host; a hosting provider can
         receive your IP address and requested URLs. Search and place filters
         appear in the address bar, browser history and copied links. Avoid
-        personal or sensitive search text. GOSIP sends no referrer on outgoing
-        requests or links.
+        personal or sensitive search text. Outgoing links send no referrer. The
+        page's own requests (such as globe tiles) send only the site address,
+        never the page path, search or filters.
       </p>
       <p>
         {localSourceAccess

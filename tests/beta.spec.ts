@@ -372,8 +372,13 @@ test('repository privacy licenses and keyboard navigation remain usable at 320px
   await expect(trigger).toBeFocused()
   await expect(page.locator('meta[name="referrer"]')).toHaveAttribute(
     'content',
-    'no-referrer',
+    'strict-origin',
   )
+  // Outgoing links never send a referrer.
+  for (const rel of await page
+    .locator('a[target="_blank"]')
+    .evaluateAll((links) => links.map((a) => a.getAttribute('rel') ?? '')))
+    expect(rel).toContain('noreferrer')
   const blocked = await page.evaluate(async () => {
     const violations: string[] = []
     document.addEventListener('securitypolicyviolation', (e) =>

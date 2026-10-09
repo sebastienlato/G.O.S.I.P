@@ -9,7 +9,12 @@ assert(
   html.indexOf('Content-Security-Policy') < html.indexOf('<script'),
   'CSP must precede scripts',
 )
-assert(html.includes('no-referrer'), 'Missing no-referrer policy')
+// Page requests send only the site origin (Cesium ion token check, D54);
+// outgoing links stay rel=noreferrer.
+assert(
+  html.includes('content="strict-origin"'),
+  'Missing strict-origin referrer policy',
+)
 for (const path of [
   'world.svg',
   'world.geojson',
