@@ -6,7 +6,7 @@ export const OONI_MAX_BYTES = 100_000
 export const OONI_DAY_MS = 86_400_000
 export const OONI_LICENSE = 'https://creativecommons.org/licenses/by-nc-sa/4.0/'
 export const OONI_CREDIT = {
-  attribution: '© Open Observatory of Network Interference (OONI)',
+  attribution: '© 2020 Open Observatory of Network Interference (OONI)',
   source: 'https://api.ooni.io/',
   license: OONI_LICENSE,
   changes:
