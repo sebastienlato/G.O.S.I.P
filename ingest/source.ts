@@ -43,11 +43,12 @@ export async function ingestSource<T extends SnapshotBase>(
   }
   let snapshot: T | null = null
   let error: string | null = null
+  let stage = 'request'
   try {
-    snapshot = adapter.parse(
-      (adapter.decodeResponse ?? JSON.parse)(await get(adapter.url)),
-      now,
-    )
+    const raw = await get(adapter.url)
+    stage = 'parse'
+    snapshot = adapter.parse((adapter.decodeResponse ?? JSON.parse)(raw), now)
+    stage = 'validation'
     adapter.validate(snapshot, now)
     if (
       new TextEncoder().encode(
@@ -56,9 +57,35 @@ export async function ingestSource<T extends SnapshotBase>(
       (adapter.publicationMaxBytes ?? adapter.maxBytes) - 1000
     )
       throw Error('Publication too large')
-  } catch {
+  } catch (failure) {
     snapshot = null
-    error = `${adapter.source.toUpperCase()} fetch failed or returned invalid, oversized, truncated or stale data.`
+    // Never echo arbitrary exceptions: fetch errors can contain secret-bearing URLs.
+    const allowed = [
+      'Unknown CSV schema',
+      'Unexpected FIRMS response',
+      'Invalid observation',
+      'Invalid measure',
+      'Duplicate detection',
+      'Too many rows',
+      'Invalid fire summary',
+      'Insufficient delay',
+      'Too many detections',
+      'Publication too large',
+      'Response too large',
+      'HTTP 401',
+      'HTTP 403',
+      'HTTP 404',
+      'HTTP 429',
+      'HTTP 500',
+      'HTTP 502',
+      'HTTP 503',
+      'HTTP 504',
+    ]
+    const detail =
+      failure instanceof Error && allowed.includes(failure.message)
+        ? failure.message
+        : 'unavailable or invalid data'
+    error = `${adapter.source.toUpperCase()} ${stage} failed: ${detail}.`
     try {
       snapshot = adapter.decode(
         await get(

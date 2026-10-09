@@ -29,6 +29,7 @@ export function aggregateFIRMS(raw: string, day: string) {
     'frp',
     'daynight',
   ]
+  if (!raw.startsWith('latitude,')) throw Error('Unexpected FIRMS response')
   if (header.join(',') !== expected.join(',')) throw Error('Unknown CSV schema')
   const cells = new Map<string, number[]>()
   const seen = new Set<string>()
