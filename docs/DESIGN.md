@@ -58,9 +58,16 @@ Data colours (`encoding.ts`): magnitude <4 `#e9b44c`, 4–4.9 `#f08a3e`, 5–5.9
 │ ☑ Quakes  44 │                                    [-] │ RECORDS      │
 │ WINDOW, VIEW │             ( globe )              [⌂] │ search       │
 │ CATEGORIES   │                                        │ cards…       │
-│ SOURCES …    │ [legend]        [POS / ALT]   [mode]   │              │
+│ SOURCES …    │ [legend]            [mode][POS / ALT]  │              │
 └──────────────┴────────────────────────────────────────┴──────────────┘
 ```
+
+## Final polish rules (D64)
+
+- Feed order: launches soonest, then newest; aggregated cells (FIRMS) last, busiest first. Never let an aggregate layer fill the first page.
+- A source that has not been requested yet reads "Waiting"/"standby"; "Unavailable"/"degraded" are for real failures. Tabs load on reveal.
+- The legend lists only kinds drawn in the current view. Map mode, static switch and POS/ALT readout form the bottom-right stack on desktop; credits sit on glass.
+- Phones: one-line masthead status ("Live · 4 min ago", "Stale · 1 h ago"), all window choices on one row at 320, home altitude 15,500 km.
 
 ## Adding a live layer (Phases 16+)
 

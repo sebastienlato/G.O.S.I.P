@@ -14,11 +14,18 @@ import {
   magnitudeSteps,
 } from '../state/encoding'
 import KindIcon from './KindIcon'
+import type { MarkerKind } from '../state/encoding'
 
 const samples = [3, 4.5, 5.5, 6.5]
 
-/** Explains what is drawn on the globe. Feed-only layers are not listed. */
-export default function MapLegend() {
+/**
+ * Explains what is drawn on the globe: only kinds with records in the current
+ * view. Feed-only layers are not listed.
+ */
+export default function MapLegend({ shown }: { shown: Set<MarkerKind> }) {
+  const has = (...kinds: MarkerKind[]) => kinds.some((k) => shown.has(k))
+  if (!has('quake', 'volcano', 'storm', 'maritime', 'launch', 'ooni', 'fire'))
+    return null
   return (
     <details
       className="map-legend"
@@ -27,46 +34,56 @@ export default function MapLegend() {
     >
       <summary>Legend</summary>
       <div className="legend-body">
-        <p className="legend-row" aria-label="Earthquake magnitude scale">
-          <span className="legend-scale" aria-hidden="true">
-            {samples.map((m, i) => (
-              <span
-                key={m}
-                className="event-marker kind-quake legend-mark"
-                style={
-                  {
-                    '--marker-color': magnitudeSteps[i].color,
-                    '--size': `${magnitudeSize(m)}px`,
-                  } as React.CSSProperties
-                }
-              >
-                <span />
-              </span>
-            ))}
-          </span>
-          <span>Earthquake M2.5 → 6+, fades over 7 days</span>
-        </p>
-        <p className="legend-row">
-          <span className="legend-badge" aria-hidden="true">
-            <KindIcon kind="volcano" color={hazardColors.volcanoes} size={15} />
-          </span>
-          <span>Volcano</span>
-          <span className="legend-badge" aria-hidden="true">
-            <KindIcon
-              kind="storm"
-              color={hazardColors.severeStorms}
-              size={15}
-            />
-          </span>
-          <span>Storm</span>
-        </p>
-        {maritimeAvailable && (
-          <p className="legend-row">
-            <KindIcon kind="maritime" color={maritimeColor} size={15} /> Delayed
-            port calls · regional glow
+        {has('quake') && (
+          <p className="legend-row" aria-label="Earthquake magnitude scale">
+            <span className="legend-scale" aria-hidden="true">
+              {samples.map((m, i) => (
+                <span
+                  key={m}
+                  className="event-marker kind-quake legend-mark"
+                  style={
+                    {
+                      '--marker-color': magnitudeSteps[i].color,
+                      '--size': `${magnitudeSize(m)}px`,
+                    } as React.CSSProperties
+                  }
+                >
+                  <span />
+                </span>
+              ))}
+            </span>
+            <span>Earthquake M2.5 → 6+, fades over 7 days</span>
           </p>
         )}
-        {launchesAvailable && (
+        {has('volcano', 'storm') && (
+          <p className="legend-row">
+            <span className="legend-badge" aria-hidden="true">
+              <KindIcon
+                kind="volcano"
+                color={hazardColors.volcanoes}
+                size={15}
+              />
+            </span>
+            <span>Volcano</span>
+            <span className="legend-badge" aria-hidden="true">
+              <KindIcon
+                kind="storm"
+                color={hazardColors.severeStorms}
+                size={15}
+              />
+            </span>
+            <span>Storm</span>
+          </p>
+        )}
+        {maritimeAvailable && has('maritime') && (
+          <p className="legend-row">
+            <span className="legend-badge" aria-hidden="true">
+              <KindIcon kind="maritime" color={maritimeColor} size={15} />
+            </span>
+            <span>Delayed port calls · regional glow</span>
+          </p>
+        )}
+        {launchesAvailable && has('launch') && (
           <p className="legend-row">
             <span className="legend-badge" aria-hidden="true">
               <KindIcon kind="launch" color={launchColor} size={15} />
@@ -74,7 +91,7 @@ export default function MapLegend() {
             <span>Scheduled launch · site context</span>
           </p>
         )}
-        {ooniAvailable && (
+        {ooniAvailable && has('ooni') && (
           <p className="legend-row">
             <span className="legend-badge" aria-hidden="true">
               <KindIcon kind="ooni" color={ooniColor} size={15} />
@@ -82,7 +99,7 @@ export default function MapLegend() {
             <span>Digital measurements · country context</span>
           </p>
         )}
-        {firmsAvailable && (
+        {firmsAvailable && has('fire') && (
           <p className="legend-row" aria-label="Thermal detection density">
             <span
               className="legend-heat"

@@ -1,6 +1,6 @@
 # G.O.S.I.P. — Global Open Source Intelligence Platform
 
-A free public-data console on a 3D satellite globe, with independent layers, a searchable feed and source freshness. No account, payment or analytics. Coverage is incomplete; this is not an emergency service. **Launch preparation is deployed; the required final Claude visual polish pass is pending.**
+A free public-data console on a 3D satellite globe, with independent layers, a searchable feed and source freshness. No account, payment or analytics. Coverage is incomplete; this is not an emergency service. **Launch preparation is deployed and the final Claude visual polish pass is recorded (D64); sign-off still needs current verification.**
 
 **[Open GOSIP](https://sebastienlato.github.io/G.O.S.I.P/)** · [Lightweight list](https://sebastienlato.github.io/G.O.S.I.P/?view=list) · [Static map](https://sebastienlato.github.io/G.O.S.I.P/?map=static)
 

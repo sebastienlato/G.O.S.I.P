@@ -39,7 +39,7 @@ type MapState = 'loading' | 'ready' | 'fallback'
 
 const ionToken = import.meta.env.VITE_CESIUM_ION_TOKEN?.trim() || ''
 const HOME = { lon: -35, lat: 20 }
-const homeHeight = (width: number) => (width < 700 ? 1.8e7 : 2.05e7)
+const homeHeight = (width: number) => (width < 700 ? 1.55e7 : 2.05e7)
 /** 3D cities take over below CITIES_ON and hand back above CITIES_OFF (m). */
 const CITIES_ON = 250_000
 const CITIES_OFF = 400_000
@@ -143,6 +143,11 @@ export default function WorldMap({
         }))
         .sort((a, b) => drawOrder(a.enc, b.enc)),
     [events, referenceTime],
+  )
+  // The legend explains only what is currently drawn.
+  const shownKinds = useMemo(
+    () => new Set(encoded.map(({ enc }) => enc.kind)),
+    [encoded],
   )
   // FIRMS 2° cells: drawn as a heat field on both the globe and static map.
   const cells = useMemo(
@@ -907,7 +912,7 @@ export default function WorldMap({
           <Compass size={16} />
         </button>
       </div>
-      {live && <MapLegend />}
+      {live && <MapLegend shown={shownKinds} />}
       <div className="map-bottom">
         <span className="map-mode">
           {staticView

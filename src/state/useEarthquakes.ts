@@ -78,9 +78,17 @@ export function usePublished<T extends Snapshot>(
     const poll = enabled
       ? window.setInterval(() => void refresh(), 15 * 60_000)
       : undefined
+    // A tab opened in the background skips its first fetch: load on reveal.
+    const reveal = () => {
+      if (enabled && document.visibilityState === 'visible') void refresh()
+    }
+    document.addEventListener('visibilitychange', reveal)
+    window.addEventListener('online', reveal)
     return () => {
       clearInterval(clock)
       clearInterval(poll)
+      document.removeEventListener('visibilitychange', reveal)
+      window.removeEventListener('online', reveal)
     }
   }, [enabled, refresh])
   return {

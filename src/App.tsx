@@ -336,7 +336,22 @@ export default function App() {
         ? `${liveHealthy ? 'Data' : 'Some data stale ·'} retrieved ${minutesAgo(retrievals[0], referenceTime)}`
         : activeLive.some((s) => s.loading)
           ? 'Loading live data…'
-          : 'Live data unavailable'
+          : activeLive.some((s) => s.health || s.error)
+            ? 'Live data unavailable'
+            : 'Waiting for live data…'
+
+  // Phones show the same status in two short words.
+  const freshnessShort = historical
+    ? 'Archived'
+    : !activeLive.length
+      ? 'Layers off'
+      : retrievals.length
+        ? `${liveHealthy ? 'Live' : 'Stale'} · ${minutesAgo(retrievals[0], referenceTime)}`
+        : activeLive.some((s) => s.loading)
+          ? 'Loading…'
+          : activeLive.some((s) => s.health || s.error)
+            ? 'Unavailable'
+            : 'Waiting…'
 
   const windowLabel = timeOptions.find((o) => o.value === hours)?.label
   const windowSuffix = historical
@@ -479,12 +494,23 @@ export default function App() {
                 formatTimestamp(referenceTime)
               )}
             </strong>
-            {freshness && <span className="clock-fresh">{freshness}</span>}
+            {freshness && (
+              <span className="clock-fresh">
+                <span className="fresh-full">{freshness}</span>
+                <span className="fresh-short" aria-hidden="true">
+                  {freshnessShort}
+                </span>
+              </span>
+            )}
           </span>
           {live && activeLive.length > 0 && (
             <span className={`feed-health ${liveHealthy ? 'ok' : 'warn'}`}>
               Feeds {healthyFeeds}/{activeLive.length}{' '}
-              {liveHealthy ? 'nominal' : 'degraded'}
+              {liveHealthy
+                ? 'nominal'
+                : activeLive.some((s) => s.snapshot || s.health || s.error)
+                  ? 'degraded'
+                  : 'standby'}
             </span>
           )}
         </div>
@@ -737,9 +763,13 @@ export default function App() {
             searchHelp="Search titles, descriptions, regions and countries."
             countNoun={historical ? 'archived' : 'live'}
             orderLabel={
-              !historical && liveLayers.includes('launches')
-                ? 'Launches soonest; other records newest.'
-                : 'Most recent first.'
+              historical
+                ? 'Most recent first.'
+                : `${liveLayers.includes('launches') ? 'Launches soonest, then newest' : 'Newest'} first${
+                    liveLayers.includes('firms') && firmsAvailable
+                      ? '; thermal cells last, busiest first'
+                      : ''
+                  }.`
             }
             summary={summary}
             actions={viewActions}

@@ -167,14 +167,16 @@ export function LayerToggles({
               : s.loading && !s.snapshot
                 ? 'Loading'
                 : !s.snapshot
-                  ? 'Unavailable'
+                  ? s.health || s.error
+                    ? 'Unavailable'
+                    : 'Waiting'
                   : s.stale
                     ? `${counts[key]} · stale`
                     : `${counts[key]}`
           return (
             <label
               key={key}
-              className={`layer-toggle ${on ? 'on' : ''} ${!historical && on && (s.stale || !s.snapshot) && !s.loading ? 'warn' : ''}`}
+              className={`layer-toggle ${on ? 'on' : ''} ${!historical && on && (s.stale || (!s.snapshot && !!(s.health || s.error))) && !s.loading ? 'warn' : ''} ${on && counts[key] === 0 ? 'none' : ''}`}
             >
               <input
                 type="checkbox"

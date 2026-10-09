@@ -169,7 +169,12 @@ export default function EventCard({
             </span>
           )}
           {isFireSummary(event) && (
-            <span>NASA FIRMS · 2° cell · {event.region}</span>
+            <span>
+              NASA FIRMS · 2° cell
+              {event.coordinates
+                ? ` · ${Math.abs(event.coordinates[1])}°${event.coordinates[1] < 0 ? 'S' : 'N'} ${Math.abs(event.coordinates[0])}°${event.coordinates[0] < 0 ? 'W' : 'E'}`
+                : ''}
+            </span>
           )}
           {!quake &&
             !hazard &&

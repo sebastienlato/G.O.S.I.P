@@ -208,16 +208,24 @@ export function filterEvents(
           .includes(q),
     )
     .sort((a, b) =>
-      isLaunch(a) !== isLaunch(b)
-        ? isLaunch(a)
-          ? -1
-          : 1
-        : isLaunch(a) && isLaunch(b)
-          ? Date.parse(a.net ?? '9999-01-01') -
-            Date.parse(b.net ?? '9999-01-01')
-          : isForecast(a) && isForecast(b)
-            ? Date.parse(a.occurred_at) - Date.parse(b.occurred_at)
-            : Date.parse(eventTime(b)) - Date.parse(eventTime(a)),
+      // Aggregated thermal cells share one window end and would bury every
+      // individual record: list them last, busiest cell first.
+      isFireSummary(a) !== isFireSummary(b)
+        ? isFireSummary(a)
+          ? 1
+          : -1
+        : isFireSummary(a) && isFireSummary(b)
+          ? b.detection_count - a.detection_count
+          : isLaunch(a) !== isLaunch(b)
+            ? isLaunch(a)
+              ? -1
+              : 1
+            : isLaunch(a) && isLaunch(b)
+              ? Date.parse(a.net ?? '9999-01-01') -
+                Date.parse(b.net ?? '9999-01-01')
+              : isForecast(a) && isForecast(b)
+                ? Date.parse(a.occurred_at) - Date.parse(b.occurred_at)
+                : Date.parse(eventTime(b)) - Date.parse(eventTime(a)),
     )
 }
 // Reports and additional summaries use publication; digital uses interval end.
