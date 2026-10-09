@@ -49,27 +49,30 @@ function accumulator(now: number) {
       throw Error('Malformed CSV')
     const [latitude, longitude] = row.map(Number),
       clock = row[6].padStart(4, '0')
-    if (
-      !row[0] ||
-      !row[1] ||
-      !Number.isFinite(latitude) ||
-      !Number.isFinite(longitude) ||
-      latitude < -90 ||
-      latitude > 90 ||
-      longitude < -180 ||
-      longitude > 180 ||
-      !/^\d{4}-\d{2}-\d{2}$/.test(row[5]) ||
-      !/^\d{1,4}$/.test(row[6]) ||
-      !/^\d{4}$/.test(clock) ||
-      Number(clock.slice(0, 2)) > 23 ||
-      Number(clock.slice(2)) > 59 ||
-      !['1', 'N20', 'NOAA-20'].includes(row[7]) ||
-      row[8] !== 'VIIRS' ||
-      !['l', 'n', 'h'].includes(row[9]) ||
-      !/^2\.0(NRT|RT|URT)$/.test(row[10]) ||
-      !['D', 'N'].includes(row[13])
-    )
-      throw Error('Invalid observation')
+    const validFields: Record<string, boolean> = {
+      coordinates:
+        !!row[0] &&
+        !!row[1] &&
+        Number.isFinite(latitude) &&
+        Number.isFinite(longitude) &&
+        latitude >= -90 &&
+        latitude <= 90 &&
+        longitude >= -180 &&
+        longitude <= 180,
+      date: /^\d{4}-\d{2}-\d{2}$/.test(row[5]),
+      clock:
+        /^\d{1,4}$/.test(row[6]) &&
+        /^\d{4}$/.test(clock) &&
+        Number(clock.slice(0, 2)) <= 23 &&
+        Number(clock.slice(2)) <= 59,
+      satellite: ['1', 'N20', 'NOAA-20'].includes(row[7]),
+      instrument: row[8] === 'VIIRS',
+      confidence: ['l', 'n', 'h'].includes(row[9]),
+      version: /^2\.0(NRT|RT|URT)$/.test(row[10]),
+      daynight: ['D', 'N'].includes(row[13]),
+    }
+    for (const [field, valid] of Object.entries(validFields))
+      if (!valid) throw Error(`Invalid FIRMS ${field}`)
     for (const i of [2, 3, 4, 11, 12])
       if (
         !row[i] ||
@@ -86,7 +89,7 @@ function accumulator(now: number) {
       new Date(observed).toISOString().slice(0, 10) !== row[5] ||
       observed > now
     )
-      throw Error('Invalid observation')
+      throw Error('Invalid FIRMS observation time')
     if (observed < now - 86400_000) return
     const unique = [latitude, longitude, row[5], clock].join(',')
     if (seen.has(unique)) throw Error('Duplicate detection')
