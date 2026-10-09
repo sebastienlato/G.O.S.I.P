@@ -1,3 +1,4 @@
+import { archiveSources, capturedStale, type Capture } from '../data/archive'
 import MaritimeStatus from './MaritimeStatus'
 import LaunchStatus from './LaunchStatus'
 import OoniStatus from './OoniStatus'
@@ -106,6 +107,7 @@ const layerIcon: Record<
 
 /** Live layer switches with per-layer counts and freshness. */
 export function LayerToggles({
+  historyCapture,
   liveLayers,
   onToggle,
   counts,
@@ -118,6 +120,7 @@ export function LayerToggles({
   launches,
   maritime,
 }: {
+  historyCapture?: Capture | null
   liveLayers: LiveLayer[]
   onToggle: (layer: LiveLayer) => void
   counts: Record<LiveLayer, number>
@@ -143,56 +146,73 @@ export function LayerToggles({
   return (
     <fieldset className="layer-toggles">
       <legend className="sr-only">Live layers</legend>
-      {liveLayerKeys.map((key) => {
-        const on = liveLayers.includes(key)
-        const s = state[key]
-        const status = !on
-          ? 'Off'
-          : s.loading && !s.snapshot
-            ? 'Loading'
-            : !s.snapshot
-              ? 'Unavailable'
-              : s.stale
-                ? `${counts[key]} · stale`
-                : `${counts[key]}`
-        return (
-          <label
-            key={key}
-            className={`layer-toggle ${on ? 'on' : ''} ${on && (s.stale || !s.snapshot) && !s.loading ? 'warn' : ''}`}
-          >
-            <input
-              type="checkbox"
-              checked={on}
-              aria-label={layerMeta[key].name}
-              onChange={() => onToggle(key)}
-            />
-            <span className={`layer-glyph glyph-${key}`} aria-hidden="true">
-              {key === 'eonet' ? (
-                <>
-                  <KindIcon
-                    kind="storm"
-                    color={hazardColors.severeStorms}
-                    size={15}
-                  />
-                  <KindIcon
-                    kind="volcano"
-                    color={hazardColors.volcanoes}
-                    size={15}
-                  />
-                </>
-              ) : (
-                <KindIcon
-                  kind={layerIcon[key].kind}
-                  color={layerIcon[key].color}
-                  size={17}
-                />
-              )}
-            </span>
-            <span className="layer-name">{layerMeta[key].label}</span>
-            <span className="layer-count">{status}</span>
-          </label>
+      {liveLayerKeys
+        .filter(
+          (key) =>
+            historyCapture === undefined ||
+            archiveSources.includes(key as 'usgs' | 'eonet'),
         )
-      })}
+        .map((key) => {
+          const historical = historyCapture !== undefined
+          const archived = archiveSources.includes(key as 'usgs' | 'eonet')
+          const on = liveLayers.includes(key) && (!historical || archived)
+          const s = state[key]
+          const status = historical
+            ? !archived
+              ? 'No archive'
+              : !on
+                ? 'Off'
+                : !historyCapture?.sources[key as 'usgs' | 'eonet']?.snapshot
+                  ? 'Missing capture'
+                  : `${counts[key]} · ${capturedStale(historyCapture, key as 'usgs' | 'eonet') ? 'was stale' : 'captured'}`
+            : !on
+              ? 'Off'
+              : s.loading && !s.snapshot
+                ? 'Loading'
+                : !s.snapshot
+                  ? 'Unavailable'
+                  : s.stale
+                    ? `${counts[key]} · stale`
+                    : `${counts[key]}`
+          return (
+            <label
+              key={key}
+              className={`layer-toggle ${on ? 'on' : ''} ${!historical && on && (s.stale || !s.snapshot) && !s.loading ? 'warn' : ''}`}
+            >
+              <input
+                type="checkbox"
+                checked={on}
+                disabled={historical && !archived}
+                aria-label={layerMeta[key].name}
+                onChange={() => onToggle(key)}
+              />
+              <span className={`layer-glyph glyph-${key}`} aria-hidden="true">
+                {key === 'eonet' ? (
+                  <>
+                    <KindIcon
+                      kind="storm"
+                      color={hazardColors.severeStorms}
+                      size={15}
+                    />
+                    <KindIcon
+                      kind="volcano"
+                      color={hazardColors.volcanoes}
+                      size={15}
+                    />
+                  </>
+                ) : (
+                  <KindIcon
+                    kind={layerIcon[key].kind}
+                    color={layerIcon[key].color}
+                    size={17}
+                  />
+                )}
+              </span>
+              <span className="layer-name">{layerMeta[key].label}</span>
+              <span className="layer-count">{status}</span>
+            </label>
+          )
+        })}
     </fieldset>
   )
 }

@@ -1,3 +1,4 @@
+import { parseHistory } from '../data/archive'
 import { type AdditionalSource, additionalLayers } from '../data/additional'
 import { parseCursor, parsePlace, supportsPlayback } from '../data/history'
 import {
@@ -44,6 +45,7 @@ export const defaultLiveLayers: LiveLayer[] = liveLayerKeys.filter(
 export interface ExplorerFilters {
   liveLayers: LiveLayer[]
   source: Source
+  history: string
   cursor: number | null
   country: string
   region: string
@@ -60,6 +62,7 @@ export interface ExplorerFilters {
 export const defaultFilters: ExplorerFilters = {
   source: 'usgs',
   liveLayers: [...defaultLiveLayers],
+  history: '',
   cursor: null,
   country: '',
   region: '',
@@ -99,6 +102,10 @@ export function parseFilters(search: string): ExplorerFilters {
       params.has('source') && params.get('source') !== 'usgs'
         ? [...defaultLiveLayers]
         : liveLayers,
+    history:
+      !params.has('source') || params.get('source') === 'usgs'
+        ? parseHistory(params.get('history'))
+        : '',
     cursor: supportsPlayback(params.get('source') ?? 'usgs')
       ? parseCursor(params.get('at'))
       : null,
@@ -150,6 +157,8 @@ export function parseFilters(search: string): ExplorerFilters {
 
 export function serializeFilters(filters: ExplorerFilters): string {
   const params = new URLSearchParams()
+  if (filters.source === 'usgs' && filters.history)
+    params.set('history', filters.history)
   if (
     filters.source === 'usgs' &&
     (filters.liveLayers.length !== defaultLiveLayers.length ||

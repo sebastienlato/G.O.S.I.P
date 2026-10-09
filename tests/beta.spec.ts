@@ -1,3 +1,4 @@
+import type { Archive } from '../src/data/archive'
 import { parseMaritime, publishMaritime } from '../src/data/maritime'
 import { extractMaritime } from '../ingest/maritime'
 import { maritimeFixture } from './fixtures/maritime'
@@ -133,6 +134,41 @@ const launchPublished = publishLaunches(launchSnapshot, {
   fetched_at: launchSnapshot.retrieved_at,
   record_count: 1,
 })
+// Synthetic transport captures are test-only; production collects public releases.
+const prior = structuredClone(recorded)
+prior.metadata.generated -= 86400000
+for (const f of prior.features) {
+  f.properties.time -= 86400000
+  if (f.properties.updated) f.properties.updated -= 86400000
+  f.properties.place = 'Earlier captured test region'
+}
+const priorSnapshot = parseUSGS(prior, now - 86400000)
+const priorPublished = publish(priorSnapshot, {
+  ...published.health,
+  attempted_at: priorSnapshot.retrieved_at,
+  fetched_at: priorSnapshot.retrieved_at,
+  generated_at: priorSnapshot.generated_at,
+})
+const archivePublished: Archive = {
+  version: 1,
+  attempted_at: new Date(now).toISOString(),
+  status: 'ok',
+  error: null,
+  continuity_since: new Date(now - 86400000).toISOString(),
+  captures: [now - 86400000, now].map((at, index) => ({
+    captured_at: new Date(at).toISOString(),
+    release: {
+      source_commit: 'a'.repeat(40),
+      event: 'push',
+      run_id: '123',
+      built_at: new Date(at).toISOString(),
+    },
+    sources: {
+      usgs: index ? published : priorPublished,
+      eonet: index ? hazardPublished : null,
+    },
+  })),
+}
 const base = '/G.O.S.I.P/'
 const imageryHost =
   /^(gibs\.earthdata\.nasa\.gov|([a-z0-9-]+\.)*cesium\.com|([a-z0-9-]+\.)*virtualearth\.net|tile\.googleapis\.com)$/
@@ -157,6 +193,10 @@ test.beforeEach(async ({ context, page }) => {
     if (url.origin !== origin || !url.pathname.startsWith(base)) {
       failures.push(url.href)
       await route.abort()
+      return
+    }
+    if (url.pathname.endsWith('/data/history.json')) {
+      await route.fulfill({ json: archivePublished })
       return
     }
     if (url.pathname.endsWith('/data/maritime.json')) {
@@ -1137,4 +1177,144 @@ test('maritime delayed glow, combined filters, all-off and failure retention rep
   await expect(toggle).not.toBeChecked()
   await expect(page.locator('.event-card')).toHaveCount(0)
   await expect(page.locator('.maritime-heat')).toHaveCount(0)
+})
+
+test('real history navigates captures, layers, filters, selection and saved current subsets', async ({
+  page,
+}, info) => {
+  test.setTimeout(90000)
+  await page.goto(
+    `${origin}${base}?live=usgs,eonet,news&hours=168&history=latest`,
+  )
+  await expect(page.getByLabel('Published capture · UTC')).toHaveValue(
+    new Date(now).toISOString(),
+  )
+  await expect(page.locator('.panel-feed')).toContainText('archived')
+  await expect(
+    page.getByRole('checkbox', { name: 'Global Voices reports' }),
+  ).toHaveCount(0)
+  await expect(page.locator('.event-card.kind-news')).toHaveCount(0)
+  await expect(page.locator('.map-canvas canvas').first()).toBeVisible()
+  await page.locator('.event-card.kind-quake').first().click()
+  await expect(page.getByRole('dialog')).toContainText('ARCHIVED SNAPSHOT')
+  await expect(page.getByRole('dialog')).toContainText('Fresh at capture')
+  await page.keyboard.press('Escape')
+  await page.getByRole('button', { name: 'Earlier capture' }).click()
+  await expect(page.getByLabel('Published capture · UTC')).toHaveValue(
+    new Date(now - 86400000).toISOString(),
+  )
+  await expect(page.locator('.event-card').first()).toContainText(
+    'Earlier captured test region',
+  )
+  await expect(page.locator('.event-card.is-selected')).toHaveCount(0)
+  await expect(
+    page.getByRole('checkbox', { name: /EONET global/ }).locator('..'),
+  ).toContainText('Missing capture')
+  await page
+    .getByRole('searchbox', { name: 'Search events' })
+    .fill('no such event')
+  await expect(page.locator('.event-card')).toHaveCount(0)
+  await page.getByRole('searchbox', { name: 'Search events' }).fill('')
+  await page.getByRole('checkbox', { name: 'USGS earthquakes' }).uncheck()
+  await expect(page.locator('.event-card')).toHaveCount(0)
+  await page.getByRole('checkbox', { name: 'USGS earthquakes' }).check()
+  await page.getByRole('button', { name: 'Later capture' }).click()
+  await page.reload()
+  await expect(page.getByLabel('Published capture · UTC')).toHaveValue(
+    new Date(now).toISOString(),
+  )
+  for (const width of info.project.name === 'mobile' ? [390, 320] : [1440]) {
+    await page.setViewportSize({ width, height: 1000 })
+    await page
+      .getByRole('link', { name: 'GOSIP home' })
+      .scrollIntoViewIfNeeded()
+    await page.screenshot({ path: `test-results/history-${width}-globe.png` })
+    await page.locator('.archive-controls').scrollIntoViewIfNeeded()
+    await page.screenshot({
+      path: `test-results/history-${width}-controls.png`,
+    })
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+    ).toBe(true)
+    if (width === 1440) {
+      const box = (await page.locator('.panel-controls').boundingBox())!
+      expect(box.y + box.height).toBeLessThan(1000)
+    }
+  }
+  await page.getByRole('button', { name: 'Current', exact: true }).click()
+  await expect(
+    page.getByRole('checkbox', { name: 'Global Voices reports' }),
+  ).toBeChecked()
+  await expect(page.locator('.event-card.kind-news')).toHaveCount(1)
+  expect(page.url()).not.toContain('history=')
+})
+
+test('history failures, expired links and no-layer subsets never substitute current records', async ({
+  page,
+}) => {
+  await page.goto(`${origin}${base}?live=&history=latest&view=list`)
+  await expect(page.getByLabel('Published capture · UTC')).toHaveValue(
+    new Date(now).toISOString(),
+  )
+  await expect(page.locator('.event-card')).toHaveCount(0)
+  await page.reload()
+  await expect(page.locator('.event-card')).toHaveCount(0)
+  await page.goto(
+    `${origin}${base}?live=usgs&history=${encodeURIComponent(new Date(now - 3 * 86400000).toISOString())}&view=list`,
+  )
+  await expect(page.locator('.event-card')).toHaveCount(0)
+  await expect(
+    page.getByRole('region', { name: 'History provenance' }),
+  ).toContainText('missing or expired')
+  await page.route('**/data/history.json', (route) =>
+    route.fulfill({ status: 503, body: 'unavailable' }),
+  )
+  await page.goto(`${origin}${base}?live=usgs&history=latest&view=list`)
+  await expect(page.getByRole('alert')).toContainText('History unavailable')
+  await expect(page.locator('.event-card')).toHaveCount(0)
+  await expect(
+    page.getByRole('button', { name: 'Current', exact: true }),
+  ).toBeEnabled()
+})
+
+test('loaded history retains its original version after reload failure and prunes by real clock', async ({
+  page,
+}) => {
+  await page.goto(
+    `${origin}${base}?live=usgs&history=latest&view=list&hours=168`,
+  )
+  await expect(page.locator('.event-card').first()).toBeVisible()
+  const first = await page.locator('.event-card').first().textContent()
+  await page.route('**/data/history.json', (route) =>
+    route.fulfill({ status: 503, body: 'unavailable' }),
+  )
+  await page.clock.setFixedTime(now + 61000)
+  await page.getByRole('button', { name: 'Reload history' }).click()
+  await expect(page.getByRole('alert')).toContainText('History unavailable')
+  expect(await page.locator('.event-card').first().textContent()).toBe(first)
+  await page.route('**/data/history.json', (route) =>
+    route.fulfill({
+      json: {
+        ...archivePublished,
+        attempted_at: new Date(now + 122000).toISOString(),
+        status: 'degraded',
+        error: 'capture-unavailable',
+        captures: [],
+      },
+    }),
+  )
+  await page.clock.setFixedTime(now + 122000)
+  await page.getByRole('button', { name: 'Reload history' }).click()
+  await expect(
+    page.getByRole('region', { name: 'History provenance' }),
+  ).toContainText('Capture failed')
+  expect(await page.locator('.event-card').first().textContent()).toBe(first)
+  await page.clock.setFixedTime(now + 8 * 86400000)
+  await page.getByRole('button', { name: 'Reload history' }).click()
+  await expect(page.locator('.event-card')).toHaveCount(0)
+  await expect(
+    page.getByRole('region', { name: 'History provenance' }),
+  ).toContainText('Archive updates are stale')
 })

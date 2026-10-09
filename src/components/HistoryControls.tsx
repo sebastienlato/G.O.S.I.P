@@ -192,7 +192,7 @@ export default function HistoryControls({
         <p className="history-note">
           Playback unavailable.{' '}
           {source === 'usgs'
-            ? 'Current live snapshots contain no complete revision history or proof of what was known earlier.'
+            ? 'Use Current / History above for real daily earthquake and hazard captures. Capture time is separate from source observation time.'
             : 'NWS supplies current forecast validity periods, not archived predictions or past observations.'}{' '}
           Current source controls and times remain active; no simulation is
           substituted.

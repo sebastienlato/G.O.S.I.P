@@ -1,6 +1,14 @@
-# Project state — Phase 18 complete and deployed
+# Project state — Phase 19 implemented; release verification pending
 
 ## Current delivery — 2026-10-09
+
+- Real History on the satellite globe: first successful daily capture of already-published USGS / ANSS and NASA EONET snapshots, seven-day retention, at most seven captures. Starts collecting now, no backfill. Other six current sources stay independent and explicitly outside archive scope. Aviation lab remains separate; native unchanged.
+- Captures preserve original source fields/times/health and published release SHA/run/build time, plus actual capture time. Prior capture cannot be replaced by a later correction. Current/History, exact capture selector, earlier/later steps, independent layers, search/categories/place/windows, selection and saved subsets including none work together. Missing/expired dates never fall back to current or simulated records.
+- Same-origin `data/history.json` is carried through the existing Pages deployment, not git, a cache, a retained artifact or a new backend. ≤500 KB/source/capture, ≤2,000 USGS + 200 EONET records/capture, ≤7.1 MB/archive. Runner and browser prune by real time; source/release/mirror validation fails closed. Failed capture keeps old captures; unreadable prior archive explicitly starts a new continuity boundary. A publication outage may interrupt retention. 25 MB whole-site/$0 guards and workflow registration/cadence remain unchanged.
+- Checks: npm ci; 264 unit tests; root/Pages typecheck-build; 42 repository-path desktop/mobile checks, including time/filter/pruning/failure/selection/subsets. Visually inspected 1440/390/320; tightened archive controls after the first inspection. Actual HTTPS release verification follows below. Existing Cesium chunk warning; no Safari/Firefox/native/full accessibility claim.
+- Local actual capture: published Phase 18 release `4ea273a`, 317 earthquakes / 16 hazards, ~125 KB. Local FIRMS has no secret and retains its original last-good data with stale status; the Actions secret stays in ingestion. No owner action, key/account/payment/provider message or browser-data exception added. Phase 20 starts only in a new chat.
+
+## Phase 18 delivery (historical) — 2026-10-09
 
 - Added Maritime: IMF PortWatch AIS-derived daily port-call estimates for five selected gateways, aggregated into three 10° regions, counts below 20 suppressed and remaining totals rounded down to tens. Smooth cyan globe/static glow, shared ship icon, independent toggle/count/health/details/search/categories/windows. ≥72h delay; supplied UTC day remains distinct from retrieval; unknown individual occurrence/publication/update/generation. No vessel tracks, IDs or disruption inference.
 - Identified no-key request/run, 12 seconds, 50 KB/70 rows input, 30 KB/three rows publication. Fixed 14-to-4-days-ago query, latest returned day requires all five ports; empty/truncated/incomplete data fails and retains original last-good times. Real local ingestion: October 2, North Sea 130–139, East Asia 110–119, Singapore 100–109. Use 7 days; older provider days can age out of visible windows.

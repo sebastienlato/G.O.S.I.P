@@ -31,8 +31,10 @@ export default function EventDetail({
   onShowOnMap,
   onExploreRelated,
   playback,
+  historyCapture,
 }: {
   event: ExplorerEvent
+  historyCapture?: string
   playback: boolean
   onExploreRelated: (id: string) => void
   stale: boolean
@@ -187,6 +189,13 @@ export default function EventDetail({
                                   : 'Provider estimate subject to revision. Review status concerns source parameters, not verified damage, casualties or an emergency alert.'}
           </span>
         </div>
+        {historyCapture && (
+          <p className="report-label">
+            ARCHIVED SNAPSHOT · Captured {formatTimestamp(historyCapture)}.
+            Source times below are original; provider links may now show later
+            revisions.
+          </p>
+        )}
         {playback && (
           <p className="report-label">
             SIMULATED PLAYBACK · Latest fixture content, including later
@@ -208,7 +217,11 @@ export default function EventDetail({
           ) : warning ? (
             <WarningBody event={event} stale={stale} />
           ) : hazard ? (
-            <HazardBody event={event} stale={stale} />
+            <HazardBody
+              event={event}
+              stale={stale}
+              historical={!!historyCapture}
+            />
           ) : additional ? (
             <AdditionalBody event={event} />
           ) : digital ? (
@@ -271,11 +284,15 @@ export default function EventDetail({
                 <div>
                   <dt>Freshness</dt>
                   <dd>
-                    {event.is_demo
-                      ? 'Fixed demo · No live updates'
-                      : stale
-                        ? 'STALE · Check source / refresh'
-                        : 'Recent snapshot · Manual refresh'}
+                    {historyCapture
+                      ? stale
+                        ? 'Stale / failed at capture'
+                        : 'Fresh at capture · archived, not current'
+                      : event.is_demo
+                        ? 'Fixed demo · No live updates'
+                        : stale
+                          ? 'STALE · Check source / refresh'
+                          : 'Recent snapshot · Manual refresh'}
                   </dd>
                 </div>
                 {quake && (

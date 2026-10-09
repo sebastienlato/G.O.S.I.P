@@ -3,9 +3,11 @@ import { formatTimestamp } from '../data/events'
 export default function HazardBody({
   event,
   stale,
+  historical = false,
 }: {
   event: HazardEvent
   stale: boolean
+  historical?: boolean
 }) {
   return (
     <>
@@ -63,9 +65,13 @@ export default function HazardBody({
         <div>
           <dt>Snapshot freshness</dt>
           <dd>
-            {stale
-              ? 'STALE · check source'
-              : 'Recently retrieved · curation age unknown'}
+            {historical
+              ? stale
+                ? 'Stale / failed at capture'
+                : 'Fresh at capture · curation age unknown'
+              : stale
+                ? 'STALE · check source'
+                : 'Recently retrieved · curation age unknown'}
           </dd>
         </div>
         <div>

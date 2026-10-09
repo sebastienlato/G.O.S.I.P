@@ -2146,3 +2146,50 @@ dialog::backdrop {
   font-size: 15px;
   white-space: nowrap;
 }
+
+/* Recorded time navigation stays inside the globe console. */
+.archive-controls {
+  margin: 8px 0;
+  display: grid;
+  gap: 6px;
+}
+.archive-controls label {
+  color: var(--steel);
+  font-size: 11px;
+}
+.archive-controls select {
+  width: 100%;
+  min-width: 0;
+  background: var(--void);
+  color: var(--ice);
+  border: 1px solid var(--edge-strong);
+  padding: 8px 4px;
+  font-size: 12px;
+}
+.archive-controls .segmented button {
+  white-space: normal;
+  font-size: 10px;
+}
+.archive-status {
+  padding: 12px;
+  font-size: 12px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.archive-status p {
+  margin: 8px 0;
+  color: var(--steel);
+}
+.archive-status .history-warning,
+.archive-status .history-capture-note {
+  color: var(--caution);
+}
+.archive-status .disclosure {
+  margin: 8px 0;
+}
+.archive-status button {
+  padding: 7px;
+}
+.layer-toggle:has(input:disabled) {
+  opacity: 0.55;
+}

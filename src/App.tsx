@@ -1,3 +1,11 @@
+import { useArchive } from './state/useArchive'
+import {
+  archiveSources,
+  captureEvents,
+  capturedStale,
+  pruneCaptures,
+} from './data/archive'
+import { ArchiveControls, ArchiveStatus } from './components/ArchiveControls'
 import { isMaritime } from './data/maritime'
 import { isLaunch } from './data/launches'
 import { useLaunches, useMaritime } from './state/useEarthquakes'
@@ -107,25 +115,55 @@ export default function App() {
       digitalFamily,
       digitalResult,
       cursor,
+      history,
       country,
       region,
     },
     updateFilters,
   ] = useExplorerFilters()
-  const earthquakes = useEarthquakes(
-    source === 'usgs' && liveLayers.includes('usgs'),
+  const historical = source === 'usgs' && history !== ''
+  const archiveState = useArchive(historical)
+  const captures = useMemo(
+    () => pruneCaptures(archiveState.archive?.captures ?? [], Date.now()),
+    [archiveState.archive, Math.floor(Date.now() / 60_000)],
   )
-  const hazards = useHazards(source === 'usgs' && liveLayers.includes('eonet'))
-  const warnings = useWarnings(source === 'usgs' && liveLayers.includes('dwd'))
+  const capture = historical
+    ? history === 'latest'
+      ? captures.at(-1)
+      : captures.find((c) => c.captured_at === history)
+    : undefined
+  useEffect(() => {
+    if (historical && history === 'latest' && capture)
+      updateFilters({ history: capture.captured_at }, true)
+  }, [historical, history, capture, updateFilters])
+  const archivedEvents = useMemo(
+    () => captureEvents(capture, liveLayers),
+    [capture, liveLayers],
+  )
+  const earthquakes = useEarthquakes(
+    source === 'usgs' && !historical && liveLayers.includes('usgs'),
+  )
+  const hazards = useHazards(
+    source === 'usgs' && !historical && liveLayers.includes('eonet'),
+  )
+  const warnings = useWarnings(
+    source === 'usgs' && !historical && liveLayers.includes('dwd'),
+  )
   const maritime = useMaritime(
-    source === 'usgs' && liveLayers.includes('maritime'),
+    source === 'usgs' && !historical && liveLayers.includes('maritime'),
   )
   const launches = useLaunches(
-    source === 'usgs' && liveLayers.includes('launches'),
+    source === 'usgs' && !historical && liveLayers.includes('launches'),
   )
-  const ooni = useOoni(source === 'usgs' && liveLayers.includes('ooni'))
-  const news = useNews(source === 'usgs' && liveLayers.includes('news'))
-  const fires = useFire(source === 'usgs' && liveLayers.includes('firms'))
+  const ooni = useOoni(
+    source === 'usgs' && !historical && liveLayers.includes('ooni'),
+  )
+  const news = useNews(
+    source === 'usgs' && !historical && liveLayers.includes('news'),
+  )
+  const fires = useFire(
+    source === 'usgs' && !historical && liveLayers.includes('firms'),
+  )
   const liveEvents = useMemo(
     () => [
       ...(liveLayers.includes('usgs')
@@ -197,14 +235,20 @@ export default function App() {
               : fireExamples
             : source === 'nws'
               ? (weather.snapshot?.events ?? noEvents)
-              : liveEvents
-  const referenceTime = isDemo
-    ? (cursor ?? DEMO_TIME)
-    : Math.floor(
-        (source === 'nws'
-          ? weather.now
-          : Math.max(earthquakes.now, hazards.now)) / 60_000,
-      ) * 60_000
+              : historical
+                ? archivedEvents
+                : liveEvents
+  const referenceTime = historical
+    ? capture
+      ? Date.parse(capture.captured_at)
+      : Date.now()
+    : isDemo
+      ? (cursor ?? DEMO_TIME)
+      : Math.floor(
+          (source === 'nws'
+            ? weather.now
+            : Math.max(earthquakes.now, hazards.now)) / 60_000,
+        ) * 60_000
   const demoClock = isDemo ? (cursor === null ? 'snapshot' : 'cursor') : null
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [detailId, setDetailId] = useState<string | null>(null)
@@ -332,6 +376,11 @@ export default function App() {
     },
     [selectEvent, view, mapMode],
   )
+  useEffect(() => {
+    setSelectedId(null)
+    setDetailId(null)
+    setFocusRequest(null)
+  }, [history])
   const closeEvent = useCallback(() => setDetailId(null), [])
   useEffect(() => {
     if (selectedId && !events.some((event) => event.id === selectedId)) {
@@ -363,6 +412,7 @@ export default function App() {
     updateFilters({
       query: '',
       cursor: null,
+      history: '',
       country: '',
       region: '',
       selectedCategories: categoryKeys,
@@ -377,6 +427,7 @@ export default function App() {
     (live &&
       (liveLayers.length !== defaultLiveLayers.length ||
         liveLayers.some((key) => !defaultLiveLayers.includes(key)))) ||
+    history !== '' ||
     cursor !== null ||
     country !== '' ||
     region !== '' ||
@@ -435,62 +486,72 @@ export default function App() {
   }
 
   // Masthead clock and freshness.
-  const clockLabel = isDemo
-    ? cursor === null
-      ? 'Demo snapshot'
-      : 'Simulated playback'
-    : sourceDisabled
-      ? 'Source disabled'
-      : 'Live view clock'
-  const activeLive = live
-    ? [
-        liveLayers.includes('usgs') ? earthquakes : null,
-        liveLayers.includes('eonet') ? hazards : null,
-        liveLayers.includes('dwd') ? warnings : null,
-        liveLayers.includes('firms') ? fires : null,
-        liveLayers.includes('news') ? news : null,
-        liveLayers.includes('ooni') ? ooni : null,
-        liveLayers.includes('launches') ? launches : null,
-        liveLayers.includes('maritime') ? maritime : null,
-      ].filter((s) => s !== null)
-    : []
+  const clockLabel = historical
+    ? 'History capture'
+    : isDemo
+      ? cursor === null
+        ? 'Demo snapshot'
+        : 'Simulated playback'
+      : sourceDisabled
+        ? 'Source disabled'
+        : 'Live view clock'
+  const activeLive =
+    live && !historical
+      ? [
+          liveLayers.includes('usgs') ? earthquakes : null,
+          liveLayers.includes('eonet') ? hazards : null,
+          liveLayers.includes('dwd') ? warnings : null,
+          liveLayers.includes('firms') ? fires : null,
+          liveLayers.includes('news') ? news : null,
+          liveLayers.includes('ooni') ? ooni : null,
+          liveLayers.includes('launches') ? launches : null,
+          liveLayers.includes('maritime') ? maritime : null,
+        ].filter((s) => s !== null)
+      : []
   const retrievals = activeLive
     .map((s) => s.snapshot?.retrieved_at)
     .filter((t): t is string => !!t)
     .sort()
   const liveHealthy =
     activeLive.length > 0 && activeLive.every((s) => s.snapshot && !s.stale)
-  const freshness = !live
-    ? isDemo
-      ? 'Invented examples, not live data'
-      : null
-    : !activeLive.length
-      ? 'All live layers off'
-      : retrievals.length
-        ? `${liveHealthy ? 'Data' : 'Some data stale ·'} retrieved ${minutesAgo(retrievals[0], referenceTime)}`
-        : activeLive.some((s) => s.loading)
-          ? 'Loading live data…'
-          : 'Live data unavailable'
+  const freshness = historical
+    ? 'Archived data · not current'
+    : !live
+      ? isDemo
+        ? 'Invented examples, not live data'
+        : null
+      : !activeLive.length
+        ? 'All live layers off'
+        : retrievals.length
+          ? `${liveHealthy ? 'Data' : 'Some data stale ·'} retrieved ${minutesAgo(retrievals[0], referenceTime)}`
+          : activeLive.some((s) => s.loading)
+            ? 'Loading live data…'
+            : 'Live data unavailable'
 
   const windowLabel = timeOptions.find((o) => o.value === hours)?.label
-  const windowSuffix = isDemo
-    ? digital
-      ? cursor === null
-        ? 'overlapping intervals before snapshot'
-        : 'overlapping intervals before cursor'
-      : reports || additional
+  const windowSuffix = historical
+    ? 'before capture'
+    : isDemo
+      ? digital
         ? cursor === null
-          ? 'published before snapshot'
-          : 'published before cursor'
-        : cursor === null
-          ? 'before snapshot'
-          : 'before cursor'
-    : source === 'nws'
-      ? 'ahead · overlapping periods'
-      : 'back · warnings & launches ahead'
+          ? 'overlapping intervals before snapshot'
+          : 'overlapping intervals before cursor'
+        : reports || additional
+          ? cursor === null
+            ? 'published before snapshot'
+            : 'published before cursor'
+          : cursor === null
+            ? 'before snapshot'
+            : 'before cursor'
+      : source === 'nws'
+        ? 'ahead · overlapping periods'
+        : 'back · warnings & launches ahead'
   const summary = [
     `${windowLabel} ${windowSuffix}`,
-    live && `${liveLayers.length} of ${liveLayerKeys.length} live layers`,
+    live &&
+      (historical
+        ? `${liveLayers.filter((l) => archiveSources.includes(l as 'usgs' | 'eonet')).length} of 2 archived layers`
+        : `${liveLayers.length} of ${liveLayerKeys.length} live layers`),
     `${activeCategoryCount} of ${availableCategories.length} categories`,
     country &&
       `Country: ${country === '~unknown' ? 'Not supplied / withheld' : country}`,
@@ -508,35 +569,39 @@ export default function App() {
     <div className="empty-state">
       <Search size={26} aria-hidden="true" />
       <h3>
-        {sourceDisabled
-          ? 'Source disabled on this host'
-          : live && !liveLayers.length
-            ? 'All live layers are off'
-            : selectedCategories.length
-              ? 'No matching signals'
-              : 'All layers are off'}
+        {historical
+          ? 'No matching archived records'
+          : sourceDisabled
+            ? 'Source disabled on this host'
+            : live && !liveLayers.length
+              ? 'All live layers are off'
+              : selectedCategories.length
+                ? 'No matching signals'
+                : 'All layers are off'}
       </h3>
       <p>
-        {sourceDisabled
-          ? 'No provider data was loaded. Use the source panel above to choose a labeled simulation or visit the official provider.'
-          : digital
-            ? 'No digital examples match these filters. Change the measurement family or result, enable Digital world, clear search or widen the interval window. No data is not proof of connectivity or absence of blocking.'
-            : reports
-              ? 'No report examples match these filters. Try another language, clear the correction filter or widen the publication window. An empty result says nothing about real-world activity.'
-              : source === 'nws'
-                ? 'No forecast periods overlap this view. Check source status, enable Environment, clear search or widen the future window. This is not evidence of safe weather.'
-                : !isDemo
-                  ? 'Turn on a live layer, clear search or widen the window. Delayed reports and digital measurements need 3 or 7 days. Missing data does not mean no activity occurred.'
-                  : !selectedCategories.length
-                    ? 'Enable a layer to explore the simulated events.'
-                    : query.trim()
-                      ? `No examples match “${query.trim()}” with these layers and this time window. This is a small invented sample, not evidence of no activity.`
-                      : 'No examples in this time window. Try the full seven-day demo sample.'}
+        {historical
+          ? 'This capture, layer selection or window has no matching records. Coverage is partial; missing history is not evidence of no activity.'
+          : sourceDisabled
+            ? 'No provider data was loaded. Use the source panel above to choose a labeled simulation or visit the official provider.'
+            : digital
+              ? 'No digital examples match these filters. Change the measurement family or result, enable Digital world, clear search or widen the interval window. No data is not proof of connectivity or absence of blocking.'
+              : reports
+                ? 'No report examples match these filters. Try another language, clear the correction filter or widen the publication window. An empty result says nothing about real-world activity.'
+                : source === 'nws'
+                  ? 'No forecast periods overlap this view. Check source status, enable Environment, clear search or widen the future window. This is not evidence of safe weather.'
+                  : !isDemo
+                    ? 'Turn on a live layer, clear search or widen the window. Delayed reports and digital measurements need 3 or 7 days. Missing data does not mean no activity occurred.'
+                    : !selectedCategories.length
+                      ? 'Enable a layer to explore the simulated events.'
+                      : query.trim()
+                        ? `No examples match “${query.trim()}” with these layers and this time window. This is a small invented sample, not evidence of no activity.`
+                        : 'No examples in this time window. Try the full seven-day demo sample.'}
       </p>
       {(country || region || cursor !== null) && (
         <p>
-          Try clearing place filters or returning to the fixture snapshot. The
-          selected time or supplied location context may have no records.
+          Try clearing place filters or changing the selected time. The selected
+          time or supplied location context may have no records.
         </p>
       )}
       <div className="empty-actions">
@@ -630,7 +695,11 @@ export default function App() {
           <span className="clock-text">
             <span className="clock-label">{clockLabel}</span>
             <strong>
-              {live ? <UtcClock /> : formatTimestamp(referenceTime)}
+              {live && !historical ? (
+                <UtcClock />
+              ) : (
+                formatTimestamp(referenceTime)
+              )}
             </strong>
             {freshness && <span className="clock-fresh">{freshness}</span>}
           </span>
@@ -689,10 +758,15 @@ export default function App() {
             role="group"
           >
             <h2 className="panel-title">
-              {live ? 'Live layers' : 'Simulation lab'}
+              {live
+                ? historical
+                  ? 'Archived layers'
+                  : 'Live layers'
+                : 'Simulation lab'}
             </h2>
             {live ? (
               <LayerToggles
+                historyCapture={historical ? (capture ?? null) : undefined}
                 liveLayers={liveLayers}
                 onToggle={(layer) =>
                   updateFilters({
@@ -737,6 +811,38 @@ export default function App() {
               >
                 Return to live layers
               </button>
+            )}
+            {live && (
+              <>
+                <h2 className="panel-title">Time</h2>
+                <div
+                  className="rail-group segmented"
+                  aria-label="Data time mode"
+                >
+                  <button
+                    aria-pressed={!historical}
+                    className={!historical ? 'active' : ''}
+                    onClick={() => updateFilters({ history: '' })}
+                  >
+                    Current
+                  </button>
+                  <button
+                    aria-pressed={historical}
+                    className={historical ? 'active' : ''}
+                    onClick={() => updateFilters({ history: 'latest' })}
+                  >
+                    History
+                  </button>
+                </div>
+                {historical && (
+                  <ArchiveControls
+                    captures={captures}
+                    selected={capture}
+                    value={history}
+                    onChange={(history) => updateFilters({ history })}
+                  />
+                )}
+              </>
             )}
             <h2 className="panel-title">Window</h2>
             <div className="rail-group segmented" aria-label="Time window">
@@ -876,7 +982,7 @@ export default function App() {
             className="panel panel-reference"
             aria-label="Sources and context"
           >
-            {live && (
+            {live && !historical && (
               <LiveStatus
                 liveLayers={liveLayers}
                 quakes={earthquakes}
@@ -887,6 +993,13 @@ export default function App() {
                 ooni={ooni}
                 launches={launches}
                 maritime={maritime}
+              />
+            )}
+            {historical && (
+              <ArchiveStatus
+                {...archiveState}
+                captures={captures}
+                selected={capture}
               />
             )}
             {!sourceDisabled && (
@@ -956,10 +1069,12 @@ export default function App() {
                       ? 'simulated'
                       : source === 'nws'
                         ? 'NWS forecast'
-                        : 'live'
+                        : historical
+                          ? 'archived'
+                          : 'live'
             }
             orderLabel={
-              live && liveLayers.includes('launches')
+              live && !historical && liveLayers.includes('launches')
                 ? 'Launches soonest; other records newest.'
                 : digital
                   ? 'Newest interval end first.'
@@ -996,6 +1111,7 @@ export default function App() {
           key={detailEvent.id}
           event={detailEvent}
           playback={cursor !== null}
+          historyCapture={capture?.captured_at}
           onExploreRelated={(id) => {
             updateFilters({
               cursor: null,
@@ -1015,23 +1131,26 @@ export default function App() {
           }}
           onShowOnMap={() => showOnMap(detailEvent.id)}
           stale={
-            isMaritime(detailEvent)
-              ? maritime.stale
-              : isLaunch(detailEvent)
-                ? launches.stale
-                : isOoni(detailEvent)
-                  ? ooni.stale
-                  : isNews(detailEvent)
-                    ? news.stale
-                    : isFireSummary(detailEvent)
-                      ? fires.stale
-                      : isWarning(detailEvent)
-                        ? warnings.stale
-                        : isHazard(detailEvent)
-                          ? hazards.stale
-                          : source === 'nws'
-                            ? weather.stale
-                            : earthquakes.stale
+            historical
+              ? !capture ||
+                capturedStale(capture, isHazard(detailEvent) ? 'eonet' : 'usgs')
+              : isMaritime(detailEvent)
+                ? maritime.stale
+                : isLaunch(detailEvent)
+                  ? launches.stale
+                  : isOoni(detailEvent)
+                    ? ooni.stale
+                    : isNews(detailEvent)
+                      ? news.stale
+                      : isFireSummary(detailEvent)
+                        ? fires.stale
+                        : isWarning(detailEvent)
+                          ? warnings.stale
+                          : isHazard(detailEvent)
+                            ? hazards.stale
+                            : source === 'nws'
+                              ? weather.stale
+                              : earthquakes.stale
           }
           onClose={closeEvent}
         />

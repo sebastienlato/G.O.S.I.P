@@ -1,7 +1,7 @@
 import { createServer } from 'vite'
 import { mkdir, writeFile } from 'node:fs/promises'
 const server = await createServer({
-  server: { middlewareMode: true },
+  server: { middlewareMode: true, watch: null },
   appType: 'custom',
 })
 try {
@@ -13,6 +13,8 @@ try {
   const { ingestOoni } = await server.ssrLoadModule('/ingest/ooni.ts')
   const { ingestLaunches } = await server.ssrLoadModule('/ingest/launches.ts')
   const { ingestMaritime } = await server.ssrLoadModule('/ingest/maritime.ts')
+  const { ingestArchive } = await server.ssrLoadModule('/ingest/archive.ts')
+  const history = await ingestArchive()
   const results = await Promise.all([
     ingestLaunches(),
     ingestMaritime(),
@@ -24,6 +26,14 @@ try {
     ingestFIRMS(process.env.FIRMS_MAP_KEY),
   ])
   await mkdir('public/data', { recursive: true })
+  await writeFile('public/data/history.json', JSON.stringify(history))
+  console.log(
+    JSON.stringify({
+      history: history.status,
+      captures: history.captures.length,
+      error: history.error,
+    }),
+  )
   for (const result of results) {
     await writeFile(
       `public/data/${result.health.source}.json`,

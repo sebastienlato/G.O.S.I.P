@@ -1,3 +1,4 @@
+import { verifyHistory } from './verify-history.mjs'
 import { verifyMaritime } from './verify-maritime.mjs'
 // Verify real deployment, never infer success from a push or dispatch.
 import assert from 'node:assert/strict'
@@ -407,6 +408,7 @@ try {
       `${name}: LL2 ${newSources.launches.health.record_count} selected schedules; actual space globe/details/precision/reload passed.`,
     )
     await verifyMaritime(page, site, newSources.maritime, name)
+    await verifyHistory(page, site, name)
     await quakes.check()
     await hazardToggle.check()
     await page
