@@ -2,6 +2,8 @@
 
 Act as autonomous lead developer in /Users/sebastienlato/Dev/GOSIP. Run `git pull --ff-only` first. Read AGENTS, README, ROADMAP, PROJECT_STATE, DECISIONS, docs/WORKFLOW, DESIGN, ARCHITECTURE, DATA_POLICY and BETA_READINESS. Inspect status/log/remotes and actual HTTPS release.json/data/health/history. Use final Phase 19 evidence in PROJECT_STATE/BETA_READINESS; deployed implementation and later evidence-doc commit may differ. One phase only; web first, native paused.
 
+Verified Phase 19: source `a70aa7dc9a254572c53d36b282871d3b7f4c255b`, push run 37995478785, built 2026-10-09 21:47:18.795 UTC. Eight healthy mirrored sources; 12.66 MB; zero current-run artifacts. History 125,422 bytes/status ok, one actual capture at 21:44:01.267 UTC, 319 USGS/16 EONET from prior published scheduled release `111de3a` / 37995049114. Capture hash identical across two actual deployments. 264 unit / 42 repository-path tests, root/Pages builds and final strict HTTPS desktop/mobile smoke passed; 1440/390/320 inspected. Prior transient FIRMS/OONI failures retained original stale data, recovered in final push. New scheduled event occurred but its strict fresh check failed on FIRMS; no new fresh-scheduler claim. No owner action remains for Phase 19.
+
 ## Preserve
 
 - D52/D55 satellite globe console, shared line glyphs, smooth fire/maritime fields, independent layer/feed/details/health. NASA GIBS keyless; optional URL-restricted owner ion token through Actions variable only. No Esri or new unreviewed browser imagery provider, flat-map or landing-page redesign.
