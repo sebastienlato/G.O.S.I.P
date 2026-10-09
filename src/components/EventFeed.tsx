@@ -1,4 +1,4 @@
-import { forwardRef } from 'react'
+import { forwardRef, useEffect, useState } from 'react'
 import { Search, X } from 'lucide-react'
 import EventCard from './EventCard'
 import { eventBadge, locationMeaning, type ExplorerEvent } from '../data/events'
@@ -50,6 +50,22 @@ const EventFeed = forwardRef<HTMLInputElement, Props>(function EventFeed(
   },
   search,
 ) {
+  const pageSize = 50
+  const [page, setPage] = useState(0)
+  const selectedIndex = selectedEvent
+    ? events.findIndex((e) => e.id === selectedEvent.id)
+    : -1
+  useEffect(() => {
+    setPage(selectedIndex < 0 ? 0 : Math.floor(selectedIndex / pageSize))
+  }, [events, selectedEvent?.id, selectedIndex])
+  const currentPage = Math.min(
+    page,
+    Math.max(0, Math.ceil(events.length / pageSize) - 1),
+  )
+  const visibleEvents = events.slice(
+    currentPage * pageSize,
+    (currentPage + 1) * pageSize,
+  )
   const unmapped = events.length - mappedCount
   return (
     <section
@@ -137,15 +153,43 @@ const EventFeed = forwardRef<HTMLInputElement, Props>(function EventFeed(
             >
               Show on map
             </button>
-            <button onClick={onFindInFeed}>Find in feed</button>
+            <button
+              onClick={() => {
+                setPage(Math.max(0, Math.floor(selectedIndex / pageSize)))
+                requestAnimationFrame(onFindInFeed)
+              }}
+            >
+              Find in feed
+            </button>
             <button aria-label="Clear selection" onClick={onClearSelection}>
               <X size={16} />
             </button>
           </div>
         </div>
       )}
+      {events.length > pageSize && (
+        <nav className="feed-pagination" aria-label="Feed pages">
+          <button
+            disabled={currentPage === 0}
+            onClick={() => setPage(currentPage - 1)}
+          >
+            Previous
+          </button>
+          <span>
+            {currentPage * pageSize + 1}–
+            {Math.min((currentPage + 1) * pageSize, events.length)} of{' '}
+            {events.length}
+          </span>
+          <button
+            disabled={(currentPage + 1) * pageSize >= events.length}
+            onClick={() => setPage(currentPage + 1)}
+          >
+            Next
+          </button>
+        </nav>
+      )}
       <div className="event-cards">
-        {events.map((event) => (
+        {visibleEvents.map((event) => (
           <EventCard
             key={event.id}
             event={event}

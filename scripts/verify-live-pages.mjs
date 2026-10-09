@@ -155,6 +155,7 @@ try {
         fullPage: true,
       })
     }
+    await page.getByRole('checkbox', { name: /FIRMS thermal/ }).uncheck()
     await page
       .locator('.event-card')
       .filter({ has: page.locator('.card-magnitude') })
@@ -225,6 +226,7 @@ try {
       ).toHaveCount(0)
       await page.keyboard.press('Escape')
     }
+    await page.getByRole('checkbox', { name: /DWD weather/ }).uncheck()
     await page.getByRole('checkbox', { name: /FIRMS thermal/ }).check()
     if (newSources.firms.health.record_count) {
       await page.locator('.event-card.kind-fire').first().click()

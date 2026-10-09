@@ -52,3 +52,5 @@ Data colours (`encoding.ts`): magnitude below 4 `#e9b44c`, 4â€“4.9 `#f08a3e`, 5â
 Phase 14: category buttons live in a disclosure to keep the desktop rail on one row. Phones use a two-column toggle grid and wrapped time/view controls. Thermal cards lead with the detection count, not a fire count; warning cards show original-language title, validity and DWD level.
 
 Phase 15: reports use peach `#f3a77b` and an outlined document glyph (feed-only), with an explicit attributed-claim label and byline. Five toggles retain the single desktop rail and two-column mobile grid. DWD defaults off; live Global affairs joins the category disclosure. Report detail and source status carry delay/rights/coverage caveats.
+
+Global-cell feeds render 50 cards per page; total counts, filtering and map retain every record. Map selection reveals its feed page; keyboard selection and search remain available for overlapping map marks.

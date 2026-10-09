@@ -684,3 +684,45 @@ test('warning and fire failures retain original data and cannot hide healthy sou
     page.getByText('Live USGS earthquakes', { exact: true }),
   ).toBeVisible()
 })
+
+test('global thermal feed is paged while all cells remain searchable and mapped', async ({
+  page,
+  context,
+}) => {
+  const cells = Array.from({ length: 120 }, (_, i) => [
+    -179 + (i % 90) * 2,
+    -89 + Math.floor(i / 90) * 2,
+    i + 1,
+  ])
+  const large = {
+    ...firePublished,
+    health: { ...firePublished.health, record_count: 120 },
+    snapshot: {
+      ...firePublished.snapshot,
+      feed: { ...firePublished.snapshot.feed, cells },
+    },
+  }
+  await context.route('**/data/firms.json', (r) => r.fulfill({ json: large }))
+  await page.goto(`${origin}${base}?map=static&live=firms`)
+  await expect(page.locator('.event-card')).toHaveCount(50)
+  await expect(page.locator('.static-marker')).toHaveCount(120)
+  await expect(page.getByLabel('Feed pages')).toContainText('1–50 of 120')
+  await page.getByRole('button', { name: 'Next', exact: true }).click()
+  await expect(page.getByLabel('Feed pages')).toContainText('51–100 of 120')
+  await page.getByRole('button', { name: 'Next', exact: true }).click()
+  await expect(page.locator('.event-card')).toHaveCount(20)
+  await page
+    .getByRole('button', {
+      name: /FIRMS thermal detections: 1 thermal detections/,
+    })
+    .first()
+    .focus()
+  await page.keyboard.press('Enter')
+  await page.keyboard.press('Escape')
+  await expect(page.getByLabel('Feed pages')).toContainText('1–50 of 120')
+  await page
+    .getByRole('searchbox', { name: 'Search events' })
+    .fill('120 thermal')
+  await expect(page.locator('.event-card')).toHaveCount(1)
+  await expect(page.locator('.static-marker')).toHaveCount(1)
+})
