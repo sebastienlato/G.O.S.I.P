@@ -1,12 +1,12 @@
 # G.O.S.I.P. — Global Open Source Intelligence Platform
 
-A free, local-first global event explorer. **Phase 11 adds a native SwiftUI simulation explorer; the Phase 10 GitHub Pages web beta remains live.** Cached USGS earthquakes and NWS New York forecasts remain available on exact web loopback hosts; other hosts disable these requests with an explicit explanation. The native client uses bundled simulations only. This is a prototype, not an emergency or impact assessment service.
+A free, local-first global event explorer. **The native SwiftUI simulation explorer now supports reviewed view-link sharing/restoration; the Phase 10 GitHub Pages web beta remains live.** Cached USGS earthquakes and NWS New York forecasts remain available on exact web loopback hosts; other hosts disable these requests with an explicit explanation. The native client uses bundled simulations only. This is a prototype, not an emergency or impact assessment service.
 
 **[Open the web beta](https://sebastienlato.github.io/G.O.S.I.P/)** · [Lightweight list](https://sebastienlato.github.io/G.O.S.I.P/?view=list) · Simulated data, free access, no account.
 
 ## Run locally
 
-**iOS:** open `native/GOSIP/GOSIP.xcodeproj`, choose the GOSIP scheme and an installed simulator, and Run. No signing or Apple account. All 46 original examples, local map/list, filters, timeline and provenance details work from bundled resources. See [native setup, checks and limits](docs/IOS.md).
+**iOS:** open `native/GOSIP/GOSIP.xcodeproj`, choose the GOSIP scheme and an installed simulator, and Run. No signing or Apple account. All 46 original examples, local map/list, filters, timeline and provenance details work from bundled resources. Open **View links** to copy/share filters or paste and review a public beta link before restoring it, paused and offline. Search/place text is included; avoid personal information. See [native setup, checks and limits](docs/IOS.md).
 
 Use Node **22.12+ (22.x), 24+, or newer** and npm. Checked with Node 26.8.1.
 

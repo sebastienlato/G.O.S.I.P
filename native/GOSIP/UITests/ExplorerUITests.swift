@@ -25,6 +25,111 @@ final class ExplorerUITests: XCTestCase {
     attachment.lifetime = .keepAlways
     add(attachment)
   }
+  private let linkBase = "https://sebastienlato.github.io/G.O.S.I.P/"
+  private func reviewLink(_ link: String) {
+    app.buttons["viewLinks"].tap()
+    app.segmentedControls["linkAction"].buttons["Import link"].tap()
+    let input = app.textFields["importLinkInput"]
+    reveal(input)
+    input.tap()
+    input.typeText(link)
+    let review = app.buttons["reviewLink"]
+    reveal(review)
+    review.tap()
+  }
+  private func restoreReviewedLink() {
+    let restore = app.buttons["restoreLink"]
+    reveal(restore)
+    restore.tap()
+  }
+  func testViewLinkReviewRestoreAndShareRoundTrip() {
+    reviewLink(linkBase + "?source=reports-demo&country=~unknown&hours=168&view=list")
+    XCTAssertTrue(app.staticTexts["Review simulation view"].waitForExistence(timeout: 3))
+    capture("links-iphone-review")
+    restoreReviewedLink()
+    let count = app.staticTexts["resultCount"]
+    reveal(count)
+    XCTAssertTrue(count.label.contains("3 simulated"))
+    capture("links-iphone-restored")
+    app.buttons["viewLinks"].tap()
+    let url = app.staticTexts["currentViewURL"]
+    reveal(url)
+    let shared = url.value as! String
+    XCTAssertTrue(shared.contains("source=reports-demo"))
+    XCTAssertTrue(shared.contains("country=%7Eunknown"))
+    app.buttons["copyViewLink"].tap()
+    XCTAssertTrue(app.buttons["Copied view link"].exists)
+    capture("links-iphone-share")
+    app.buttons["closeViewLinks"].tap()
+    reviewLink(shared)
+    restoreReviewedLink()
+    reveal(count)
+    XCTAssertTrue(count.label.contains("3 simulated"))
+  }
+  func testInvalidLinkDoesNotChangeViewAndReviewExpiresOnEdit() {
+    reviewLink(linkBase + "?source=usgs")
+    XCTAssertTrue(
+      app.otherElements["importLinkError"].exists || app.staticTexts["importLinkError"].exists)
+    XCTAssertFalse(app.buttons["restoreLink"].exists)
+    capture("links-iphone-rejected")
+    app.buttons["closeViewLinks"].tap()
+    reveal(app.buttons["event-demo-001"])
+    XCTAssertTrue(app.buttons["event-demo-001"].exists)
+    reviewLink(linkBase + "?source=digital-demo&result=no-samples&hours=168&view=list")
+    let restore = app.buttons["restoreLink"]
+    reveal(restore)
+    XCTAssertTrue(restore.exists)
+    for _ in 0..<3 { app.swipeDown() }
+    let input = app.textFields["importLinkInput"]
+    reveal(input)
+    input.tap()
+    input.typeText("&source=nws")
+    XCTAssertFalse(restore.exists)
+    app.buttons["closeViewLinks"].tap()
+    reveal(app.buttons["event-demo-001"])
+    XCTAssertTrue(app.buttons["event-demo-001"].exists)
+  }
+  func testImportAndNavigationLeavePlaybackPaused() {
+    reviewLink(linkBase + "?at=2026-10-01T16:00:00.000Z&view=list")
+    restoreReviewedLink()
+    app.buttons["Explore simulation time"].tap()
+    XCTAssertEqual(app.buttons["playHistory"].label, "Play")
+    app.buttons["playHistory"].tap()
+    app.buttons["viewLinks"].tap()
+    app.buttons["closeViewLinks"].tap()
+    XCTAssertEqual(app.buttons["playHistory"].label, "Play")
+    let pausedCursor = app.staticTexts["cursorTime"].label
+    let remainsPaused = NSPredicate(format: "label != %@", pausedCursor)
+    let noTick = expectation(for: remainsPaused, evaluatedWith: app.staticTexts["cursorTime"])
+    noTick.isInverted = true
+    waitForExpectations(timeout: 2.6)
+    reviewLink(
+      linkBase
+        + "?source=digital-demo&digital=outage&result=anomaly&hours=168&view=list&at=2026-10-08T13:00:00.000Z"
+    )
+    restoreReviewedLink()
+    XCTAssertEqual(app.buttons["playHistory"].label, "Play")
+    let drop = app.buttons["event-digital-demo-drop"]
+    reveal(drop)
+    XCTAssertTrue(drop.exists)
+    capture("links-iphone-paused")
+  }
+  func testLargeTextLinkReview() {
+    app.terminate()
+    app.launchArguments += [
+      "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL",
+    ]
+    app.launch()
+    reviewLink(linkBase + "?source=reports-demo&lang=en&reports=corrected&hours=168&view=list")
+    let restore = app.buttons["restoreLink"]
+    reveal(restore)
+    capture("links-large-text-review")
+    restore.tap()
+    let event = app.buttons["event-report-demo-forum"]
+    reveal(event)
+    XCTAssertTrue(event.exists)
+    capture("links-large-text-restored")
+  }
   func testMapMarkerOpensCorrespondingExample() {
     let map = app.otherElements["offlineMap"]
     XCTAssertTrue(map.waitForExistence(timeout: 5))

@@ -26,6 +26,7 @@ struct ExplorerView: View {
   @State private var selected: Record?
   @State private var showFilters = false
   @State private var showAbout = false
+  @State private var showLinks = false
   @State private var showHistory = false
   @State private var playing = false
   private var source: Source { snapshot.sources.first { $0.id == filters.sourceID }! }
@@ -52,7 +53,7 @@ struct ExplorerView: View {
             Text("3d").tag(72)
             Text("7d").tag(168)
           }.pickerStyle(.segmented).accessibilityIdentifier("windowPicker")
-          Picker("View", selection: $filters.map) {
+          Picker("View", selection: paused(\Filters.map)) {
             Text("Map + list").tag(true)
             Text("List").tag(false)
           }.pickerStyle(.segmented).accessibilityIdentifier("viewPicker")
@@ -186,6 +187,14 @@ struct ExplorerView: View {
         ToolbarItem(placement: .topBarTrailing) {
           Button {
             playing = false
+            showLinks = true
+          } label: {
+            Label("View links", systemImage: "link")
+          }.accessibilityIdentifier("viewLinks")
+        }
+        ToolbarItem(placement: .topBarTrailing) {
+          Button {
+            playing = false
             showFilters = true
           } label: {
             Label("Filters", systemImage: "line.3.horizontal.decrease")
@@ -194,6 +203,13 @@ struct ExplorerView: View {
       }
       .sheet(isPresented: $showFilters) { FilterSheet(source: source, filters: $filters) }
       .sheet(isPresented: $showAbout) { AboutView() }
+      .sheet(isPresented: $showLinks) {
+        ViewLinkSheet(current: filters, snapshot: snapshot) { restored in
+          playing = false
+          selected = nil
+          filters = restored
+        }
+      }
       .sheet(item: $selected) { record in
         DetailView(
           record: record, cursor: filters.at,
@@ -213,7 +229,7 @@ struct ExplorerView: View {
         while !Task.isCancelled && playing {
           do { try await Task.sleep(for: .milliseconds(1200)) } catch { return }
           guard playing, scenePhase == .active, !reduceMotion, selected == nil, !showFilters,
-            !showAbout
+            !showAbout, !showLinks
           else {
             playing = false
             return
@@ -260,25 +276,48 @@ struct FilterSheet: View {
             ForEach(
               Array(Set(source.records.map(\.country).filter { !$0.isEmpty })).sorted(), id: \.self
             ) { Text($0).tag($0) }
-            if source.records.contains(where: { $0.country.isEmpty }) {
+            if !filters.country.isEmpty && filters.country != "~unknown"
+              && !source.records.contains(where: { $0.country == filters.country })
+            {
+              Text(filters.country + " · no supplied match").tag(filters.country)
+            }
+            if source.records.contains(where: { $0.country.isEmpty })
+              || filters.country == "~unknown"
+            {
               Text("Not supplied / withheld").tag("~unknown")
             }
           }.accessibilityIdentifier("countryPicker")
           Picker("Region", selection: $filters.region) {
             Text("All regions").tag("")
-            ForEach(Array(Set(source.records.map(\.region))).sorted(), id: \.self) {
+            ForEach(
+              Array(
+                Set(source.records.map(\.region) + (filters.region.isEmpty ? [] : [filters.region]))
+              ).sorted(), id: \.self
+            ) {
               Text($0).tag($0)
             }
+          }
+          if !filters.region.isEmpty
+            && !source.records.contains(where: { $0.region == filters.region })
+          {
+            Text("Imported region: " + filters.region + " · no supplied match")
           }
           Text("Country is independent of mapping. No geocoding or nationality inference.").font(
             .caption)
         }
         Section("Content") {
-          Picker("Category", selection: $filters.category) {
-            Text("All categories").tag("")
-            ForEach(Array(Set(source.records.map(\.category))).sorted(), id: \.self) {
-              Text(Filters.categories[$0]!).tag($0)
-            }
+          ForEach(Filters.categoryKeys, id: \.self) { key in
+            Toggle(
+              Filters.categories[key]!,
+              isOn: Binding(
+                get: { filters.selectedCategories.contains(key) },
+                set: { enabled in
+                  if enabled {
+                    filters.selectedCategories.insert(key)
+                  } else {
+                    filters.selectedCategories.remove(key)
+                  }
+                }))
           }
           if source.id == "reports-demo" {
             Picker("Language", selection: $filters.language) {
@@ -400,7 +439,7 @@ struct AboutView: View {
             "46 original examples · seven separate sources. Fixed 8 October 2026 snapshot. No live feeds, global monitoring, emergency guidance or historical archive."
           )
           Text(
-            "The installed app reads bundled resources only. No network client, map service, location permission, analytics, accounts, payments or saved searches. No automatic upgrade or paid fallback."
+            "The installed app reads bundled resources only. No network client, map service, location permission, analytics, accounts, payments or saved searches. View links are read locally. Only an explicit copy/share action exports filters. No automatic upgrade or paid fallback."
           )
           Text(
             "Free local simulator build. App Store or device distribution is not included. Web beta hosting has separate limits."

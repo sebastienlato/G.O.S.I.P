@@ -10,7 +10,7 @@ def obj(name, content):
     return key(name)
 def refs(names):
     return '(' + ', '.join(key(name) for name in names) + ',)'
-app_files = ['App/GOSIPApp.swift', 'App/OfflineMap.swift', 'Core/Sources/GOSIPCore/Explorer.swift']
+app_files = ['App/GOSIPApp.swift', 'App/OfflineMap.swift', 'App/ViewLinkSheet.swift', 'Core/Sources/GOSIPCore/ViewLink.swift', 'Core/Sources/GOSIPCore/Explorer.swift']
 resources = [f'Core/Sources/GOSIPCore/Resources/{f}' for f in ['fixtures.json', 'world.json', 'notices.txt']]
 tests = ['UITests/ExplorerUITests.swift']
 for file in app_files + resources + tests:

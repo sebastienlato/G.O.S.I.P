@@ -176,7 +176,7 @@ public struct Snapshot: Decodable, Sendable {
   }
 }
 
-public struct Filters: Sendable {
+public struct Filters: Sendable, Equatable {
   public static let categories = [
     "environment": "Environment", "physical": "Earth & activity", "digital": "Digital world",
     "science": "Science & space", "civic": "Global affairs",
@@ -186,7 +186,8 @@ public struct Filters: Sendable {
   public var country = ""
   public var region = ""
   public var query = ""
-  public var category = ""
+  public static let categoryKeys = ["environment", "physical", "digital", "science", "civic"]
+  public var selectedCategories = Set(categoryKeys)
   public var language = ""
   public var correctedOnly = false
   public var family = ""
@@ -210,10 +211,16 @@ public struct Filters: Sendable {
   public static func cleanQuery(_ value: String) -> String {
     let clean = String(
       value.unicodeScalars.filter { scalar in
-        scalar.value >= 32 && scalar.value != 127 && !(0x202a...0x202e).contains(scalar.value)
+        scalar.value >= 32 && !(127...159).contains(scalar.value)
+          && !(0x202a...0x202e).contains(scalar.value)
           && !(0x2066...0x2069).contains(scalar.value)
       })
-    return String(clean.prefix(200))
+    var bounded = ""
+    for character in clean {
+      guard bounded.utf16.count + String(character).utf16.count <= 200 else { break }
+      bounded.append(character)
+    }
+    return bounded
   }
   public func records(in snapshot: Snapshot) -> [Record] {
     guard [6, 24, 72, 168].contains(hours), at >= Clock.start, at <= Clock.snapshot,
@@ -232,7 +239,7 @@ public struct Filters: Sendable {
         && (country.isEmpty
           || (country == "~unknown" ? record.country.isEmpty : record.country == country))
         && (region.isEmpty || record.region == region)
-        && (category.isEmpty || record.category == category)
+        && selectedCategories.contains(record.category)
         && (language.isEmpty || record.language == language) && (!correctedOnly || record.corrected)
         && (family.isEmpty || record.family == family)
         && (result.isEmpty || record.result == result)

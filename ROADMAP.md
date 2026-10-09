@@ -18,3 +18,5 @@
 AI is deferred. No project-wide freeze when one data provider is unavailable. Real feed approval applies to the feed, not to all development.
 
 **Cost invariant across every phase:** $0 spending, no paid subscriptions/APIs/domains, no billing-enabled infrastructure, no automatic upgrades; free public core access. If quotas or rights prevent a live feed, continue with lawful alternatives or clearly labeled demo data. Public beta must be assessed against actual free-tier limits before deployment.
+
+**Post-roadmap continuation — native view links:** completed explicit copy/share and reviewed offline paste/import, with strict simulation-only validation, web filter parity and paused restoration. No new deployment or paid distribution.

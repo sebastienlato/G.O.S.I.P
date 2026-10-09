@@ -1,10 +1,12 @@
-# Architecture — Phase 11
+# Architecture — native view-link continuation
 
 ## Native client
 
 `native/GOSIP` adds a dependency-free SwiftUI app and Foundation-only Swift package. The checked-in Xcode project compiles the same core source and bundles fixtures/geography/notices; simulator signing is disabled. `ExplorerView` owns source/filter/cursor/dialog state, `OfflineMap` draws local geographic rings, and detail sections preserve source-specific semantics. One filtered array drives map/list; null positions stay in the list. There is no native transport, persistence or location API.
 
 `scripts/export-native.mjs` uses existing TypeScript validators and canonical original fixtures, exporting exact raw payloads/IDs with native display projections and source-separated arrays. It also generates a web-filter oracle for the Swift tests. `--check` rejects committed-resource drift; the native decoder bounds and validates its presentation envelope. The app does not load the test oracle. See [IOS](IOS.md) for commands, coverage and deliberate limitations. Web code and deployed assets remain independent.
+
+`ViewLink.swift` is a Foundation-only, offline parser/serializer using web query names and semantics. Its strict address/encoding/duplicate/length/value boundary precedes any state mutation. `ViewLinkSheet` shows current filters/privacy and provides copy/system share; pasted input requires review and an explicit restore. Edits invalidate the review. The parent clears selection and playback on restoration; no persisted state or inbound URL handler. Categories are a set so empty/multiple web layers survive. Unknown supplied places remain selectable and produce honest empty results. `links.json` adds 133 generated comparisons against the actual web parser/serializer and filters; like `parity.json`, it is excluded from Xcode resources.
 
 ## Web client
 

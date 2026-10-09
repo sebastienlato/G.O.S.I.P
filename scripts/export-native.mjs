@@ -268,6 +268,75 @@ try {
     ),
   }))
   output(root + 'parity.json', parity)
+  // Shared-link oracle uses the actual web parser/serializer plus source filters.
+  const links = await server.ssrLoadModule('/src/state/explorer.ts')
+  const queries = [
+    '',
+    'hours=168&view=list',
+    'layers=',
+    'layers=physical,science',
+    'country=~unknown&hours=168',
+    'country=Canada',
+    'region=No+supplied+match',
+    'q=water&hours=168',
+    'q=%D9%85%D9%8A%D8%A7%D9%87',
+    'q=a%2Bb+%26+c',
+    'lang=fr&reports=corrected&hours=168',
+    'lang=ar&hours=168',
+    'digital=outage&result=anomaly&hours=168',
+    'digital=interference&result=inconclusive&hours=168',
+    'result=no-samples&hours=168',
+    'result=no-anomaly&hours=168',
+    'at=2026-10-01T16%3A00%3A00.000Z',
+    'at=2026-10-08T13%3A00%3A00.000Z&hours=6',
+    'map=static&selected=ignored&camera=ignored',
+  ]
+  output(
+    root + 'links.json',
+    sources.flatMap(([source, , events]) =>
+      queries.map((query) => {
+        const search = `?source=${source}&${query}`
+        const filters = links.parseFilters(search)
+        const ids = e
+          .filterEvents(
+            events,
+            filters.query,
+            filters.selectedCategories,
+            filters.hours,
+            filters.cursor ?? e.DEMO_TIME,
+          )
+          .filter((event) =>
+            h.matchesPlace(event, filters.country, filters.region),
+          )
+          .filter(
+            (event) =>
+              !r.isReport(event) ||
+              ((filters.language === 'all' ||
+                event.source_language === filters.language) &&
+                (filters.reportStatus === 'all' || !!event.correction)),
+          )
+          .filter(
+            (event) =>
+              !d.isDigital(event) ||
+              ((filters.digitalFamily === 'all' ||
+                event.family === filters.digitalFamily) &&
+                (filters.digitalResult === 'all' ||
+                  event.result === filters.digitalResult)),
+          )
+          .map((event) => event.id)
+        return {
+          search,
+          canonical: links.serializeFilters({
+            ...filters,
+            cursor: filters.cursor ?? e.DEMO_TIME,
+            mapMode: 'interactive',
+          }),
+          ids,
+        }
+      }),
+    ),
+  )
+
   const geo = JSON.parse(readFileSync('public/world.geojson', 'utf8'))
   const rings = geo.features.flatMap(({ geometry }) =>
     (geometry.type === 'MultiPolygon'
@@ -288,7 +357,7 @@ try {
       .join('\n\n'),
   )
   console.log(
-    `${check ? 'Verified' : 'Exported'} 46 canonical fixtures, seven separate sources, 4,732 filter parity cases and local map/notices.`,
+    `${check ? 'Verified' : 'Exported'} 46 canonical fixtures, seven separate sources, 4,732 filter parity cases, 133 view-link cases and local map/notices.`,
   )
 } finally {
   await server.close()
