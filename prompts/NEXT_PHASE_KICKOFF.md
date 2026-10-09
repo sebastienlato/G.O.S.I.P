@@ -1,6 +1,6 @@
 # G.O.S.I.P. — Phase 14: live fire and weather
 
-Act as autonomous lead developer in /Users/sebastienlato/Dev/GOSIP. Read AGENTS.md, README.md, ROADMAP.md, PROJECT_STATE.md, DECISIONS.md, docs/WORKFLOW.md, docs/ARCHITECTURE.md, docs/DATA_POLICY.md and docs/BETA_READINESS.md; inspect git status/log/remotes. One phase only. Web first; native iOS paused. Read actual Phase 13 release evidence rather than inferring success.
+Act as autonomous lead developer in /Users/sebastienlato/Dev/GOSIP. Run `git pull --ff-only` first: an owner-approved design pass landed on main after Phase 13 (D47). Read docs/DESIGN.md before touching UI; new layers must use `src/state/encoding.ts`, `LayerToggles`/`LiveStatus` in `components/FeedSource.tsx` and `MapLegend`. Read AGENTS.md, README.md, ROADMAP.md, PROJECT_STATE.md, DECISIONS.md, docs/WORKFLOW.md, docs/ARCHITECTURE.md, docs/DATA_POLICY.md and docs/BETA_READINESS.md; inspect git status/log/remotes. One phase only. Web first; native iOS paused. Read actual Phase 13 release evidence rather than inferring success.
 
 ## Foundation
 

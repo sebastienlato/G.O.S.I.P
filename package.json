@@ -1,7 +1,7 @@
 {
   "name": "gosip",
   "version": "0.1.0",
-  "description": "Free, local-first global event explorer \u2014 observations, forecasts and attributed report examples",
+  "description": "Free, local-first global event explorer — observations, forecasts and attributed report examples",
   "scripts": {
     "data:native": "node scripts/export-native.mjs",
     "check:native": "node scripts/export-native.mjs --check && swift test --package-path native/GOSIP/Core",
@@ -27,6 +27,8 @@
   "license": "Apache-2.0",
   "type": "module",
   "dependencies": {
+    "@fontsource-variable/archivo": "^5.3.0",
+    "@fontsource-variable/atkinson-hyperlegible-next": "^5.3.0",
     "lucide-react": "^1.53.0",
     "maplibre-gl": "^6.13.0",
     "react": "^19.3.0",

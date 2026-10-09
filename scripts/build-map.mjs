@@ -29,7 +29,7 @@ const path = geoPath(
     .scale(1000 / (2 * Math.PI))
     .translate([500, 250]),
 )
-const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 500"><rect width="1000" height="500" fill="#142025"/><path d="${path(geoGraticule10())}" fill="none" stroke="#25353a" stroke-width="0.5"/>${countries.features.map((f) => `<path d="${path(f)}" fill="#2d4145" stroke="#4b6061" stroke-width="0.5"/>`).join('')}</svg>`
+const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 500"><rect width="1000" height="500" fill="#0a1822"/><path d="${path(geoGraticule10())}" fill="none" stroke="#12242e" stroke-width="0.5"/>${countries.features.map((f) => `<path d="${path(f)}" fill="#1b2e37" stroke="#304956" stroke-width="0.5"/>`).join('')}</svg>`
 writeFileSync('public/world.svg', svg)
 copyFileSync(
   'node_modules/world-atlas/LICENSE',

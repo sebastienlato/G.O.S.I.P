@@ -296,9 +296,7 @@ for (const mode of ['view=list', 'map=static']) {
   }) => {
     await page.goto(`${origin}${base}?${mode}`)
     await expect(page.locator('.event-card')).toHaveCount(4)
-    await expect(
-      page.getByText('LIVE VIEW CLOCK', { exact: true }),
-    ).toBeVisible()
+    await expect(page.locator('.clock')).toContainText('Live view clock')
     await expect(
       page.getByText('Live USGS earthquakes', { exact: true }),
     ).toBeVisible()

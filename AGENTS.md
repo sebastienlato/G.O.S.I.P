@@ -14,6 +14,7 @@ Read README, ROADMAP, PROJECT_STATE, DECISIONS, docs/WORKFLOW and the current ph
 9. Safety: no tactical real-time conflict tracking or precise vulnerable-person positions; aggregate/delay or omit sensitive movement. No secret exposure, destructive action outside this workspace, force-push or unapproved account creation.
 
 ## Workflow
+- Other contributors (the owner, Claude design passes) may push between phases. Start every chat with `git pull --ff-only`; never rewrite or revert their commits without owner approval. Follow docs/DESIGN.md for any UI work.
 - Deliver an end-to-end visible increment. Simplest maintainable implementation; no documentation-only phases, exhaustive review matrices or unnecessary backends.
 - Run build/typecheck, focused core tests and browser smoke. Fix important failures; after three attempts at the same failure, change approach or isolate/defer noncritical work. Never claim failing checks pass.
 - Keep docs short and factual; update PROJECT_STATE/DECISIONS for material changes.
