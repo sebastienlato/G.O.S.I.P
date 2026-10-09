@@ -14,6 +14,16 @@ function hasFireSnapshot() {
     return false
   }
 }
+// Globe imagery/terrain hosts the visitor's browser may contact (D52).
+const imageryHosts = [
+  'https://server.arcgisonline.com',
+  'https://gibs.earthdata.nasa.gov',
+  'https://api.cesium.com',
+  'https://assets.ion.cesium.com',
+  'https://assets.cesium.com',
+  'https://*.virtualearth.net',
+  'https://tile.googleapis.com',
+].join(' ')
 export default defineConfig(({ mode }) => ({
   define: {
     __FIRMS_AVAILABLE__: JSON.stringify(
@@ -21,6 +31,8 @@ export default defineConfig(({ mode }) => ({
     ),
   },
   base: mode === 'pages' ? '/G.O.S.I.P/' : '/',
+  // Never inline assets as data: URLs; the CSP only allows same-origin fonts.
+  build: { assetsInlineLimit: 0 },
   plugins: [
     react(),
     tailwindcss(),
@@ -34,8 +46,7 @@ export default defineConfig(({ mode }) => ({
             tag: 'meta',
             attrs: {
               'http-equiv': 'Content-Security-Policy',
-              content:
-                "default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self' https://api.weather.gov; worker-src 'self' blob:; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'",
+              content: `default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: ${imageryHosts}; font-src 'self'; connect-src 'self' https://api.weather.gov ${imageryHosts}; worker-src 'self' blob:; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'`,
             },
             injectTo: 'head-prepend',
           },

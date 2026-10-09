@@ -5,8 +5,8 @@
   "scripts": {
     "data:native": "node scripts/export-native.mjs",
     "check:native": "node scripts/export-native.mjs --check && swift test --package-path native/GOSIP/Core",
-    "dev": "vite",
-    "build": "npm run data:notices && tsc --noEmit && vite build",
+    "dev": "node scripts/copy-cesium.mjs && vite",
+    "build": "npm run data:notices && node scripts/copy-cesium.mjs && tsc --noEmit && vite build",
     "typecheck": "tsc --noEmit",
     "preview": "vite preview",
     "test": "vitest run",
@@ -17,7 +17,7 @@
     "format": "prettier --write src tests scripts *.ts *.json index.html",
     "format:check": "prettier --check src tests scripts *.ts *.json index.html",
     "data:notices": "node scripts/build-dependency-notices.mjs && node scripts/copy-project-license.mjs",
-    "build:pages": "npm run data:notices && tsc --noEmit && vite build --mode pages && node scripts/check-pages-release.mjs",
+    "build:pages": "npm run data:notices && node scripts/copy-cesium.mjs && tsc --noEmit && vite build --mode pages && node scripts/check-pages-release.mjs",
     "test:beta": "GOSIP_TEST_FIRMS=1 npm run build:pages && BETA_TEST=1 playwright test",
     "release:pages": "node scripts/publish-pages.mjs",
     "ingest": "node ingest/run.mjs"
@@ -27,10 +27,12 @@
   "license": "Apache-2.0",
   "type": "module",
   "dependencies": {
+    "@cesium/engine": "26.3.0",
     "@fontsource-variable/archivo": "^5.3.0",
     "@fontsource-variable/atkinson-hyperlegible-next": "^5.3.0",
+    "@fontsource-variable/jetbrains-mono": "5.3.0",
+    "cesium": "1.145.0",
     "lucide-react": "^1.53.0",
-    "maplibre-gl": "^6.13.0",
     "react": "^19.3.0",
     "react-dom": "^19.3.0"
   },
@@ -57,5 +59,9 @@
   "private": true,
   "engines": {
     "node": "^22.12.0 || >=24.0.0"
+  },
+  "overrides": {
+    "@cesium/engine": "26.3.0",
+    "@cesium/widgets": "16.2.0"
   }
 }

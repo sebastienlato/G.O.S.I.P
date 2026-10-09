@@ -35,13 +35,17 @@ jobs:
         env:
           FIRMS_MAP_KEY: ${{ secrets.FIRMS_MAP_KEY }}
       - run: npm run build:pages
+        env:
+          # Public, URL-restricted Cesium ion browser token (D52). Optional:
+          # without it the globe uses keyless imagery and no 3D terrain.
+          VITE_CESIUM_ION_TOKEN: ${{ vars.CESIUM_ION_TOKEN }}
       - name: Stamp source revision
         run: node -e 'require("fs").writeFileSync("dist/release.json", JSON.stringify({source_commit:process.env.GITHUB_SHA,event:process.env.GITHUB_EVENT_NAME,run_id:process.env.GITHUB_RUN_ID,built_at:new Date().toISOString()}))'
       - name: Enforce artifact budget
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          node -e 'const fs=require("fs"),p=require("path");function size(d){return fs.readdirSync(d,{withFileTypes:true}).reduce((n,e)=>n+(e.isDirectory()?size(p.join(d,e.name)):fs.statSync(p.join(d,e.name)).size),0)}if(size("dist")>4000000)throw Error("4 MB publication budget exceeded")'
+          node -e 'const fs=require("fs"),p=require("path");function size(d){return fs.readdirSync(d,{withFileTypes:true}).reduce((n,e)=>n+(e.isDirectory()?size(p.join(d,e.name)):fs.statSync(p.join(d,e.name)).size),0)}if(size("dist")>25000000)throw Error("25 MB publication budget exceeded")'
           gh api "repos/$GITHUB_REPOSITORY/actions/artifacts?per_page=100" > "$RUNNER_TEMP/artifacts.json"
           node -e 'const a=require(process.env.RUNNER_TEMP+"/artifacts.json");if(a.total_count>100||a.artifacts.reduce((n,x)=>n+x.size_in_bytes,0)>100000000)throw Error("Artifact accumulation: stop and investigate")'
       - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0

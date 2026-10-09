@@ -1,6 +1,6 @@
 # G.O.S.I.P. — Global Open Source Intelligence Platform
 
-A free public event explorer. **Live earthquakes, hazards, German warnings, global thermal detections and attributed report headlines**, a world map, searchable feed, source details and freshness status. No account, payment, analytics or remote map tiles. Estimates can change; this is not an emergency service.
+A free open-source intelligence console. **Live earthquakes, hazards, German warnings, global thermal detections and attributed report headlines** on a 3D satellite globe you can fly from orbit to street level, with a searchable feed, source details and freshness status. No account, payment or analytics. The globe loads imagery from Esri, NASA GIBS and (optionally) Cesium ion; data comes only from GOSIP's own snapshots. Estimates can change; this is not an emergency service.
 
 **[Open GOSIP](https://sebastienlato.github.io/G.O.S.I.P/)** · [Lightweight list](https://sebastienlato.github.io/G.O.S.I.P/?view=list)
 
@@ -14,7 +14,7 @@ npm run ingest
 npm run dev
 ```
 
-Ingestion writes ignored `public/data/` snapshots. Without a snapshot, the explorer reports unavailable data; it never substitutes invented events. `npm run build:pages` builds for the public repository path.
+Optional: put a URL-restricted Cesium ion token in `.env.local` as `VITE_CESIUM_ION_TOKEN=…` for terrain, Bing imagery and 3D cities (the public build reads the `CESIUM_ION_TOKEN` Actions variable). Ingestion writes ignored `public/data/` snapshots. Without a snapshot, the explorer reports unavailable data; it never substitutes invented events. `npm run build:pages` builds for the public repository path.
 
 ## Sources
 

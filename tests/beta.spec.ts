@@ -82,6 +82,8 @@ const newsPublished = publishNews(newsSnapshot, {
 })
 
 const base = '/G.O.S.I.P/'
+const imageryHost =
+  /^(server\.arcgisonline\.com|gibs\.earthdata\.nasa\.gov|([a-z0-9-]+\.)*cesium\.com|([a-z0-9-]+\.)*virtualearth\.net|tile\.googleapis\.com)$/
 const origin = 'https://public.gosip.test'
 
 // Reserved public hostname, served entirely from a strict local static server.
@@ -94,6 +96,12 @@ test.beforeEach(async ({ context, page }) => {
   page.on('pageerror', (error) => failures.push(error.message))
   await context.route('**/*', async (route) => {
     const url = new URL(route.request().url())
+    // Globe imagery/terrain providers are expected third parties (D52); tests
+    // stay offline, so they are refused without counting as unexpected.
+    if (imageryHost.test(url.hostname)) {
+      await route.abort()
+      return
+    }
     if (url.origin !== origin || !url.pathname.startsWith(base)) {
       failures.push(url.href)
       await route.abort()
@@ -133,25 +141,44 @@ test.afterEach(async ({ page }) => {
 test('repository map loads geography, worker and markers with production CSP', async ({
   page,
 }, info) => {
+  // WebGL globe start-up is slow on software renderers (GPU-less CI).
+  test.setTimeout(120_000)
   const resources: string[] = []
   page.on('request', (r) => resources.push(r.url()))
   await page.goto(`${origin}${base}`)
   await expect(page.getByText('Interactive map', { exact: true })).toBeVisible({
     timeout: 15000,
   })
-  await expect(page.locator('.map-canvas .event-marker')).toHaveCount(4)
-  expect(resources.some((url) => url.endsWith(`${base}world.geojson`))).toBe(
-    true,
-  )
-  expect(resources.some((url) => url.includes('maplibre-gl-worker'))).toBe(true)
-  const marker = page.getByRole('button', {
-    name: new RegExp('USGS observation:'),
-    exact: true,
-  })
-  await marker.first().click()
-  await expect(page.getByRole('dialog')).toContainText('USGS')
+  // Point records are accessible DOM markers; thermal cells are drawn on
+  // the globe surface and reached through the feed.
+  const points = page.locator('.event-card[data-mapped="true"]:not(.kind-fire)')
+  await expect(points.first()).toBeVisible()
+  await expect
+    .poll(async () =>
+      [
+        await page.locator('.map-canvas .event-marker').count(),
+        await points.count(),
+      ].join('/'),
+    )
+    .toBe('3/3')
+  expect(
+    resources.some((url) =>
+      url.includes(`${base}cesium/Assets/Textures/NaturalEarthII/`),
+    ),
+  ).toBe(true)
+  // Markers on the far side of the globe are hidden; use one in view.
+  const marker = page
+    .locator('.map-canvas .event-marker')
+    .filter({ visible: true })
+    .first()
+  const markerId = await marker.getAttribute('data-event-id')
+  const label = (await marker.getAttribute('aria-label'))!.split(': ')[1]
+  await marker.click()
+  await expect(page.getByRole('dialog')).toContainText(label.split(',')[0])
   await page.keyboard.press('Escape')
-  await expect(marker.first()).toBeFocused()
+  await expect(
+    page.locator(`.map-canvas .event-marker[data-event-id="${markerId}"]`),
+  ).toBeFocused()
   await page.getByRole('link', { name: 'GOSIP home' }).click()
   await page.screenshot({
     path: `test-results/phase-13-${info.project.name}-beta-map.png`,
@@ -191,7 +218,7 @@ for (const mode of ['view=list', 'map=static']) {
     await page.reload()
     await expect(page.locator('.event-card')).toHaveCount(4)
     expect(
-      resources.filter((url) => /maplibre|world\.geojson/.test(url)),
+      resources.filter((url) => /\/cesium\/|\/assets\/engine-/.test(url)),
     ).toEqual([])
     await page.evaluate(() => document.fonts.ready)
     expect(
@@ -606,10 +633,12 @@ test('fire and German warnings combine with independent toggles, details, validi
           .evaluate((e) => e.scrollWidth <= e.clientWidth),
       )
       .toBe(true)
+    // Desktop: every layer, the window and view controls fit in the
+    // console's control panel without scrolling it.
     if (width === 1440)
-      expect((await page.locator('.rail').boundingBox())!.height).toBeLessThan(
-        75,
-      )
+      expect(
+        (await page.locator('.panel-controls').boundingBox())!.height,
+      ).toBeLessThan(560)
     await page.evaluate(() => document.fonts.ready)
     expect(
       await page.evaluate(

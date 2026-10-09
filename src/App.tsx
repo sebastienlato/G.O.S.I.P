@@ -26,7 +26,7 @@ import EnvironmentSource from './components/EnvironmentSource'
 import { useWeather } from './state/useWeather'
 import { fireExamples } from './data/fire'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Info, Link, List, Map, Search, ShieldCheck } from 'lucide-react'
+import { Globe2, Info, Link, List, Search, ShieldCheck } from 'lucide-react'
 import WorldMap from './components/WorldMap'
 import {
   categoryKeys,
@@ -254,6 +254,18 @@ export default function App() {
         cursor: null,
       })
   }, [source, updateFilters])
+  // Choosing a record in the feed also flies the globe to it.
+  const selectFromFeed = useCallback(
+    (id: string) => {
+      selectEvent(id)
+      if (view === 'map' && mapMode !== 'static')
+        setFocusRequest((previous) => ({
+          id,
+          sequence: (previous?.sequence ?? 0) + 1,
+        }))
+    },
+    [selectEvent, view, mapMode],
+  )
   const closeEvent = useCallback(() => setDetailId(null), [])
   useEffect(() => {
     if (selectedId && !events.some((event) => event.id === selectedId)) {
@@ -523,16 +535,23 @@ export default function App() {
     </>
   )
 
+  const healthyFeeds = activeLive.filter((s) => s.snapshot && !s.stale).length
   return (
     <>
       <a className="skip-link" href="#event-feed">
         Skip to event feed
       </a>
+      <p className="classification">
+        Unclassified <span>//</span> Open-source public data{' '}
+        <span className="wide-only">
+          <span>//</span> Not an emergency service
+        </span>
+      </p>
       <header className="masthead">
         <a href="#" className="brand" aria-label="GOSIP home">
           <span className="wordmark">GOSIP</span>
           <span className="brand-line">
-            {isDemo ? 'Simulation lab' : 'Live hazards and attributed reports'}
+            {isDemo ? 'Simulation lab' : 'Global open source intelligence'}
           </span>
         </a>
         <div
@@ -541,67 +560,140 @@ export default function App() {
           <span className="clock-dot" aria-hidden="true" />
           <span className="clock-text">
             <span className="clock-label">{clockLabel}</span>
-            <strong>{formatTimestamp(referenceTime)}</strong>
+            <strong>
+              {live ? <UtcClock /> : formatTimestamp(referenceTime)}
+            </strong>
             {freshness && <span className="clock-fresh">{freshness}</span>}
           </span>
+          {live && activeLive.length > 0 && (
+            <span className={`feed-health ${liveHealthy ? 'ok' : 'warn'}`}>
+              Feeds {healthyFeeds}/{activeLive.length}{' '}
+              {liveHealthy ? 'nominal' : 'degraded'}
+            </span>
+          )}
         </div>
         <nav className="masthead-actions" aria-label="Main navigation">
           <button onClick={() => openAbout()} aria-label="About the project">
-            <Info size={16} aria-hidden="true" />
+            <Info size={15} aria-hidden="true" />
             <span className="wide-only">About</span>
           </button>
           <button
             onClick={() => openAbout(true)}
             aria-label="Privacy & source licenses"
           >
-            <ShieldCheck size={16} aria-hidden="true" className="narrow-only" />
+            <ShieldCheck size={15} aria-hidden="true" />
             <span className="privacy-word">Privacy</span>
             <span className="wide-only"> & source licenses</span>
           </button>
         </nav>
       </header>
-      <main>
-        <div className="rail" aria-label="Event filters" role="group">
-          {live ? (
-            <LayerToggles
-              liveLayers={liveLayers}
-              onToggle={(layer) =>
-                updateFilters({
-                  liveLayers: liveLayers.includes(layer)
-                    ? liveLayers.filter((key) => key !== layer)
-                    : [...liveLayers, layer],
-                })
-              }
-              counts={{
-                usgs: events.filter(
-                  (e) =>
-                    !e.is_demo &&
-                    !isHazard(e) &&
-                    !isWarning(e) &&
-                    !isFireSummary(e) &&
-                    !isNews(e),
-                ).length,
-                eonet: events.filter(isHazard).length,
-                dwd: events.filter(isWarning).length,
-                firms: events.filter(isFireSummary).length,
-                news: events.filter(isNews).length,
-              }}
-              quakes={earthquakes}
-              hazards={hazards}
-              warnings={warnings}
-              fires={fires}
-              news={news}
-            />
-          ) : (
-            <button
-              className="return-live"
-              onClick={() => changeSource('usgs')}
+      <main className={`console ${view === 'list' ? 'list-view' : ''}`}>
+        <div className="globe-area">
+          {view === 'map' && (
+            <div
+              className="map-column"
+              ref={mapRegion}
+              tabIndex={-1}
+              aria-label="Map and selected event"
             >
-              Return to live layers
-            </button>
+              <WorldMap
+                events={mapEvents}
+                selectedId={selectedEvent?.id ?? null}
+                onSelect={selectEvent}
+                focusRequest={focusRequest}
+                staticView={mapMode === 'static'}
+                referenceTime={referenceTime}
+                live={live}
+                onModeChange={(staticView) =>
+                  updateFilters({
+                    mapMode: staticView ? 'static' : 'interactive',
+                  })
+                }
+              />
+            </div>
           )}
-          <div className="rail-scroll">
-            <details className="category-menu">
+        </div>
+        <div className="left-stack">
+          <section
+            className="panel panel-controls rail"
+            aria-label="Event filters"
+            role="group"
+          >
+            <h2 className="panel-title">
+              {live ? 'Live layers' : 'Simulation lab'}
+            </h2>
+            {live ? (
+              <LayerToggles
+                liveLayers={liveLayers}
+                onToggle={(layer) =>
+                  updateFilters({
+                    liveLayers: liveLayers.includes(layer)
+                      ? liveLayers.filter((key) => key !== layer)
+                      : [...liveLayers, layer],
+                  })
+                }
+                counts={{
+                  usgs: events.filter(
+                    (e) =>
+                      !e.is_demo &&
+                      !isHazard(e) &&
+                      !isWarning(e) &&
+                      !isFireSummary(e) &&
+                      !isNews(e),
+                  ).length,
+                  eonet: events.filter(isHazard).length,
+                  dwd: events.filter(isWarning).length,
+                  firms: events.filter(isFireSummary).length,
+                  news: events.filter(isNews).length,
+                }}
+                quakes={earthquakes}
+                hazards={hazards}
+                warnings={warnings}
+                fires={fires}
+                news={news}
+              />
+            ) : (
+              <button
+                className="return-live"
+                onClick={() => changeSource('usgs')}
+              >
+                Return to live layers
+              </button>
+            )}
+            <h2 className="panel-title">Window</h2>
+            <div className="rail-group segmented" aria-label="Time window">
+              {timeOptions.map((option) => (
+                <button
+                  key={option.value}
+                  aria-label={option.label}
+                  className={hours === option.value ? 'active' : ''}
+                  aria-pressed={hours === option.value}
+                  onClick={() => updateFilters({ hours: option.value })}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+            <h2 className="panel-title">View</h2>
+            <div className="rail-group segmented" aria-label="Explorer view">
+              <button
+                className={view === 'map' ? 'active' : ''}
+                aria-pressed={view === 'map'}
+                onClick={() => updateFilters({ view: 'map' })}
+              >
+                <Globe2 size={14} aria-hidden="true" />
+                Globe
+              </button>
+              <button
+                className={view === 'list' ? 'active' : ''}
+                aria-pressed={view === 'list'}
+                onClick={() => updateFilters({ view: 'list' })}
+              >
+                <List size={14} aria-hidden="true" />
+                List
+              </button>
+            </div>
+            <details className="category-menu disclosure">
               <summary>Categories · {activeCategoryCount}</summary>
               <div
                 className="rail-group category-filters"
@@ -632,130 +724,127 @@ export default function App() {
                 ))}
               </div>
             </details>
-            <div className="rail-group segmented" aria-label="Time window">
-              {timeOptions.map((option) => (
-                <button
-                  key={option.value}
-                  aria-label={option.label}
-                  className={hours === option.value ? 'active' : ''}
-                  aria-pressed={hours === option.value}
-                  onClick={() => updateFilters({ hours: option.value })}
-                >
-                  {option.value < 72
-                    ? `${option.value} hours`
-                    : `${option.value / 24} days`}
-                </button>
-              ))}
-            </div>
-            <div className="rail-group segmented" aria-label="Explorer view">
-              <button
-                className={view === 'map' ? 'active' : ''}
-                aria-pressed={view === 'map'}
-                onClick={() => updateFilters({ view: 'map' })}
-              >
-                <Map size={14} aria-hidden="true" />
-                Map
-              </button>
-              <button
-                className={view === 'list' ? 'active' : ''}
-                aria-pressed={view === 'list'}
-                onClick={() => updateFilters({ view: 'list' })}
-              >
-                <List size={14} aria-hidden="true" />
-                List
-              </button>
-            </div>
-          </div>
-        </div>
-        {!live && (
-          <div className="lab-strip">
-            {isDemo && (
-              <div className="demo-banner">
-                <span className="demo-badge">Simulated</span>
-                <p>
-                  You’re exploring invented examples.{' '}
-                  <span>No live data or real alerts.</span>
-                </p>
-                <button
-                  className="icon-button"
-                  onClick={() => openAbout()}
-                  aria-label="About simulated data"
-                >
-                  <Info size={17} />
-                </button>
+            {!live && (
+              <div className="lab-strip">
+                {isDemo && (
+                  <div className="demo-banner">
+                    <span className="demo-badge">Simulated</span>
+                    <p>
+                      Invented examples.{' '}
+                      <span>No live data or real alerts.</span>
+                    </p>
+                    <button
+                      className="icon-button"
+                      onClick={() => openAbout()}
+                      aria-label="About simulated data"
+                    >
+                      <Info size={16} />
+                    </button>
+                  </div>
+                )}
+                {!localSourceAccess && source === 'nws' && (
+                  <section
+                    className="feed-source source-status"
+                    aria-label="Source access status"
+                  >
+                    <strong>NWS · Coming to the public explorer</strong>
+                    <p>{PUBLIC_SOURCE_NOTE}</p>
+                    <div className="source-actions">
+                      <button onClick={() => changeSource('demo')}>
+                        Explore simulated examples
+                      </button>
+                      <a
+                        href={
+                          'https://forecast.weather.gov/MapClick.php?lat=40.7128&lon=-74.0060'
+                        }
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        Visit official provider ↗
+                      </a>
+                    </div>
+                  </section>
+                )}
+                <EnvironmentSource
+                  source={source}
+                  weather={weather}
+                  fallback={() => changeSource('fire-demo')}
+                />
+                {additional && <AdditionalSource source={additional} />}
+                {digital && (
+                  <DigitalSource
+                    family={digitalFamily}
+                    result={digitalResult}
+                    onFamily={(digitalFamily) =>
+                      updateFilters({ digitalFamily })
+                    }
+                    onResult={(digitalResult) =>
+                      updateFilters({ digitalResult })
+                    }
+                  />
+                )}
+                {reports && (
+                  <ReportSource
+                    language={language}
+                    reportStatus={reportStatus}
+                    onLanguage={(language) => updateFilters({ language })}
+                    onStatus={(reportStatus) => updateFilters({ reportStatus })}
+                  />
+                )}
               </div>
             )}
-            {!localSourceAccess && source === 'nws' && (
-              <section
-                className="feed-source source-status"
-                aria-label="Source access status"
+          </section>
+          <section
+            className="panel panel-reference"
+            aria-label="Sources and context"
+          >
+            {live && (
+              <LiveStatus
+                liveLayers={liveLayers}
+                quakes={earthquakes}
+                hazards={hazards}
+                warnings={warnings}
+                fires={fires}
+                news={news}
+              />
+            )}
+            {!sourceDisabled && (
+              <details
+                key={source}
+                open={isDemo}
+                className="place-disclosure disclosure"
               >
-                <strong>NWS · Coming to the public explorer</strong>
-                <p>{PUBLIC_SOURCE_NOTE}</p>
-                <div className="source-actions">
-                  <button onClick={() => changeSource('demo')}>
-                    Explore simulated examples
-                  </button>
-                  <a
-                    href={
-                      'https://forecast.weather.gov/MapClick.php?lat=40.7128&lon=-74.0060'
-                    }
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    Visit official provider ↗
-                  </a>
+                <summary>Place filters & history</summary>
+                <div className="disclosure-body">
+                  <HistoryControls
+                    key={source}
+                    source={source}
+                    cursor={cursor}
+                    country={country}
+                    region={region}
+                    hours={hours}
+                    events={allEvents}
+                    suspended={!!detailId}
+                    update={updateFilters}
+                  />
                 </div>
-              </section>
+              </details>
             )}
-            <EnvironmentSource
-              source={source}
-              weather={weather}
-              fallback={() => changeSource('fire-demo')}
-            />
-            {additional && <AdditionalSource source={additional} />}
-            {digital && (
-              <DigitalSource
-                family={digitalFamily}
-                result={digitalResult}
-                onFamily={(digitalFamily) => updateFilters({ digitalFamily })}
-                onResult={(digitalResult) => updateFilters({ digitalResult })}
-              />
-            )}
-            {reports && (
-              <ReportSource
-                language={language}
-                reportStatus={reportStatus}
-                onLanguage={(language) => updateFilters({ language })}
-                onStatus={(reportStatus) => updateFilters({ reportStatus })}
-              />
-            )}
-          </div>
-        )}
-        <div className={`stage ${view === 'list' ? 'list-view' : ''}`}>
-          {view === 'map' && (
-            <div
-              className="map-column"
-              ref={mapRegion}
-              tabIndex={-1}
-              aria-label="Map and selected event"
-            >
-              <WorldMap
-                events={mapEvents}
-                selectedId={selectedEvent?.id ?? null}
-                onSelect={selectEvent}
-                focusRequest={focusRequest}
-                staticView={mapMode === 'static'}
-                referenceTime={referenceTime}
-                live={live}
-                onModeChange={(staticView) =>
-                  updateFilters({
-                    mapMode: staticView ? 'static' : 'interactive',
-                  })
-                }
-              />
-            </div>
-          )}
+            <SimulationLab source={source} onChange={changeSource} />
+            <footer className="page-footer">
+              <p>
+                Free and open to everyone. No account, ads or tracking.
+                Locations are approximate and coverage is incomplete.
+              </p>
+              <p>
+                Data: USGS / ANSS · NASA EONET · DWD
+                {firmsAvailable && ' · NASA FIRMS'} · Global Voices · Natural
+                Earth. Imagery: Esri / NASA GIBS. Not an emergency service.
+              </p>
+            </footer>
+          </section>
+        </div>
+        <div className="panel panel-feed">
           <EventFeed
             ref={search}
             events={events}
@@ -796,7 +885,7 @@ export default function App() {
             }
             summary={summary}
             actions={viewActions}
-            onSelect={selectEvent}
+            onSelect={selectFromFeed}
             onReadDetails={(id) => setDetailId(id)}
             onShowOnMap={showOnMap}
             onFindInFeed={showInFeed}
@@ -815,52 +904,6 @@ export default function App() {
             }
           />
         </div>
-        <div className="below">
-          {live && (
-            <LiveStatus
-              liveLayers={liveLayers}
-              quakes={earthquakes}
-              hazards={hazards}
-              warnings={warnings}
-              fires={fires}
-              news={news}
-            />
-          )}
-          {!sourceDisabled && (
-            <details
-              key={source}
-              open={isDemo}
-              className="place-disclosure disclosure"
-            >
-              <summary>Place filters & history</summary>
-              <div className="disclosure-body">
-                <HistoryControls
-                  key={source}
-                  source={source}
-                  cursor={cursor}
-                  country={country}
-                  region={region}
-                  hours={hours}
-                  events={allEvents}
-                  suspended={!!detailId}
-                  update={updateFilters}
-                />
-              </div>
-            </details>
-          )}
-          <SimulationLab source={source} onChange={changeSource} />
-        </div>
-        <footer className="page-footer">
-          <p>
-            Free and open to everyone. No account, ads or tracking. Locations
-            are approximate and coverage is incomplete.
-          </p>
-          <p>
-            Data: USGS / ANSS · NASA EONET · DWD
-            {firmsAvailable && ' · NASA FIRMS'} · Global Voices · Natural Earth.
-            Not an emergency service.
-          </p>
-        </footer>
       </main>
       {detailEvent && (
         <EventDetail
@@ -903,5 +946,20 @@ export default function App() {
       )}
       <AboutDialog ref={about} privacyOnly={privacyOnly} />
     </>
+  )
+}
+
+/** Ticking UTC clock for the live console (seconds precision). */
+function UtcClock() {
+  const [now, setNow] = useState(() => Date.now())
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(Date.now()), 1000)
+    return () => window.clearInterval(timer)
+  }, [])
+  const d = new Date(now)
+  return (
+    <time dateTime={d.toISOString()}>
+      {d.toISOString().slice(0, 10)} {d.toISOString().slice(11, 19)} UTC
+    </time>
   )
 }

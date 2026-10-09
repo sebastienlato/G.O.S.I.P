@@ -21,6 +21,14 @@ export default function PrivacySources() {
         Opening an external source link leaves GOSIP and contacts that site.
       </p>
       <p>
+        <strong>Globe imagery:</strong> the interactive globe loads satellite,
+        label, terrain and 3D-city tiles directly from Esri, NASA GIBS and
+        Cesium ion (which may serve Bing or Google content). Those services
+        receive your IP address and the map areas you view, like any online map.
+        The list view and static map make none of these requests. Display
+        preferences (imagery, filter, labels, 3D) are kept only in this browser.
+      </p>
+      <p>
         Live snapshots remain in page memory. Your browser may cache hosted
         files normally. Old local USGS storage from earlier versions is no
         longer read; browser site-data controls can remove it. NWS stays in page
@@ -132,6 +140,14 @@ export default function PrivacySources() {
           <strong>Simulation lab:</strong> original GOSIP fixtures. No live
           digital, space, aviation or maritime data is connected. Examples are
           never evidence of actual conditions.
+        </li>
+        <li>
+          <strong>Globe:</strong> CesiumJS (Apache-2.0). Imagery: Esri World
+          Imagery and boundaries/places reference layers; NASA GIBS VIIRS true
+          colour and Black Marble night lights; optional Cesium ion terrain,
+          imagery and Google photorealistic 3D tiles under non-commercial terms.
+          Providers' on-globe credits are shown; NVG/IR modes are visual
+          filters, not sensor data.
         </li>
         <li>
           <strong>Map:</strong> Natural Earth 4.1.0 public-domain geography via

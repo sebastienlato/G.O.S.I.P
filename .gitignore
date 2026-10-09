@@ -13,3 +13,4 @@ native/**/xcuserdata/
 native/**/*.xcuserstate
 
 public/data/
+public/cesium/

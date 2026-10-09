@@ -39,7 +39,8 @@ export function eventAge(
   referenceTime: number,
   demoClock: Props['demoClock'],
 ) {
-  if (isFireSummary(event)) return `24h window to ${formatTimestamp(event.interval_end)}`
+  if (isFireSummary(event))
+    return `24h window to ${formatTimestamp(event.interval_end)}`
   if (isWarning(event))
     return `Valid ${formatTimestamp(event.valid_from)} → ${event.valid_until ? formatTimestamp(event.valid_until) : 'end not supplied'}`
   if (isForecast(event))
@@ -78,6 +79,7 @@ export default function EventCard({
   return (
     <button
       className={`event-card kind-${enc.kind} ${selected ? 'is-selected' : ''}`}
+      data-mapped={event.coordinates ? 'true' : 'false'}
       id={`card-${event.id}`}
       aria-current={selected ? 'true' : undefined}
       onClick={() => onSelect(event.id)}

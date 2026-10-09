@@ -99,6 +99,16 @@ export function encode(
   }
 }
 
+/** Thermal detection count per 2° cell → translucent heat on the globe. */
+export const fireCellSteps = [
+  { min: 1, label: '1–9', color: 'rgba(255, 210, 63, 0.32)' },
+  { min: 10, label: '10–99', color: 'rgba(255, 176, 46, 0.5)' },
+  { min: 100, label: '100–999', color: 'rgba(255, 112, 40, 0.62)' },
+  { min: 1000, label: '1,000+', color: 'rgba(255, 58, 48, 0.72)' },
+] as const
+export const fireCellColor = (count: number) =>
+  [...fireCellSteps].reverse().find((step) => count >= step.min)!.color
+
 /** Larger and older markers first so small, fresh ones stay on top. */
 export const drawOrder = (a: Encoding, b: Encoding) =>
   b.size - a.size || a.freshness - b.freshness

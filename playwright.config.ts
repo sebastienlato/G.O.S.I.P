@@ -7,7 +7,12 @@ export default defineConfig({
     : { testIgnore: '**/beta.spec.ts' }),
   fullyParallel: true,
   reporter: 'list',
-  use: { baseURL: 'http://127.0.0.1:4173', trace: 'retain-on-failure' },
+  use: {
+    baseURL: 'http://127.0.0.1:4173',
+    trace: 'retain-on-failure',
+    // Lets the WebGL globe fall back to software rendering on GPU-less hosts.
+    launchOptions: { args: ['--enable-unsafe-swiftshader'] },
+  },
   webServer: {
     command: beta
       ? 'node scripts/preview-pages.mjs'

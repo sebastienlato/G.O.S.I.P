@@ -1,8 +1,6 @@
 import { firmsAvailable } from '../state/explorer'
 import {
-  fireColor,
-  newsColor,
-  warningColor,
+  fireCellSteps,
   hazardColors,
   magnitudeSize,
   magnitudeSteps,
@@ -10,13 +8,13 @@ import {
 
 const samples = [3, 4.5, 5.5, 6.5]
 
-/** Explains marker size, colour, fade and shape for live layers. */
+/** Explains what is drawn on the globe. Feed-only layers are not listed. */
 export default function MapLegend() {
   return (
     <details
       className="map-legend"
       // Open by default where there is room; a tap away on small screens.
-      open={typeof window === 'undefined' || window.innerWidth > 640}
+      open={typeof window === 'undefined' || window.innerWidth > 1000}
     >
       <summary>Legend</summary>
       <div className="legend-body">
@@ -33,15 +31,7 @@ export default function MapLegend() {
               />
             ))}
           </span>
-          <span>Magnitude 2.5 → 6+</span>
-        </p>
-        <p className="legend-row">
-          <span className="legend-fade" aria-hidden="true">
-            <i />
-            <i />
-            <i />
-          </span>
-          <span>Fades over 7 days</span>
+          <span>Quake M2.5 → 6+, fades over 7 d</span>
         </p>
         <p className="legend-row">
           <span
@@ -59,30 +49,14 @@ export default function MapLegend() {
           />
           <span>Storm</span>
         </p>
-        <p className="legend-row">
-          <span
-            className="glyph glyph-warning"
-            style={{ '--mark': warningColor } as React.CSSProperties}
-            aria-hidden="true"
-          />
-          <span>DWD warnings · feed only</span>
-        </p>
-        <p className="legend-row">
-          <span
-            className="glyph glyph-news"
-            style={{ '--mark': newsColor } as React.CSSProperties}
-            aria-hidden="true"
-          />
-          <span>Reports · attributed · feed only</span>
-        </p>
         {firmsAvailable && (
-          <p className="legend-row">
-            <span
-              className="glyph glyph-fire"
-              style={{ '--mark': fireColor } as React.CSSProperties}
-              aria-hidden="true"
-            />
-            <span>Thermal · 2° cell · preceding 24h</span>
+          <p className="legend-row" aria-label="Thermal detections per 2° cell">
+            <span className="legend-heat" aria-hidden="true">
+              {fireCellSteps.map((step) => (
+                <i key={step.label} style={{ background: step.color }} />
+              ))}
+            </span>
+            <span>Thermal detections / 2° cell, 24 h</span>
           </p>
         )}
       </div>
