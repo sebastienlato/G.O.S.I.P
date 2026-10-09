@@ -68,7 +68,7 @@ function accumulator(now: number) {
       satellite: ['1', 'N20', 'NOAA-20'].includes(row[7]),
       instrument: row[8] === 'VIIRS',
       confidence: ['l', 'n', 'h'].includes(row[9]),
-      version: /^2\.0(NRT|RT|URT)$/.test(row[10]),
+      version: /^2\.[01](NRT|RT|URT)$/.test(row[10]),
       daynight: ['D', 'N'].includes(row[13]),
     }
     for (const [field, valid] of Object.entries(validFields))
