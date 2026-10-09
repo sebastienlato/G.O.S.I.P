@@ -303,7 +303,7 @@ test('repository map loads geography, worker and markers with production CSP', a
 })
 
 for (const mode of ['view=list', 'map=static']) {
-  test(`repository ${mode} keeps lightweight entry, fixture counts and reload`, async ({
+  test(`repository ${mode} keeps lightweight entry, retired link migration and reload`, async ({
     page,
   }, info) => {
     const resources: string[] = []
@@ -311,10 +311,10 @@ for (const mode of ['view=list', 'map=static']) {
     if (info.project.name === 'mobile')
       await page.setViewportSize({ width: 320, height: 740 })
     for (const [source, count] of [
-      ['demo', 10],
+      ['demo', 5],
       ['digital-demo', 2],
       ['space-demo', 1],
-      ['aviation-demo', 4],
+      ['aviation-demo', 0],
       ['maritime-demo', 3],
     ] as const) {
       await page.goto(`${origin}${base}?source=${source}&hours=168&${mode}`)
@@ -413,26 +413,20 @@ for (const source of ['nws']) {
     await page.goto(
       `${origin}${base}?source=${source}&view=list&enableLive=true`,
     )
-    await expect(page.getByLabel('Source access status')).toContainText(
-      'Coming to the public explorer',
-    )
     await expect(
-      page.getByRole('link', { name: 'Visit official provider' }),
-    ).toHaveAttribute(
-      'href',
-      /^https:\/\/(earthquake\.usgs\.gov|forecast\.weather\.gov)\//,
-    )
+      page.getByRole('heading', { name: 'Broader weather · Coming' }),
+    ).toBeVisible()
     await expect(page.locator('.event-card')).toHaveCount(0)
     await page.reload()
-    await expect(page.getByLabel('Source access status')).toBeVisible()
+    await expect(
+      page.getByRole('heading', { name: 'Broader weather · Coming' }),
+    ).toBeVisible()
     expect(await page.evaluate(() => localStorage.length)).toBe(0)
     await expect(
-      page.getByRole('button', { name: /^(Refresh|Retry) (USGS|NWS)$/ }),
+      page.getByRole('button', { name: /NWS|simulated/i }),
     ).toHaveCount(0)
-    await page
-      .getByRole('button', { name: 'Explore simulated examples', exact: true })
-      .click()
-    await expect(page.locator('.event-card')).toHaveCount(5)
+    await page.getByRole('checkbox', { name: 'USGS earthquakes' }).check()
+    await expect(page.locator('.event-card')).toHaveCount(2)
     expect(new URL(page.url()).pathname).toBe(base)
   })
 }
@@ -629,20 +623,11 @@ test('independent live layers combine map/feed, clear selection and survive shar
   await page.getByRole('button', { name: 'Environment', exact: true }).click()
   await page.locator('.category-menu > summary').click()
   await expect(page.locator('.event-card')).toHaveCount(3)
-  await page
-    .getByText('Simulation lab · invented examples', { exact: true })
-    .click()
-  await page
-    .getByRole('button', { name: 'Other examples · simulated', exact: true })
-    .click()
-  await expect(page.locator('.event-card')).toHaveCount(5)
   await expect(
-    page.locator('.event-card').filter({ hasText: 'EONET' }),
+    page.getByText('Simulation lab · invented examples', { exact: true }),
   ).toHaveCount(0)
   await expect(
-    page
-      .locator('.event-card')
-      .filter({ hasText: 'Volcano monitoring scenario' }),
+    page.locator('.event-card').filter({ hasText: /simulated|scenario/i }),
   ).toHaveCount(0)
 })
 
@@ -1317,4 +1302,47 @@ test('loaded history retains its original version after reload failure and prune
   await expect(
     page.getByRole('region', { name: 'History provenance' }),
   ).toContainText('Archive updates are stale')
+})
+
+test('retired aviation stays coming after reload and keyboard opens real records', async ({
+  page,
+}, info) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.goto(
+    `${origin}${base}?source=aviation-demo&at=2026-10-08T12:00:00.000Z&view=list`,
+  )
+  await expect(
+    page.getByRole('heading', { name: 'Aviation · Coming' }),
+  ).toBeVisible()
+  await expect(page.locator('.event-card')).toHaveCount(0)
+  await expect(
+    page.locator('.lab, .demo-banner, input[type=range]'),
+  ).toHaveCount(0)
+  expect(new URL(page.url()).searchParams.has('at')).toBe(false)
+  await page.reload()
+  await expect(
+    page.getByRole('heading', { name: 'Aviation · Coming' }),
+  ).toBeVisible()
+  const quakes = page.getByRole('checkbox', { name: 'USGS earthquakes' })
+  await quakes.focus()
+  await page.keyboard.press('Space')
+  await expect(quakes).toBeChecked()
+  await expect(page.locator('.event-card')).toHaveCount(2)
+  const card = page.locator('.event-card').first()
+  await card.focus()
+  await page.keyboard.press('Enter')
+  await expect(page.getByRole('dialog')).toContainText('USGS')
+  await page.keyboard.press('Escape')
+  await expect(card).toBeFocused()
+  await page.getByRole('button', { name: 'History', exact: true }).focus()
+  await page.keyboard.press('Enter')
+  await expect(page.getByLabel('Published capture · UTC')).toBeVisible()
+  await page.getByLabel('Published capture · UTC').focus()
+  await page.keyboard.press('Home')
+  await page.keyboard.press('Enter')
+  await expect(page.locator('.event-card')).toHaveCount(2)
+  await page.screenshot({
+    path: `test-results/phase20-${info.project.name}-keyboard.png`,
+    scale: 'css',
+  })
 })

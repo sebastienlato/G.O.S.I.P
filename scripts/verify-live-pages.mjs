@@ -433,6 +433,33 @@ try {
     console.log(
       `${name}: live release ${source}, ${body.health.record_count} USGS records + ${hazards.health.record_count} EONET catalog entries; EONET fetched ${hazards.health.fetched_at}; USGS generated ${body.health.generated_at}, fetched ${body.health.fetched_at}; map/list/static/details/privacy, independent layer toggles, empty/reload and same-origin data with approved globe imagery requests passed.`,
     )
+    for (const retired of ['demo', 'aviation-demo', 'nws']) {
+      await page.goto(
+        site + `?source=${retired}&view=list&at=2026-10-08T12:00:00.000Z`,
+      )
+      await expect(
+        page.locator('.lab, .demo-banner, input[type=range]'),
+      ).toHaveCount(0)
+      assert(!new URL(page.url()).searchParams.has('source'))
+      assert(!new URL(page.url()).searchParams.has('at'))
+      if (retired !== 'demo') {
+        await expect(
+          page.getByRole('heading', {
+            name:
+              retired === 'nws'
+                ? 'Broader weather · Coming'
+                : 'Aviation · Coming',
+          }),
+        ).toBeVisible()
+        await expect(page.locator('.event-card')).toHaveCount(0)
+        await page.reload()
+        await expect(page.locator('.event-card')).toHaveCount(0)
+      }
+    }
+    assert.deepEqual(failures, [])
+    console.log(
+      `${name}: Phase 20 retired links use only real/coming states; no simulation/playback controls.`,
+    )
     await context.close()
   }
 } finally {

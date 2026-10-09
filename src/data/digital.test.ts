@@ -1,18 +1,9 @@
 import { describe, expect, it } from 'vitest'
-import raw from './digitalExamples.json'
-import {
-  digitalExamples,
-  digitalMatches,
-  digitalReadout,
-  parseDigitalExamples,
-} from './digital'
-import {
-  DEMO_TIME,
-  demoEvents,
-  eventBadge,
-  filterEvents,
-  hasCoordinates,
-} from './events'
+import raw from '../../tests/fixtures/legacy/digitalExamples.json'
+import { digitalMatches, digitalReadout, parseDigitalExamples } from './digital'
+import { digitalExamples } from '../../tests/fixtures/legacy/digital'
+import { DEMO_TIME, eventBadge, filterEvents, hasCoordinates } from './events'
+import { demoEvents } from '../../tests/fixtures/legacy/events'
 import { parseFilters, serializeFilters } from '../state/explorer'
 
 const parse = (patch: Record<string, unknown>, index = 0) =>

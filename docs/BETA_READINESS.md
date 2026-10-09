@@ -1,8 +1,10 @@
-# Current release status — Phase 16
+# Current release status — Phase 20 launch preparation
 
-Scheduler gate **passed before implementation**, unchanged verifier: [schedule run 37964180735](https://github.com/sebastienlato/G.O.S.I.P/actions/runs/37964180735), source `5b3ec930c9eec770c01ba0289a0438fca20e179d`, created 2026-10-09 17:08:47 UTC, matching scheduled HTTPS release, five healthy mirrors retrieved 17:09:07 UTC, build/deploy/cleanup success and zero artifacts. Earlier open-blocker/Community diagnostic text below is historical and superseded; no posting needed. Best-effort timing/drop/inactivity limitations remain; workflow registration is unchanged.
+Public simulations/playback retired; legacy links migrate before rendering to real sources or honest coming states. Fixture data and sample report documents are excluded from production by build guards. Eight real sources, partial immutable USGS/EONET history and the globe console remain. No billing/provider/scheduler changes. **Final public launch remains gated on the owner-coordinated Claude visual polish pass.** The earlier Claude globe commits are not that pass.
 
-Phase 16 implements delayed OONI country/day measurement counts, source health, country-context globe icons and separate CC BY-NC-SA licensing. No account/key/payment/new service. 236 unit and 30 desktop/mobile repository-path checks pass, root/Pages builds/typecheck pass; desktop/320px digital screenshots inspected. ~12.4 MB candidate under 25 MB. Final deployed-source/HTTPS smoke evidence is recorded below.
+Local checks: npm ci (zero reported audit vulnerabilities), 266 unit tests, root/Pages typecheck-build. 44 repository-path desktop/mobile checks passed; 1440/390/320 visuals inspected, including corrected phone credits. HTTPS release evidence below. Focused keyboard/reduced-motion, phone widths, source status/licences, history gaps/retention/failure, and lightweight list/static checks are included; no full accessibility or cross-browser guarantee. Cesium's large lazy chunk remains. Native resources unchanged; optional exporter detects pre-existing `links.json` drift, reproduced using the pre-phase parser, while fixture/parity content matches.
+
+Phase 16's actual scheduled-source verifier success remains historical. Later push/manual runs do not prove schedule freshness. Workflow cadence/registration/verifier and 25 MB/$0/artifact guards are unchanged. Prior Phase 19 source `a70aa7d` is documented below; actual Phase 20 release evidence will identify the implementation SHA separately from later documentation commits.
 
 ## Historical release evidence
 
@@ -14,7 +16,7 @@ Public URL: https://sebastienlato.github.io/G.O.S.I.P/ . Existing PUBLIC reposit
 
 - [Actions billing](https://docs.github.com/en/billing/concepts/product-billing/github-actions): standard runners in public repositories and Pages are free; larger runners are always chargeable. Use standard ubuntu-latest only; no cache or paid service. Artifact storage shares the account allowance (GitHub Free: 500 MB), so public runner eligibility alone does not guarantee storage headroom. **Owner confirmed no payment method.** ZERO_COST_STORAGE_CONFIRMED=true records this; if payment settings change, establish a $0 Actions budget with stop usage or disable deployment. Never raise paid budgets to restore service.
 - [Pages limits](https://docs.github.com/en/pages/getting-started-with-github-pages/github-pages-limits): public repo eligible; 1 GB published site, soft 100 GB/month bandwidth, 10-minute deployment timeout. Custom Actions exempt from ordinary 10-build/hour limit. Throttling/withdrawal possible; no reliable global traffic meter or unlimited-scale promise. Host logs IPs; no user accounts/transactions/analytics.
-- [Scheduling](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#schedule): minimum five minutes; delay/drop possible, especially hour boundaries; latest default branch only; public schedules disable after 60 days without repo activity. We use 7/22/37/52 UTC minutes. Re-enable manually in Actions after inactivity; do not create fake commits to evade policy. UI staleness keeps working when jobs stop.
+- [Scheduling](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#schedule): minimum five minutes; delay/drop possible, especially hour boundaries; latest default branch only; public schedules disable after 60 days without repo activity. Current cadence is 3/18/33/48 UTC minutes (D56). Re-enable manually in Actions after inactivity; do not create fake commits to evade policy. UI staleness keeps working when jobs stop.
 - [Official artifact action](https://github.com/actions/upload-pages-artifact): one-day retention, bounded site (4 MB until the globe; 25 MB since D52, ~12.2 MB), no dependency cache, delete only this run's temporary artifact after deployment. A repository guard stops uploads above 100 MB retained artifacts/100 artifacts. Cancellation may leave an artifact until one-day expiry. Other repositories/packages share account storage; no account-wide capacity guarantee. No-payment/$0-budget protection is mandatory.
 
 ## Release procedure
@@ -25,7 +27,7 @@ Public URL: https://sebastienlato.github.io/G.O.S.I.P/ . Existing PUBLIC reposit
 4. Verify Actions build, deploy and artifact cleanup; read release.json source SHA, usgs.json, eonet.json and health.json. Run `node scripts/verify-live-pages.mjs <actual-URL> <source-SHA>`; inspect screenshots. An accepted dispatch or pushed commit is not successful deployment.
 5. For source trouble, retain stale data with honest health. For terms/quota/billing trouble disable workflow/unpublish; never purchase capacity. Roll back code with an ordinary commit and redeploy, preserving history.
 
-## Checks and remaining limits
+## Historical Phase 12 checks and remaining limits
 
 206 unit tests and 22 repository-path desktop/mobile checks passed locally; root build/typecheck passed. The old direct-provider/default-demo browser suites describe retired behavior and are not the current release checks. No Safari/Firefox/full accessibility audit claim. Lazy MapLibre chunk warning remains; list/static entry avoids it. No native validation is claimed for Phase 12.
 

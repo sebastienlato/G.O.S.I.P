@@ -3,12 +3,12 @@ import {
   categories,
   DEMO_TIME,
   demoAge,
-  demoEvents,
   filterEvents,
   formatTimestamp,
   parseDemoEvents,
   type Category,
 } from './events'
+import { demoEvents } from '../../tests/fixtures/legacy/events'
 const all = Object.keys(categories) as Category[]
 
 describe('demo provider boundary', () => {

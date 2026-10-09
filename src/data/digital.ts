@@ -1,5 +1,4 @@
 import type { DemoEvent, ExplorerEvent } from './events'
-import rawExamples from './digitalExamples.json'
 
 export const digitalFamilies = {
   outage: 'Outage signals',
@@ -222,7 +221,6 @@ export function parseDigitalExamples(input: unknown): DigitalEvent[] {
     }
   })
 }
-export const digitalExamples = parseDigitalExamples(rawExamples)
 export const digitalMatches = (
   event: DigitalEvent,
   family: DigitalFamily | 'all',

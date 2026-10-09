@@ -1,18 +1,18 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
-  parseFilters,
+  parsePublicFilters,
   serializeFilters,
   type ExplorerFilters,
 } from './explorer'
 
 export function useExplorerFilters() {
   const [filters, setFilters] = useState(() =>
-    parseFilters(window.location.search),
+    parsePublicFilters(window.location.search),
   )
   const current = useRef(filters)
   useEffect(() => {
     const restore = () => {
-      current.current = parseFilters(window.location.search)
+      current.current = parsePublicFilters(window.location.search)
       setFilters(current.current)
     }
     window.history.replaceState(
@@ -36,7 +36,7 @@ export function useExplorerFilters() {
         next.language = 'all'
         next.reportStatus = 'all'
       }
-      const validated = parseFilters(serializeFilters(next))
+      const validated = parsePublicFilters(serializeFilters(next))
       const search = serializeFilters(validated)
       if (search !== window.location.search) {
         window.history[replace ? 'replaceState' : 'pushState'](

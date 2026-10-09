@@ -1,5 +1,4 @@
 import type { DemoEvent, ExplorerEvent } from './events'
-import rawExamples from './reportExamples.json'
 
 export const reportLanguages = {
   en: 'English',
@@ -173,4 +172,3 @@ export function parseReportExamples(input: unknown): ReportEvent[] {
     }
   })
 }
-export const reportExamples = parseReportExamples(rawExamples)

@@ -14,8 +14,10 @@ import {
   point,
   WEATHER_NOW,
 } from '../../tests/fixtures/weather'
-import { DEMO_TIME, demoEvents, filterEvents } from './events'
-import { fireExamples, parseThermalExamples } from './fire'
+import { DEMO_TIME, filterEvents } from './events'
+import { demoEvents } from '../../tests/fixtures/legacy/events'
+import { parseThermalExamples } from './fire'
+import { fireExamples } from '../../tests/fixtures/legacy/fire'
 import {
   defaultFilters,
   parseFilters,

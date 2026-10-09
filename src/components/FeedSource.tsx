@@ -2,8 +2,6 @@ import { archiveSources, capturedStale, type Capture } from '../data/archive'
 import MaritimeStatus from './MaritimeStatus'
 import LaunchStatus from './LaunchStatus'
 import OoniStatus from './OoniStatus'
-import { localSourceAccess } from '../state/sourceAccess'
-import { additionalLayers, type AdditionalSource } from '../data/additional'
 import type {
   useHazards,
   useEarthquakes,
@@ -21,7 +19,6 @@ import {
   launchesAvailable,
   maritimeAvailable,
   type LiveLayer,
-  type Source,
 } from '../state/explorer'
 import { formatTimestamp } from '../data/events'
 import KindIcon from './KindIcon'
@@ -214,58 +211,6 @@ export function LayerToggles({
           )
         })}
     </fieldset>
-  )
-}
-
-/** Separate demonstrations, kept out of the live view. */
-export function SimulationLab({
-  source,
-  onChange,
-}: {
-  source: Source
-  onChange: (source: Source) => void
-}) {
-  const simulations: [Source, string][] = [
-    ['demo', 'Other examples · simulated'],
-    ...(!firmsAvailable
-      ? [['fire-demo', 'Fire examples · simulated'] as [Source, string]]
-      : []),
-    ...Object.entries(additionalLayers)
-      .filter(([key]) => key !== 'space-demo' && key !== 'maritime-demo')
-      .map(([key, layer]): [Source, string] => [
-        key as AdditionalSource,
-        `${layer.label} · simulated`,
-      ]),
-  ]
-  return (
-    <details
-      className="lab disclosure"
-      open={source !== 'usgs' ? true : undefined}
-    >
-      <summary>Simulation lab · invented examples</summary>
-      <div className="disclosure-body">
-        <p>
-          Demonstrations for layers that are not live yet. They never mix with
-          live data.
-        </p>
-        <div className="lab-sources">
-          {simulations.map(([key, label]) => (
-            <button
-              key={key}
-              aria-pressed={source === key}
-              onClick={() => onChange(key)}
-            >
-              {label}
-            </button>
-          ))}
-          {localSourceAccess && (
-            <button onClick={() => onChange('nws')}>
-              NWS weather · local development
-            </button>
-          )}
-        </div>
-      </div>
-    </details>
   )
 }
 

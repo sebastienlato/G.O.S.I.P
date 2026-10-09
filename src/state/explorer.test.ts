@@ -3,6 +3,7 @@ import {
   categoryKeys,
   defaultFilters,
   parseFilters,
+  parsePublicFilters,
   serializeFilters,
 } from './explorer'
 
@@ -48,5 +49,47 @@ describe('shareable explorer filters', () => {
     expect(parseFilters('?q=%00Japan%0A').query).toBe('Japan')
     expect(parseFilters(`?q=${'x'.repeat(5000)}`)).toEqual(defaultFilters)
     expect(parseFilters('?q=%E0%A4%A')).toMatchObject({ hours: 24 })
+  })
+})
+
+describe('public launch link migration', () => {
+  it('retires every simulation and direct-provider route before rendering', () => {
+    for (const source of [
+      'demo',
+      'fire-demo',
+      'reports-demo',
+      'digital-demo',
+      'space-demo',
+      'aviation-demo',
+      'maritime-demo',
+      'nws',
+    ]) {
+      const state = parsePublicFilters(
+        `?source=${source}&at=2026-10-08T12:00:00.000Z&country=fictional&layers=physical&view=list`,
+      )
+      expect(state.source).toBe('usgs')
+      expect(state.cursor).toBeNull()
+      expect(state.country).toBe('')
+      expect(state.selectedCategories).toEqual(categoryKeys)
+      expect(state.view).toBe('list')
+      expect(serializeFilters(state)).not.toMatch(/source=|at=|fictional/)
+      expect(parsePublicFilters(serializeFilters(state))).toEqual(state)
+    }
+  })
+  it('keeps unavailable coverage explicit across reload, without enabling unrelated layers', () => {
+    expect(parsePublicFilters('?source=aviation-demo')).toMatchObject({
+      coming: 'aviation',
+      liveLayers: [],
+    })
+    expect(parsePublicFilters('?source=nws')).toMatchObject({
+      coming: 'weather',
+      liveLayers: [],
+    })
+    const news = parsePublicFilters('?source=reports-demo')
+    expect(news).toMatchObject({ liveLayers: ['news'], hours: 72 })
+    expect(parsePublicFilters('?live=&history=latest')).toMatchObject({
+      liveLayers: [],
+      history: 'latest',
+    })
   })
 })

@@ -1,12 +1,14 @@
 import { describe, expect, it } from 'vitest'
 import {
-  additionalExamples,
-  additionalBySource,
   additionalLayers,
   parseAdditionalExamples,
   isAdditional,
   additionalReadout,
 } from './additional'
+import {
+  additionalExamples,
+  additionalBySource,
+} from '../../tests/fixtures/legacy/additional'
 import {
   categories,
   DEMO_TIME,

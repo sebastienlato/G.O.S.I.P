@@ -46,6 +46,7 @@ export interface ExplorerFilters {
   liveLayers: LiveLayer[]
   source: Source
   history: string
+  coming: string
   cursor: number | null
   country: string
   region: string
@@ -63,6 +64,7 @@ export const defaultFilters: ExplorerFilters = {
   source: 'usgs',
   liveLayers: [...defaultLiveLayers],
   history: '',
+  coming: '',
   cursor: null,
   country: '',
   region: '',
@@ -98,6 +100,16 @@ export function parseFilters(search: string): ExplorerFilters {
         ? ['usgs' as const]
         : [...defaultLiveLayers]
   return {
+    coming: [
+      'aviation',
+      'weather',
+      'thermal',
+      'digital',
+      'space',
+      'maritime',
+    ].includes(params.get('coming') ?? '')
+      ? params.get('coming')!
+      : '',
     liveLayers:
       params.has('source') && params.get('source') !== 'usgs'
         ? [...defaultLiveLayers]
@@ -157,6 +169,7 @@ export function parseFilters(search: string): ExplorerFilters {
 
 export function serializeFilters(filters: ExplorerFilters): string {
   const params = new URLSearchParams()
+  if (filters.coming) params.set('coming', filters.coming)
   if (filters.source === 'usgs' && filters.history)
     params.set('history', filters.history)
   if (
@@ -197,4 +210,49 @@ export function serializeFilters(filters: ExplorerFilters): string {
   if (filters.mapMode === 'static') params.set('map', 'static')
   const query = params.toString()
   return query ? `?${query}` : ''
+}
+
+/** Retired web URLs never enter a fixture or direct-provider mode. */
+export function parsePublicFilters(search: string): ExplorerFilters {
+  const filters = parseFilters(search)
+  if (filters.source === 'usgs') return filters
+  const redirects: Partial<Record<Source, [LiveLayer[], WindowHours, string]>> =
+    {
+      'fire-demo': [
+        firmsAvailable ? ['firms'] : [],
+        72,
+        firmsAvailable ? '' : 'thermal',
+      ],
+      'reports-demo': [['news'], 72, ''],
+      'digital-demo': [
+        ooniAvailable ? ['ooni'] : [],
+        72,
+        ooniAvailable ? '' : 'digital',
+      ],
+      'space-demo': [
+        launchesAvailable ? ['launches'] : [],
+        168,
+        launchesAvailable ? '' : 'space',
+      ],
+      'maritime-demo': [
+        maritimeAvailable ? ['maritime'] : [],
+        168,
+        maritimeAvailable ? '' : 'maritime',
+      ],
+      'aviation-demo': [[], 24, 'aviation'],
+      nws: [[], 24, 'weather'],
+    }
+  const [liveLayers, hours, coming] = redirects[filters.source] ?? [
+    [...defaultLiveLayers],
+    24,
+    '',
+  ]
+  return {
+    ...defaultFilters,
+    view: filters.view,
+    mapMode: filters.mapMode,
+    liveLayers,
+    hours,
+    coming,
+  }
 }

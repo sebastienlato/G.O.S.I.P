@@ -1,14 +1,15 @@
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
-import raw from './reportExamples.json'
-import { parseReportExamples, reportExamples, isReport } from './reports'
+import raw from '../../tests/fixtures/legacy/reportExamples.json'
+import { parseReportExamples, isReport } from './reports'
+import { reportExamples } from '../../tests/fixtures/legacy/reports'
 import {
   DEMO_TIME,
-  demoEvents,
   filterEvents,
   hasCoordinates,
   locationMeaning,
 } from './events'
+import { demoEvents } from '../../tests/fixtures/legacy/events'
 import { parseFilters, serializeFilters } from '../state/explorer'
 
 const sample = (patch: Record<string, unknown> = {}) => ({
@@ -22,7 +23,7 @@ describe('original report fixture boundary', () => {
     for (const e of reportExamples) {
       expect(e.is_demo).toBe(true)
       expect(e.status).toBe('attributed-claim')
-      const document = readFileSync(`public${e.source_url}`, 'utf8')
+      const document = readFileSync(`tests/fixtures/legacy/${e.id}.txt`, 'utf8')
       expect(document).toContain('NOT REAL NEWS')
       expect(JSON.parse(document.slice(document.indexOf('{')))).toEqual(e)
     }

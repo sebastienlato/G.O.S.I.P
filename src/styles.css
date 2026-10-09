@@ -1157,6 +1157,10 @@ select {
 .globe-credits {
   pointer-events: auto;
 }
+.globe-credits .cesium-widget-credits {
+  position: static;
+  display: block;
+}
 .globe-credits .cesium-credit-textContainer,
 .globe-credits .cesium-credit-logoContainer {
   display: inline;

@@ -1,8 +1,9 @@
 import { describe, it, expect } from 'vitest'
-import { DEMO_TIME, demoProvider, filterEvents } from './events'
-import { digitalExamples } from './digital'
-import { reportExamples } from './reports'
-import { fireExamples } from './fire'
+import { DEMO_TIME, filterEvents } from './events'
+import { demoProvider } from '../../tests/fixtures/legacy/events'
+import { digitalExamples } from '../../tests/fixtures/legacy/digital'
+import { reportExamples } from '../../tests/fixtures/legacy/reports'
+import { fireExamples } from '../../tests/fixtures/legacy/fire'
 import {
   categoryKeys,
   defaultFilters,
@@ -18,7 +19,7 @@ import {
   parseRelationships,
   correctionRelationship,
 } from './history'
-import input from './relationships.json'
+import input from '../../tests/fixtures/legacy/relationships.json'
 
 describe('bounded fixture time and supplied places', () => {
   it('accepts only canonical hourly cursors inside the seven-day range', () => {

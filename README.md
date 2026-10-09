@@ -1,41 +1,45 @@
 # G.O.S.I.P. — Global Open Source Intelligence Platform
 
-A free open-source intelligence console. **Live earthquakes, hazards, German warnings, global thermal detections, attributed report headlines delayed digital measurement totals public launch schedules and delayed maritime estimates** on a 3D satellite globe you can fly from orbit to street level, with a searchable feed, source details and freshness status. No account, payment or analytics. The globe loads imagery from NASA GIBS and (optionally) Cesium ion; data comes only from GOSIP's own snapshots. Estimates can change; this is not an emergency service.
+A free public-data console on a 3D satellite globe, with independent layers, a searchable feed and source freshness. No account, payment or analytics. Coverage is incomplete; this is not an emergency service. **Launch preparation is deployed; the required final Claude visual polish pass is pending.**
 
-**[Open GOSIP](https://sebastienlato.github.io/G.O.S.I.P/)** · [Lightweight list](https://sebastienlato.github.io/G.O.S.I.P/?view=list)
+**[Open GOSIP](https://sebastienlato.github.io/G.O.S.I.P/)** · [Lightweight list](https://sebastienlato.github.io/G.O.S.I.P/?view=list) · [Static map](https://sebastienlato.github.io/G.O.S.I.P/?map=static)
 
-## Run
+## What it shows
 
-Node 24+ recommended (ingestion and CI use Node 24).
+- **USGS / ANSS:** M2.5+ earthquakes, with occurrence and provider revision times.
+- **NASA EONET:** curated storm/volcano metadata; approximate locations and geometry dates, not official alerts.
+- **DWD:** original German warnings and validity intervals; feed only, off by default.
+- **NASA FIRMS:** global NOAA-20 NRT detections in 2° cells for the preceding 24 hours. Counts are not confirmed fires or precise positions.
+- **Global Voices:** attributed headline/byline/link metadata, delayed at least 24 hours. Claims are not verified incidents; no inferred map positions.
+- **OONI:** country/day measurement totals ≥1,000, delayed at least 24 hours. Counts cannot establish outages or censorship; country icons are geographic context.
+- **Launch Library 2 / The Space Devs:** selected upcoming launch schedules with supplied time precision and rounded sites. Plans may change; no spacecraft tracking or launch observations.
+- **IMF PortWatch:** five selected gateways combined into three coarse regions, delayed ≥72 hours and rounded down to tens. Estimates are not vessel positions, trade volume or evidence of disruption.
+
+Choose **3 or 7 days** for delayed reports and digital counts; **7 days** for schedules and maritime estimates. Missing records do not mean no activity. Aviation and other unavailable sources stay coming. There are no public simulations or fixture playback routes; old links open real layers or an explicit coming state. Native iOS is paused.
+
+## Freshness and history
+
+Scheduled ingestion publishes bounded snapshots on a best-effort 15-minute cadence. Browsers read data from this site only; the globe separately loads approved NASA GIBS/optional Cesium ion imagery. List/static entry avoids the globe engine and external imagery. Each source preserves original retrieval, provider and event times. Failure retains last-good data marked stale; 45 minutes without freshness also shows stale. Recent retrieval does not prove recent provider curation.
+
+**History** keeps the first successful daily capture of previously published USGS/EONET snapshots, at most seven captures for seven days. Collection began in Phase 19: initial coverage is partial, with no backfill. Captured versions stay fixed; provider links may contain later corrections. Capture time is separate from source time and is not proof of earlier knowledge. Other sources have no archive. Missing/expired captures stay unavailable; outages can interrupt continuity and delay physical deletion of expired payloads.
+
+## Develop and check
+
+Node 24+ recommended; ingestion and CI use Node 24.
 
 ```sh
 npm ci
 npm run ingest
 npm run dev
+npm test
+npm run build
+npm run test:beta
 ```
 
-Optional: put a URL-restricted Cesium ion token in `.env.local` as `VITE_CESIUM_ION_TOKEN=…` for terrain, Bing imagery and 3D cities (the public build reads the `CESIUM_ION_TOKEN` Actions variable). Ingestion writes ignored `public/data/` snapshots. Without a snapshot, the explorer reports unavailable data; it never substitutes invented events. `npm run build:pages` builds for the public repository path.
+Ingestion writes ignored `public/data/`. Missing snapshots show unavailable data. Fixtures live under `tests/fixtures/` for tests and the frozen native prototype; the build rejects fixture imports and public fixture files. `npm run build:pages` checks repository paths and the 25 MB whole-site cap. Tests use mocked same-origin snapshots, never public fixture modes.
 
-## Sources
+The optional URL-restricted Cesium ion browser token comes from the Actions variable `CESIUM_ION_TOKEN` (locally `VITE_CESIUM_ION_TOKEN` in ignored `.env.local`). Ingestion keys stay server secrets; never commit credentials. Keyless NASA GIBS works without ion.
 
-Independent **USGS / ANSS earthquakes** and **NASA EONET storms/volcanoes** toggles share the map/feed. DWD German weather warnings, available FIRMS thermal summaries and Global Voices report headlines join them; DWD is off by default; the other connected layers are on. USGS observations use occurrence time; EONET curated metadata uses the latest geometry date, with approximate locations/times and no official-alert or corroboration claim. EONET requests the past 30 days; visible windows remain 6 hours–7 days. It may contain no recent volcano entries. Unknown values stay unknown.
+Official pinned Pages Actions deploy on relevant main pushes, manual dispatch and schedule; no data commits, caches or retained run artifacts. Free hosting has finite quotas and may stop; no paid fallback or automatic upgrade. Owner confirmed no payment method; changed billing settings require a $0 stop-usage budget. See [release evidence and limits](docs/BETA_READINESS.md), [data rights](docs/DATA_POLICY.md), [design](docs/DESIGN.md) and [roadmap](ROADMAP.md).
 
-GitHub Actions publishes bounded snapshots. A real scheduled deployment was verified on October 9 at 17:09 UTC with fresh mirrored health and completed artifact cleanup. Scheduling remains best effort; see [release evidence](docs/BETA_READINESS.md). Visitors read same-origin JSON. Each layer shows its own retrieval, count and failure/stale state; retained data keeps original times. Stale after 45 minutes or failure. USGS supplies feed generation; EONET does not, so recent retrieval cannot prove recent curation.
-
-DWD warnings retain original German text and validity intervals; they are feed-only because the source supplies no coordinates. FIRMS NOAA-20 VIIRS uses the latest global NRT data, streamed into 2° counts for the preceding 24 hours, without an added delay or precise detection positions. Counts are detections, not confirmed fires. Global Voices English-edition headlines retain bylines, publication times and original links; claims are not verified incidents. Reports are feed-only and delayed at least 24 hours: select 3 or 7 days to see them. OONI adds country/day web-connectivity test totals, delayed at least 24 hours; select 3 or 7 days. Blue network icons are geographic country context, never probe positions. Voluntary uneven coverage and low-volume exclusions mean these counts cannot establish outages or censorship. Adapted OONI data is CC BY-NC-SA 4.0, separate from Apache software. Space adds selected Launch Library 2 / The Space Devs schedules: choose 7 days for upcoming launches, with rounded site context and supplied time precision. Plans may change; these are not launch observations or spacecraft positions. NOAA space weather and orbital predictions remain deferred. Maritime adds IMF PortWatch estimates for five selected gateways: at least 72 hours delayed, combined into three 10° regions and rounded down to tens. Cyan glow represents selected gateway counts, not vessel locations or routes; choose 7 days and read the supplied source day. Aviation and other live layers are coming. An explicitly separate **Simulation lab** remains; replaced seismic, coastal-weather, volcano, fire, digital, space and maritime examples are hidden from web. Native iOS is paused. [Roadmap](ROADMAP.md) · [Data rights and limits](docs/DATA_POLICY.md) · [Deployment and $0 safeguards](docs/BETA_READINESS.md)
-
-## Real history
-
-Choose **History** to explore daily captures of published USGS earthquakes and NASA EONET hazards on the same globe/feed. Retention is seven days, with at most one capture per UTC day; collection begins in Phase 19, so missing days are explicit. Capture time is separate from source occurrence, geometry, revision and retrieval. Captured versions stay fixed; provider links may show later revisions. This is partial sampled history, not a complete archive or proof of what was known earlier. Other layers remain in **Current** view. No simulation fallback; outages can interrupt retention.
-
-## Checks & deployment
-
-- `npm test` — parsers, ingestion, filtering and state tests.
-- `npm run build` — typecheck and root production build.
-- `npm run test:beta` — desktop/mobile tests at the exact Pages path with same-origin test snapshots.
-- GitHub Actions builds and publishes on relevant main pushes, manual dispatch and schedule. No data commits; no branch publishing. `gh-pages` is preserved.
-- `npm run release:pages` dispatches the existing deployment workflow.
-
-Public core access is free. Hosting has finite quotas and may stop; no automatic paid upgrade. Owner confirmed no payment method for Actions storage protection. If that changes, establish a $0 Actions stop-usage budget before continuing ingestion.
-
-Apache-2.0 for original software and fixtures; provider/map/dependency rights remain separate. [Earlier development history](docs/PHASES_0_11_HISTORY.md) · [Native prototype](docs/IOS.md)
+Apache-2.0 covers original software and fixtures. Provider rights remain separate, including Global Voices CC BY 3.0, DWD CC BY 4.0 and adapted OONI CC BY-NC-SA 4.0. Full source caveats/credits are available in the app. [Earlier phases](docs/PHASES_0_11_HISTORY.md) · [Native prototype](docs/IOS.md)

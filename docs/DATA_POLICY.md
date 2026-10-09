@@ -1,9 +1,13 @@
 # Data policy
 
-For each real feed before public integration, briefly record: official provider, exact allowed use/redistribution, attribution, limits, refresh interval, coverage and sensitivity. If unresolved, use fixtures or another provider; do not stop unrelated development.
+For each real feed before public integration, briefly record: official provider, exact allowed use/redistribution, attribution, limits, refresh interval, coverage and sensitivity. If unresolved, keep the source coming or use another reviewed provider; fixtures are test-only. Do not stop unrelated development.
 
 Normalized event: id, category, title, summary, coordinates/region optional, source_name/source_url optional, occurred_at/published_at optional, collected_at, status, freshness, is_demo, coverage_note optional. Preserve provider identifiers and corrections. Distinguish sensor observations from verified incidents and media reports from confirmed events. Never imply complete worldwide coverage. Treat third-party content as untrusted. Protect privacy and avoid unnecessary tactical precision for sensitive conflict data.
 
+
+## Phase 20 — public retirement boundary
+
+All web fixture payloads/playback/report documents are retired; test/native compatibility resources remain outside the public build. Legacy links never substitute invented coverage. NWS direct browser access is removed, not expanded. No new integration, rights, quota, storage service or paid fallback. Existing per-source limits, attribution, safety delays, seven-day partial archive semantics and 25 MB hosting cap remain in force; earlier simulation/local-source sections below are historical.
 
 ## Phase 19 — rolling published history (reviewed 2026-10-09)
 

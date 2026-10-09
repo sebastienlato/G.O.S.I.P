@@ -7,7 +7,6 @@ import {
   maritimeAvailable,
 } from '../state/explorer'
 import { assetPath } from '../state/assetPath'
-import { localSourceAccess } from '../state/sourceAccess'
 
 export default function PrivacySources() {
   return (
@@ -23,10 +22,9 @@ export default function PrivacySources() {
         never the page path, search or filters.
       </p>
       <p>
-        {localSourceAccess
-          ? 'On this loopback host, selecting the development NWS source can contact that provider directly, revealing your IP address and browser connection information. No credentials are sent.'
-          : 'Live layers are read from snapshots on this host. Your browser does not contact data providers. Public NWS is not connected yet.'}{' '}
-        Opening an external source link leaves GOSIP and contacts that site.
+        Live layers are read from snapshots on this host. Your browser does not
+        contact data providers. Public NWS is not connected yet. Opening an
+        external source link leaves GOSIP and contacts that site.
       </p>
       <p>
         <strong>Globe imagery:</strong> the interactive globe loads satellite,
@@ -39,8 +37,7 @@ export default function PrivacySources() {
       <p>
         Live snapshots remain in page memory. Your browser may cache hosted
         files normally. Old local USGS storage from earlier versions is no
-        longer read; browser site-data controls can remove it. NWS stays in page
-        memory.
+        longer read; browser site-data controls can remove it.
       </p>
       <h3>Sources & licenses</h3>
       <ul>
@@ -143,11 +140,11 @@ export default function PrivacySources() {
           </a>
         </li>
         <li>
-          <strong>Coming: NOAA / National Weather Service.</strong> Local
-          development only: one Lower Manhattan forecast. NWS text and values
-          retain source credit, with GOSIP display labels. NWS material is
-          public domain unless otherwise noted and is not covered by GOSIP
-          copyright. No endorsement or affiliation.{' '}
+          <strong>Coming: NOAA / National Weather Service.</strong> The earlier
+          local forecast prototype is not connected to the public explorer. NWS
+          text and values retain source credit, with GOSIP display labels. NWS
+          material is public domain unless otherwise noted and is not covered by
+          GOSIP copyright. No endorsement or affiliation.{' '}
           <a
             href="https://www.weather.gov/disclaimer"
             target="_blank"
@@ -181,10 +178,9 @@ export default function PrivacySources() {
         <li>
           <strong>Coming:</strong> {!firmsAvailable && 'fire, '}broader weather,
           more news sources, satellite orbits, space weather and aviation
-          {!maritimeAvailable && ', maritime'}. <strong>Simulation lab:</strong>{' '}
-          original GOSIP fixtures. No live satellite tracking, space weather or
-          aviation data is connected. Examples are never evidence of actual
-          conditions.
+          {!maritimeAvailable && ', maritime'}. No live satellite tracking,
+          space weather or aviation data is connected. No simulated records are
+          published.
         </li>
         <li>
           <strong>Globe:</strong> CesiumJS (Apache-2.0). Imagery: NASA GIBS

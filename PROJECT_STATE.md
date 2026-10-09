@@ -1,6 +1,15 @@
-# Project state — Phase 19 complete and deployed
+# Project state — Phase 20 launch preparation; final Claude pass pending
 
 ## Current delivery — 2026-10-09
+
+- Public simulations and playback retired entirely. Generic legacy demos open Current real data; replaced source links select their real layer (or coming if unavailable). Aviation/NWS links show persistent coming states with no records, including reload/back. No direct NWS browser permission. Eight real layers, D52/D55 globe, same-origin data, immutable partial history and failure retention preserved.
+- Fixture payloads and sample report documents moved to `tests/fixtures/legacy/`; build fails on any fixture module import or public fixture route. Tests/native exporter read the moved payloads. No native resource/source changes. Place controls now describe actual supplied context only. Phone globe credits no longer overlap.
+- npm ci audited 118 packages with zero reported vulnerabilities; 266 unit tests and root/Pages builds/typecheck pass. 44 repository-path desktop/mobile checks pass; 1440/390/320 visuals inspected, including corrected phone credits and keyboard focus. Actual release evidence follows below. Existing Cesium lazy-engine chunk warning; list/static stay lightweight. No full accessibility or Safari/Firefox/native support claim.
+- Native export diagnostic: fixture contents and filtering parity match unchanged native resources. `links.json` check fails on historical web/native link semantics; reproduced with HEAD's pre-phase parser, so it predates this work. Native remains paused and unchanged; no native validation pass claimed.
+- **Launch gate still open:** latest Claude commits (`cdaaa10` through `2ec5b62`) predate Phases 16–19. No final Phase 20 Claude pass is recorded. Owner asked to arrange/share it; this increment is not declared a completed public launch. Concrete design handoff in `prompts/CLAUDE_FINAL_POLISH.md`; next chat remains Phase 20, not optional Phase 21.
+- No new provider, account, key, billing, CSP host, backend or scheduler change. Owner no-payment-method and ZERO_COST_STORAGE_CONFIRMED safeguards persist, site ≤25 MB. Push evidence is not scheduled-run evidence.
+
+## Phase 19 delivery (historical) — 2026-10-09
 
 - Real History on the satellite globe: first successful daily capture of already-published USGS / ANSS and NASA EONET snapshots, seven-day retention, at most seven captures. Starts collecting now, no backfill. Other six current sources stay independent and explicitly outside archive scope. Aviation lab remains separate; native unchanged.
 - Captures preserve original source fields/times/health and published release SHA/run/build time, plus actual capture time. Prior capture cannot be replaced by a later correction. Current/History, exact capture selector, earlier/later steps, independent layers, search/categories/place/windows, selection and saved subsets including none work together. Missing/expired dates never fall back to current or simulated records.

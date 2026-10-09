@@ -1,4 +1,3 @@
-import fixtures from './additionalExamples.json'
 import type { ExplorerEvent } from './events'
 
 export const additionalLayers = {
@@ -197,13 +196,7 @@ export function parseAdditionalExamples(input: unknown): AdditionalEvent[] {
     return e as unknown as AdditionalEvent
   })
 }
-export const additionalExamples = parseAdditionalExamples(fixtures)
-export const additionalBySource = Object.fromEntries(
-  Object.entries(additionalLayers).map(([source, layer]) => [
-    source,
-    additionalExamples.filter((e) => e.family === layer.family),
-  ]),
-) as Record<AdditionalSource, AdditionalEvent[]>
+
 export const isAdditional = (event: ExplorerEvent): event is AdditionalEvent =>
   'kind' in event && event.kind === 'additional'
 export const additionalReadout = (event: AdditionalEvent) =>

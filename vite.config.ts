@@ -79,6 +79,19 @@ export default defineConfig(({ mode }) => ({
   // Never inline assets as data: URLs; the CSP only allows same-origin fonts.
   build: { assetsInlineLimit: 0 },
   plugins: [
+    {
+      name: 'no-public-fixtures',
+      apply: 'build',
+      generateBundle() {
+        for (const id of this.getModuleIds()) {
+          if (
+            id.includes('/tests/fixtures/') ||
+            /Examples\.json$|relationships\.json$/.test(id)
+          )
+            this.error('Test fixture imported by the public application: ' + id)
+        }
+      },
+    },
     react(),
     tailwindcss(),
     {
@@ -91,7 +104,7 @@ export default defineConfig(({ mode }) => ({
             tag: 'meta',
             attrs: {
               'http-equiv': 'Content-Security-Policy',
-              content: `default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: ${imageryHosts}; font-src 'self'; connect-src 'self' https://api.weather.gov ${imageryHosts}; worker-src 'self' blob:; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'`,
+              content: `default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: ${imageryHosts}; font-src 'self'; connect-src 'self' ${imageryHosts}; worker-src 'self' blob:; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'`,
             },
             injectTo: 'head-prepend',
           },

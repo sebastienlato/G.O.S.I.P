@@ -1,4 +1,6 @@
-# Architecture — Phase 15
+# Architecture — current web with historical implementation notes
+
+Phase 20 supersedes the simulation/development routes mentioned below: App renders reviewed current/history snapshots only. `parsePublicFilters` normalizes old source links before first render; unavailable aviation/NWS and unavailable replaced layers retain shareable coming states. The legacy parser remains only for fixture/native compatibility tests. Fixture arrays/JSON/documents live under `tests/fixtures/legacy/`; a production module-graph guard and Pages file guard reject them. No direct-provider NWS CSP permission. Native resources remain frozen.
 
 React/TypeScript/Vite static explorer, bundled Natural Earth geography and lazy CesiumJS globe. Independent USGS, EONET, DWD, Global Voices reports and available FIRMS checkboxes feed one filtered array for map/list/selection/details. DWD defaults off; the other connected layers default on; simulation modes remain separate. Validated `live` subsets include none; explicit legacy `source=usgs` stays USGS-only. Category/search/place/window/view state remains shareable; selection clears when filtered out. Internal `source: 'usgs'` remains the live-mode compatibility name.
 

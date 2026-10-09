@@ -21,27 +21,47 @@ try {
   const r = await server.ssrLoadModule('/src/data/reports.ts')
   const d = await server.ssrLoadModule('/src/data/digital.ts')
   const a = await server.ssrLoadModule('/src/data/additional.ts')
+  const fixtures = Object.assign(
+    {},
+    ...(await Promise.all(
+      ['events', 'fire', 'reports', 'digital', 'additional'].map((name) =>
+        server.ssrLoadModule(`/tests/fixtures/legacy/${name}.ts`),
+      ),
+    )),
+  )
   const h = await server.ssrLoadModule('/src/data/history.ts')
   const sources = [
     [
       'demo',
       'Original examples',
-      e.demoEvents,
+      fixtures.demoEvents,
       '18 invented examples across five categories. Not representative of global activity.',
     ],
-    ['fire-demo', 'Fire examples', f.fireExamples, f.FIRE_NOTE],
-    ['reports-demo', 'Global reports', r.reportExamples, r.REPORT_COVERAGE],
-    ['digital-demo', 'Digital world', d.digitalExamples, d.DIGITAL_COVERAGE],
+    ['fire-demo', 'Fire examples', fixtures.fireExamples, f.FIRE_NOTE],
+    [
+      'reports-demo',
+      'Global reports',
+      fixtures.reportExamples,
+      r.REPORT_COVERAGE,
+    ],
+    [
+      'digital-demo',
+      'Digital world',
+      fixtures.digitalExamples,
+      d.DIGITAL_COVERAGE,
+    ],
     ...Object.entries(a.additionalLayers).map(([id, config]) => [
       id,
       config.label,
-      a.additionalBySource[id],
+      fixtures.additionalBySource[id],
       config.caveat,
     ]),
   ]
   const relationships = h.parseRelationships(
-    JSON.parse(readFileSync('src/data/relationships.json', 'utf8')),
-    d.digitalExamples,
+    JSON.parse(
+      readFileSync('tests/fixtures/legacy/relationships.json', 'utf8'),
+    ),
+    fixtures.digitalExamples,
   )
   const categories = Object.keys(e.categories)
   const stamp = (v) => (v ? e.formatTimestamp(v) : 'Not supplied')
@@ -199,7 +219,7 @@ try {
       if (event.source_url) {
         if (event.source_url !== `/reports/${event.id}.txt`)
           throw new Error('Noncanonical original')
-        original = readFileSync(`public${event.source_url}`, 'utf8')
+        original = readFileSync(`tests/fixtures/legacy/${event.id}.txt`, 'utf8')
       }
     }
     details.push(

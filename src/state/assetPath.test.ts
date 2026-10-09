@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { assetPath } from './assetPath'
 import { parseReportExamples } from '../data/reports'
-import raw from '../data/reportExamples.json'
+import raw from '../../tests/fixtures/legacy/reportExamples.json'
 
 describe('repository asset paths', () => {
   it('prefixes canonical assets once for root and repository hosting', () => {

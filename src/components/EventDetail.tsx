@@ -14,7 +14,6 @@ import { isHazard } from '../data/eonet'
 import HazardBody from './HazardBody'
 import { isAdditional, additionalLayers } from '../data/additional'
 import AdditionalBody from './AdditionalBody'
-import Relationships from './Relationships'
 import { isDigital } from '../data/digital'
 import DigitalBody from './DigitalBody'
 import { isReport } from '../data/reports'
@@ -29,14 +28,12 @@ export default function EventDetail({
   stale,
   onClose,
   onShowOnMap,
-  onExploreRelated,
   playback,
   historyCapture,
 }: {
   event: ExplorerEvent
   historyCapture?: string
   playback: boolean
-  onExploreRelated: (id: string) => void
   stale: boolean
   onClose: () => void
   onShowOnMap: () => void
@@ -395,7 +392,6 @@ export default function EventDetail({
             </>
           )}
         </>
-        <Relationships event={event} onExplore={onExploreRelated} />
         {event.coordinates ? (
           <button className="show-on-map" onClick={onShowOnMap}>
             <MapPin size={16} /> Show on map

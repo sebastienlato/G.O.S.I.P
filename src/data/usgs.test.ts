@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { feed, quake, TEST_NOW } from '../../tests/fixtures/usgs'
-import { demoEvents, filterEvents } from './events'
+import { filterEvents } from './events'
+import { demoEvents } from '../../tests/fixtures/legacy/events'
 import {
   createUSGSProvider,
   MAX_BYTES,

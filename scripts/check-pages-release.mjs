@@ -33,21 +33,20 @@ assert.equal(
   await readFile('dist/NOTICE.txt', 'utf8'),
   await readFile('NOTICE', 'utf8'),
 )
-const reports = JSON.parse(
-  await readFile('src/data/reportExamples.json', 'utf8'),
+assert(
+  !html.includes('api.weather.gov'),
+  'No direct data-provider CSP permission',
 )
-for (const report of reports) {
-  if (report.source_url)
-    assert(
-      (await readFile(join('dist', report.source_url), 'utf8')).includes(
-        'NOT REAL NEWS',
-      ),
-    )
-}
 async function size(path) {
   let bytes = 0
   for (const entry of await readdir(path, { withFileTypes: true })) {
     assert(!entry.isSymbolicLink(), 'No release symlinks')
+    assert(
+      !/^(reports|fixtures)$|demo-|Examples\.json$|relationships\.json$/.test(
+        entry.name,
+      ),
+      'No public fixture payloads or report routes',
+    )
     const file = join(path, entry.name)
     bytes += entry.isDirectory() ? await size(file) : (await stat(file)).size
   }

@@ -35,20 +35,19 @@ const AboutDialog = forwardRef<HTMLDialogElement, { privacyOnly: boolean }>(
               <h2 id="about-title">What GOSIP shows</h2>
               <p>
                 GOSIP combines earthquakes, curated hazards, German weather
-                warnings, global thermal summaries, attributed report headlines
+                warnings, global thermal summaries, attributed report headlines,
                 delayed OONI measurement totals, launch schedules and delayed
                 maritime estimates from public snapshots checked on a
                 best-effort 15-minute schedule. Each layer keeps its own source,
-                times and freshness. The separate simulation lab holds invented
-                examples and never mixes them with live data.
+                times and freshness. Unavailable sources stay listed as coming.
               </p>
               <h3>Read it with care</h3>
               <p>
                 Locations and magnitudes are provider estimates that can change.
                 Provider review does not verify impacts. An empty region does
-                not mean nothing is happening there. Demo time in the lab is
-                fixed at 8 October 2026, 16:00 UTC; live filters use your device
-                clock.
+                not mean nothing is happening there. Current filters use your
+                device clock; History shows partial daily earthquake and hazard
+                captures.
               </p>
             </>
           )}
