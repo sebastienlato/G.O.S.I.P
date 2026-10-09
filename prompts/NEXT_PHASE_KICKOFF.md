@@ -2,6 +2,8 @@
 
 Act as autonomous lead developer in /Users/sebastienlato/Dev/GOSIP. Run `git pull --ff-only` first. Read AGENTS, README, ROADMAP, PROJECT_STATE, DECISIONS, docs/WORKFLOW, DESIGN, ARCHITECTURE, DATA_POLICY and BETA_READINESS. Inspect git status/log/remotes and actual HTTPS release.json/data/health. Read final Phase 16 deployment evidence. One phase only; web first, iOS paused.
 
+Verified Phase 16 release: source `2238a79fdb409d95b5a49b55b0842f11e0c8edc8`, push run 37966685941, built 2026-10-09 17:30:57 UTC. Six healthy HTTPS source mirrors, 98 OONI country totals, desktop/mobile actual globe smoke passed, zero artifacts, 12.49 MB. 236 unit and 30 repository-path browser checks pass. Final evidence docs commit is newer than deployed code. No owner action remains.
+
 ## Foundation
 
 - Satellite globe console (D52/D55); new layers belong on the globe with the shared line-icon encoding, left layer panel, right feed and source details. No landing-page/flat-map redesign or square heat-grid regression. Keyless NASA GIBS, optional owner ion imagery/terrain/cities; Esri removed after terms review.

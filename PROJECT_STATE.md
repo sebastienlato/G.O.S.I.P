@@ -1,12 +1,12 @@
-# Project state — Phase 16 digital world
+# Project state — Phase 16 complete and deployed
 
 ## Current delivery — 2026-10-09
 
 - Scheduler prerequisite passed unchanged before implementation: real schedule run [37964180735](https://github.com/sebastienlato/G.O.S.I.P/actions/runs/37964180735), created 17:08:47 UTC, source `5b3ec930c9eec770c01ba0289a0438fca20e179d`. Successful build/deploy/cleanup, zero artifacts, matching schedule HTTPS stamp and all five fresh healthy mirrors retrieved 17:09:07 UTC. This supersedes the prior blocker/Community action; workflow registration unchanged, no owner action needed. Timing remains best effort.
 - Added live OONI country/day web-connectivity measurement totals, delayed ≥24h. Country context globe icons, Digital toggle, independent source health, details/licence, search/categories/windows and same-origin snapshots. 100 KB/250 rows; totals ≥1,000 only, no outcome/raw sensitive details. Provider publication/update/generation unknown; counts are tests, not outages, censorship, users or networks. Latest delayed day only; use 3/7 days.
 - Real local ingestion healthy: 98 selected country/territory totals from 141 rows (94 map anchors, four feed-only), UTC day October 7. CC BY-NC-SA data licence stays separate from Apache software. No key/account/backend/billing; IODA and Radar deferred with current review. Replaced digital lab/examples retire permanently; legacy links migrate, native unchanged.
-- Checks: 236 unit tests, root/Pages builds/typecheck, 30 desktop/mobile repository-path browser checks passed; inspected desktop/320px source/feed/static layouts. Candidate ~12.4 MB (<25 MB). Final HTTPS deployment evidence follows below after release verification. No Safari/Firefox/native/full accessibility claim; Cesium chunk warning remains.
-- Next phase: Phase 17 (space), only in a new chat via prompts/NEXT_PHASE_KICKOFF.md after this delivery's deployment is verified.
+- Checks: 236 unit tests, root/Pages builds/typecheck, 30 desktop/mobile repository-path browser checks passed; inspected desktop/320px source/feed/static layouts. Candidate ~12.4 MB (<25 MB). Verified HTTPS deployment evidence is recorded below. No Safari/Firefox/native/full accessibility claim; Cesium chunk warning remains.
+- Next phase: Phase 17 (space), only in a new chat via prompts/NEXT_PHASE_KICKOFF.md after this completed delivery.
 
 ## Earlier release evidence (historical)
 
@@ -25,3 +25,12 @@
 Live preflight release c2e0ee6 / run 37949117288 passed build/deploy/cleanup with zero artifacts and matched the HTTPS push stamp. All five mirrored sources were healthy (15:06:02 UTC), site 12,394,158 bytes before stamp. Actual desktop smoke passed; mobile uncovered the existing 80svh feed-panel cap collapsing cards beneath long selected-record text. Removed the total-panel cap on phones, bounded the card scroller independently, and added 320px sequential card-selection coverage. All 28 repository-path checks pass again; fresh HTTPS verification follows the fix.
 
 Final preflight release: source `40560cb4a731f0c9e47122d4aef0e7d8ba1a7863`, push run `37949496686`, HTTPS release stamp matches (built 2026-10-09 15:09:02 UTC). Build/deploy/cleanup succeeded; zero run artifacts; 12,394,483 bytes before stamp (<25 MB). Fresh HTTPS embedded/index health agrees: USGS 315, EONET 17, DWD 306, news 7, FIRMS 1,596; retrieved 15:08:56 UTC. Actual desktop/mobile globe/list/static/details/toggles/all-off/reload/privacy smoke passes; real screenshots inspected after imagery loading. NASA/ion requests allowed, Esri excluded, source data same-origin. Final scheduler verifier still fails (current event push; only schedule run 37917198418 recorded). Digital work remains blocked; owner Community action above. No Phase 17 kickoff yet; final evidence-only docs commit is newer than the deployed source.
+
+
+## Phase 16 verified publication — 2026-10-09
+
+[Push run 37966685941](https://github.com/sebastienlato/G.O.S.I.P/actions/runs/37966685941) deployed source `2238a79fdb409d95b5a49b55b0842f11e0c8edc8`; HTTPS release.json matches source/event/run ID, built 17:30:57 UTC (13:30 EDT). Build/deploy/cleanup succeeded, zero run artifacts; 12,493,609 bytes before the release stamp, below 25 MB. Pages built/workflow/HTTPS at the unchanged public URL. This is push evidence, separate from the scheduled prerequisite verified at 17:09 UTC.
+
+All six HTTPS embedded/index health mirrors agree and are healthy, retrieved 17:30:47 UTC: OONI 98, USGS 313, EONET 16, DWD 460, Global Voices 7, FIRMS 1,577. OONI covers October 7 UTC, 98 selected of 141 countries/territories, 94 country anchors and four feed-only; counts below 1,000 suppressed, publication/update/generation unknown. Actual HTTPS desktop/mobile smoke passed for globe/list/static, all source details/toggles/all-off/reload/privacy, OONI licence/delay and country-context camera selection; only approved imagery hosts and same-origin data. Digital screenshots visually inspected at desktop and phone widths; local 320px checks also passed. 236 unit / 30 repository-path browser checks and root/Pages builds/typecheck pass. Cesium large lazy-chunk warning remains; no Safari/Firefox/native/full accessibility claim.
+
+No remaining owner action, key/account/payment/service added, workflow registration or verifier weakened. Digital web simulations are permanently retired; native fixtures unchanged. Final evidence-only documentation commit is newer than the deployed code. Phase 16 complete; prompts/NEXT_PHASE_KICKOFF.md starts Phase 17 in a new chat, not this one.
