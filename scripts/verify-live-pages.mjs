@@ -245,6 +245,9 @@ try {
     await expect(hazardToggle).toBeChecked()
     await hazardToggle.uncheck()
     await page
+      .getByRole('checkbox', { name: 'Maritime port-call estimates' })
+      .uncheck()
+    await page
       .getByRole('checkbox', { name: 'OONI digital measurements' })
       .uncheck()
     await page.getByRole('checkbox', { name: /DWD weather/ }).uncheck()
