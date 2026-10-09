@@ -1,11 +1,11 @@
-name: Live data and Pages
+name: Publish live data and Pages
 on:
   push:
     branches: [main]
     paths-ignore: ['native/**', 'docs/**', '*.md', 'prompts/**']
-  # Re-register the schedule after zero schedule events; retain a 15-minute cadence.
+  # Fresh workflow registration after zero schedule events; retain a 15-minute cadence.
   schedule:
-    - cron: '11,26,41,56 * * * *'
+    - cron: '3,18,33,48 * * * *'
   workflow_dispatch:
 permissions:
   contents: read

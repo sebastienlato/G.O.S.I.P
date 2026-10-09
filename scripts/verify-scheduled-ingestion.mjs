@@ -7,7 +7,7 @@ const api = (path) =>
     execFileSync('gh', ['api', `repos/${repo}/${path}`], { encoding: 'utf8' }),
   )
 const { workflow_runs: runs } = api(
-  'actions/workflows/pages.yml/runs?event=schedule&per_page=10',
+  'actions/workflows/publish-live.yml/runs?event=schedule&per_page=10',
 )
 const run = runs.find(
   (r) =>

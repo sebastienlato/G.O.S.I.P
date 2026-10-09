@@ -5,7 +5,7 @@ const remote = execFileSync('git', ['remote', 'get-url', 'origin'], {
 }).trim()
 if (remote !== 'https://github.com/sebastienlato/G.O.S.I.P.git')
   throw new Error('Unexpected remote')
-execFileSync('gh', ['workflow', 'run', 'pages.yml', '--ref', 'main'], {
+execFileSync('gh', ['workflow', 'run', 'publish-live.yml', '--ref', 'main'], {
   stdio: 'inherit',
 })
 console.log(
