@@ -11,6 +11,8 @@ Act as autonomous lead developer in /Users/sebastienlato/Dev/GOSIP. Run `git pul
 - Follow night-chart design and shared encoding.ts, LayerToggles/LiveStatus, MapLegend. Desktop rail one row; mobile two-column toggles; category disclosure preserves arbitrary subsets. Details hold caveats; default copy short.
 - Official pinned Pages Actions, main relevant push/manual/15-minute UTC schedule, public standard Linux guard, no cache/data commits, 4 MB site cap, accumulation check/one-day expiry/current-run artifact cleanup. ZERO_COST_STORAGE_CONFIRMED=true and owner no-payment-method confirmation persist; payment changes require $0 Actions stop-usage budget. No paid plans/trials/accounts by agent or auto-upgrade. Schedules may delay/drop/disable after 60 inactive days.
 
+- Phase 14 verified source `d0d89124226d3ab49b93fedeb655e763f3a21093`, run 37874218159: 309 USGS + 17 EONET + 294 DWD + 216 FIRMS cells (2,012 detections for 2026-10-07 UTC), all healthy; actual HTTPS desktop/mobile smoke and cleanup passed. 218 unit and 26 repository-path browser checks; 3,416,227 bytes with source stamp under 4 MB. Final evidence-only docs commit is newer; recheck actual live source/health. No remaining owner setup. Use scripts/verify-live-pages.mjs for actual HTTPS checks and update it when adding sources.
+
 ## Deliver Phase 15
 
 1. Add lawful, bounded real world-news/report metadata. Review current GDELT, ReliefWeb approved appname and suitable broadcaster/agency feeds; ≤10 lines per new source covering rights, attribution, redistribution, access/identification, quota/cadence and sensitivity. Do not assume aggregator access grants article/text/image rights. Prefer original-language title/metadata and link-out; no scraped/copied full articles.
