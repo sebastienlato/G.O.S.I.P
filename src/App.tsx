@@ -1,3 +1,5 @@
+import { isOoni } from './data/ooni'
+import { useOoni } from './state/useEarthquakes'
 import { isNews } from './data/news'
 import { useNews } from './state/useEarthquakes'
 import { isFireSummary } from './data/firms'
@@ -14,7 +16,6 @@ import HistoryControls from './components/HistoryControls'
 import { matchesPlace } from './data/history'
 import {
   isDigital,
-  digitalExamples,
   digitalMatches,
   digitalResults,
   digitalFamilies,
@@ -33,6 +34,7 @@ import {
   liveLayerKeys,
   defaultLiveLayers,
   firmsAvailable,
+  ooniAvailable,
 } from './state/explorer'
 import { useExplorerFilters } from './state/useExplorerFilters'
 import EventDetail from './components/EventDetail'
@@ -63,7 +65,11 @@ import {
 
 const demoEvents = demoProvider
   .getEvents()
-  .filter((event) => !['demo-001', 'demo-005', 'demo-008'].includes(event.id))
+  .filter(
+    (event) =>
+      !['demo-001', 'demo-005', 'demo-008'].includes(event.id) &&
+      event.category !== 'digital',
+  )
 const noEvents: ExplorerEvent[] = []
 const timeOptions: { value: WindowHours; label: string }[] = [
   { value: 6, label: '6 hours' },
@@ -105,6 +111,7 @@ export default function App() {
   )
   const hazards = useHazards(source === 'usgs' && liveLayers.includes('eonet'))
   const warnings = useWarnings(source === 'usgs' && liveLayers.includes('dwd'))
+  const ooni = useOoni(source === 'usgs' && liveLayers.includes('ooni'))
   const news = useNews(source === 'usgs' && liveLayers.includes('news'))
   const fires = useFire(source === 'usgs' && liveLayers.includes('firms'))
   const liveEvents = useMemo(
@@ -114,6 +121,7 @@ export default function App() {
         : []),
       ...(liveLayers.includes('eonet') ? (hazards.snapshot?.events ?? []) : []),
       ...(liveLayers.includes('dwd') ? (warnings.snapshot?.events ?? []) : []),
+      ...(liveLayers.includes('ooni') ? (ooni.snapshot?.events ?? []) : []),
       ...(liveLayers.includes('news') ? (news.snapshot?.events ?? []) : []),
       ...(liveLayers.includes('firms') ? (fires.snapshot?.events ?? []) : []),
     ],
@@ -124,6 +132,7 @@ export default function App() {
       warnings.snapshot,
       fires.snapshot,
       news.snapshot,
+      ooni.snapshot,
     ],
   )
   const weather = useWeather(source === 'nws')
@@ -143,7 +152,7 @@ export default function App() {
     : source === 'demo'
       ? categoryKeys
       : live
-        ? ['physical', 'environment', 'civic']
+        ? ['physical', 'environment', 'civic', 'digital']
         : digital
           ? ['digital']
           : reports
@@ -155,7 +164,7 @@ export default function App() {
   const allEvents = additional
     ? additionalBySource[additional]
     : digital
-      ? digitalExamples
+      ? []
       : reports
         ? []
         : source === 'demo'
@@ -239,6 +248,19 @@ export default function App() {
     setDetailId(id)
   }, [])
   useEffect(() => {
+    if (source === 'digital-demo')
+      updateFilters({
+        source: 'usgs',
+        liveLayers: ooniAvailable ? ['ooni'] : [],
+        hours: 72,
+        cursor: null,
+        digitalFamily: 'all',
+        digitalResult: 'all',
+        query: '',
+        country: '',
+        region: '',
+        selectedCategories: categoryKeys,
+      })
     if (source === 'reports-demo')
       updateFilters({
         source: 'usgs',
@@ -383,6 +405,7 @@ export default function App() {
         liveLayers.includes('dwd') ? warnings : null,
         liveLayers.includes('firms') ? fires : null,
         liveLayers.includes('news') ? news : null,
+        liveLayers.includes('ooni') ? ooni : null,
       ].filter((s) => s !== null)
     : []
   const retrievals = activeLive
@@ -457,7 +480,7 @@ export default function App() {
               : source === 'nws'
                 ? 'No forecast periods overlap this view. Check source status, enable Environment, clear search or widen the future window. This is not evidence of safe weather.'
                 : !isDemo
-                  ? 'Turn on a live layer, clear search or widen the window. Missing data does not mean no hazards occurred.'
+                  ? 'Turn on a live layer, clear search or widen the window. Delayed reports and digital measurements need 3 or 7 days. Missing data does not mean no activity occurred.'
                   : !selectedCategories.length
                     ? 'Enable a layer to explore the simulated events.'
                     : query.trim()
@@ -639,18 +662,21 @@ export default function App() {
                       !isHazard(e) &&
                       !isWarning(e) &&
                       !isFireSummary(e) &&
-                      !isNews(e),
+                      !isNews(e) &&
+                      !isOoni(e),
                   ).length,
                   eonet: events.filter(isHazard).length,
                   dwd: events.filter(isWarning).length,
                   firms: events.filter(isFireSummary).length,
                   news: events.filter(isNews).length,
+                  ooni: events.filter(isOoni).length,
                 }}
                 quakes={earthquakes}
                 hazards={hazards}
                 warnings={warnings}
                 fires={fires}
                 news={news}
+                ooni={ooni}
               />
             ) : (
               <button
@@ -806,6 +832,7 @@ export default function App() {
                 warnings={warnings}
                 fires={fires}
                 news={news}
+                ooni={ooni}
               />
             )}
             {!sourceDisabled && (
@@ -838,9 +865,9 @@ export default function App() {
               </p>
               <p>
                 Data: USGS / ANSS · NASA EONET · DWD
-                {firmsAvailable && ' · NASA FIRMS'} · Global Voices · Natural
-                Earth. Imagery: NASA GIBS / Cesium ion. Not an emergency
-                service.
+                {firmsAvailable && ' · NASA FIRMS'} · Global Voices
+                {ooniAvailable && ' · OONI'} · Natural Earth. Imagery: NASA GIBS
+                / Cesium ion. Not an emergency service.
               </p>
             </footer>
           </section>
@@ -901,7 +928,7 @@ export default function App() {
                 ? 'Local fixtures. No live connection.'
                 : source === 'nws'
                   ? 'NWS predictions, not observations or alerts.'
-                  : 'Sources remain independent. Detection counts are not confirmed fires; warnings are not observed impacts; reports are attributed claims.'
+                  : 'Sources remain independent. Detection counts are not confirmed fires; warnings are not observed impacts; reports are attributed claims; digital counts are measurements, not outages.'
             }
           />
         </div>
@@ -930,17 +957,19 @@ export default function App() {
           }}
           onShowOnMap={() => showOnMap(detailEvent.id)}
           stale={
-            isNews(detailEvent)
-              ? news.stale
-              : isFireSummary(detailEvent)
-                ? fires.stale
-                : isWarning(detailEvent)
-                  ? warnings.stale
-                  : isHazard(detailEvent)
-                    ? hazards.stale
-                    : source === 'nws'
-                      ? weather.stale
-                      : earthquakes.stale
+            isOoni(detailEvent)
+              ? ooni.stale
+              : isNews(detailEvent)
+                ? news.stale
+                : isFireSummary(detailEvent)
+                  ? fires.stale
+                  : isWarning(detailEvent)
+                    ? warnings.stale
+                    : isHazard(detailEvent)
+                      ? hazards.stale
+                      : source === 'nws'
+                        ? weather.stale
+                        : earthquakes.stale
           }
           onClose={closeEvent}
         />

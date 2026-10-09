@@ -1,3 +1,4 @@
+import { parseOoni, publishOoni, ooniWindow } from '../src/data/ooni'
 import { parseNews, publishNews } from '../src/data/news'
 import { dwdFixture, firmsCSV } from './fixtures/phase14'
 import { parseDWD, publishDWD } from '../src/data/dwd'
@@ -81,6 +82,28 @@ const newsPublished = publishNews(newsSnapshot, {
   record_count: 1,
 })
 
+const ooniSnapshot = parseOoni(
+  {
+    ...ooniWindow(now),
+    test_name: 'web_connectivity',
+    reported_countries: 2,
+    rows: [
+      { country_code: 'CA', measurement_count: 2500 },
+      { country_code: 'SG', measurement_count: 1200 },
+    ],
+  },
+  now,
+)
+const ooniPublished = publishOoni(ooniSnapshot, {
+  source: 'ooni',
+  status: 'ok',
+  error: null,
+  attempted_at: ooniSnapshot.retrieved_at,
+  fetched_at: ooniSnapshot.retrieved_at,
+  generated_at: null,
+  record_count: 2,
+})
+
 const base = '/G.O.S.I.P/'
 const imageryHost =
   /^(gibs\.earthdata\.nasa\.gov|([a-z0-9-]+\.)*cesium\.com|([a-z0-9-]+\.)*virtualearth\.net|tile\.googleapis\.com)$/
@@ -105,6 +128,10 @@ test.beforeEach(async ({ context, page }) => {
     if (url.origin !== origin || !url.pathname.startsWith(base)) {
       failures.push(url.href)
       await route.abort()
+      return
+    }
+    if (url.pathname.endsWith('/data/ooni.json')) {
+      await route.fulfill({ json: ooniPublished })
       return
     }
     if (url.pathname.endsWith('/data/news.json')) {
@@ -207,8 +234,8 @@ for (const mode of ['view=list', 'map=static']) {
     if (info.project.name === 'mobile')
       await page.setViewportSize({ width: 320, height: 740 })
     for (const [source, count] of [
-      ['demo', 15],
-      ['digital-demo', 6],
+      ['demo', 12],
+      ['digital-demo', 2],
       ['space-demo', 4],
       ['aviation-demo', 4],
       ['maritime-demo', 4],
@@ -328,7 +355,7 @@ for (const source of ['nws']) {
     await page
       .getByRole('button', { name: 'Explore simulated examples', exact: true })
       .click()
-    await expect(page.locator('.event-card')).toHaveCount(9)
+    await expect(page.locator('.event-card')).toHaveCount(7)
     expect(new URL(page.url()).pathname).toBe(base)
   })
 }
@@ -531,7 +558,7 @@ test('independent live layers combine map/feed, clear selection and survive shar
   await page
     .getByRole('button', { name: 'Other examples · simulated', exact: true })
     .click()
-  await expect(page.locator('.event-card')).toHaveCount(9)
+  await expect(page.locator('.event-card')).toHaveCount(7)
   await expect(
     page.locator('.event-card').filter({ hasText: 'EONET' }),
   ).toHaveCount(0)
@@ -781,4 +808,89 @@ test('global thermal feed is paged while all cells remain searchable and mapped'
     .fill('120 thermal')
   await expect(page.locator('.event-card')).toHaveCount(1)
   await expect(page.locator('.static-heat')).toBeVisible()
+})
+
+test('digital aggregates replace simulations, preserve delayed intervals and retain memory on failure', async ({
+  page,
+  context,
+}, info) => {
+  if (info.project.name === 'mobile')
+    await page.setViewportSize({ width: 320, height: 740 })
+  await page.goto(
+    `${origin}${base}?source=digital-demo&map=static&layers=physical&digital=connectivity&country=example`,
+  )
+  const toggle = page.getByRole('checkbox', {
+    name: 'OONI digital measurements',
+  })
+  await expect(toggle).toBeChecked()
+  await expect(page.locator('.event-card.kind-ooni')).toHaveCount(2)
+  await expect(page.locator('.static-map .kind-ooni')).toHaveCount(1)
+  await expect(
+    page.getByRole('button', {
+      name: 'Digital world · simulated',
+      exact: true,
+    }),
+  ).toHaveCount(0)
+  await expect(
+    page.getByText('Live OONI · delayed daily measurements', { exact: true }),
+  ).toBeVisible()
+  await page
+    .locator('.event-card.kind-ooni')
+    .filter({ hasText: 'Canada' })
+    .click()
+  const dialog = page.getByRole('dialog')
+  await expect(dialog).toContainText('CC BY-NC-SA 4.0')
+  await expect(dialog).toContainText('not people, networks or outages')
+  await expect(dialog).toContainText('Not supplied')
+  await expect(
+    dialog.getByRole('button', { name: 'Show on map', exact: true }),
+  ).toBeVisible()
+  await page.keyboard.press('Escape')
+  await page.getByRole('button', { name: '24 hours', exact: true }).click()
+  await expect(page.locator('.event-card')).toHaveCount(0)
+  await page.getByRole('button', { name: '3 days', exact: true }).click()
+  await page.reload()
+  await expect(page.locator('.event-card.kind-ooni')).toHaveCount(2)
+  await page.screenshot({
+    path: `test-results/phase16-${info.project.name}-digital.png`,
+    fullPage: true,
+  })
+  await context.route('**/data/ooni.json', (route) =>
+    route.fulfill({
+      json: {
+        version: 1,
+        snapshot: null,
+        health: {
+          ...ooniPublished.health,
+          status: 'failed',
+          fetched_at: null,
+          record_count: 0,
+          error: 'OONI request failed.',
+        },
+      },
+    }),
+  )
+  await page.clock.setFixedTime(now + 61_000)
+  await page
+    .getByText('Digital freshness & source details', { exact: true })
+    .click()
+  await page
+    .getByRole('button', { name: 'Refresh digital data', exact: true })
+    .click()
+  await expect(
+    page.getByText('STALE · last available OONI measurements', { exact: true }),
+  ).toBeVisible()
+  await expect(page.locator('.event-card.kind-ooni')).toHaveCount(2)
+  await page
+    .locator('.event-card.kind-ooni')
+    .filter({ hasText: 'Canada' })
+    .click()
+  await expect(dialog).toContainText('STALE · retained measurements')
+  await page.keyboard.press('Escape')
+  await toggle.uncheck()
+  await expect(
+    page.getByText('All live layers are off', { exact: true }),
+  ).toBeVisible()
+  await page.reload()
+  await expect(toggle).not.toBeChecked()
 })

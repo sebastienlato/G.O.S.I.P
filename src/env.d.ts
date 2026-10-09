@@ -1,3 +1,4 @@
+declare const __OONI_AVAILABLE__: boolean
 declare const __FIRMS_AVAILABLE__: boolean
 interface ImportMetaEnv {
   /** Optional URL-restricted Cesium ion token (public by design, D52). */

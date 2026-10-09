@@ -3,6 +3,7 @@ import type { MarkerKind } from './encoding'
 // One line-icon set (24-unit grid, 2px round strokes) shared by globe
 // markers, the layer panel, feed cards and the legend. Static markup only.
 export const iconMarkup: Record<MarkerKind, string> = {
+  ooni: '<circle cx="5" cy="6" r="2.5"/><circle cx="19" cy="6" r="2.5"/><circle cx="12" cy="19" r="2.5"/><path d="m6 8 5 9m7-9-5 9M8 6h8"/>',
   // Seismogram trace.
   quake: '<path d="M2 12h4l2.5-6 3 12 3-9 2 3h5.5"/>',
   // Flat-topped cone with an ash plume.

@@ -78,7 +78,7 @@ try {
       hazards.health,
     )
     const newSources = {}
-    for (const key of ['dwd', 'firms', 'news']) {
+    for (const key of ['dwd', 'firms', 'news', 'ooni']) {
       const response = await context.request.get(
         new URL(`data/${key}.json`, site).href,
       )
@@ -110,6 +110,23 @@ try {
               c.length === 3 &&
               Math.abs(c[0] % 2) === 1 &&
               Math.abs(c[1] % 2) === 1,
+          ),
+        )
+      }
+      if (key === 'ooni') {
+        assert.equal(
+          p.snapshot.credit.license,
+          'https://creativecommons.org/licenses/by-nc-sa/4.0/',
+        )
+        assert(
+          Date.parse(p.snapshot.feed.interval_end) <=
+            Date.parse(p.snapshot.retrieved_at) - 86400_000,
+        )
+        assert(
+          p.snapshot.feed.rows.every(
+            (r) =>
+              Object.keys(r).sort().join(',') ===
+                'country_code,measurement_count' && r.measurement_count >= 1000,
           ),
         )
       }
@@ -219,6 +236,9 @@ try {
     await expect(quakes).not.toBeChecked()
     await expect(hazardToggle).toBeChecked()
     await hazardToggle.uncheck()
+    await page
+      .getByRole('checkbox', { name: 'OONI digital measurements' })
+      .uncheck()
     await page.getByRole('checkbox', { name: /DWD weather/ }).uncheck()
     await page.getByRole('checkbox', { name: /FIRMS thermal/ }).uncheck()
     await page
@@ -268,6 +288,48 @@ try {
       path: `test-results/live/${name}-phase15.png`,
       fullPage: true,
     })
+    // Exercise the real digital globe, delayed interval, details and saved toggle.
+    await page.goto(site + '?live=ooni&hours=72')
+    await expect(
+      page.getByText('Interactive map', { exact: true }),
+    ).toBeVisible({ timeout: 120000 })
+    await expect(
+      page.getByText('Live OONI · delayed daily measurements', { exact: true }),
+    ).toBeVisible()
+    assert(newSources.ooni.health.record_count > 0)
+    await expect(page.locator('.event-card.kind-ooni').first()).toBeVisible()
+    await page
+      .locator('.event-card.kind-ooni')
+      .filter({ hasText: 'Canada' })
+      .click()
+    await expect(page.getByRole('dialog')).toContainText('CC BY-NC-SA 4.0')
+    await expect(page.getByRole('dialog')).toContainText(
+      'not people, networks or outages',
+    )
+    await page
+      .getByRole('dialog')
+      .getByRole('button', { name: 'Show on map', exact: true })
+      .click()
+    await expect(page.locator('.map-canvas .kind-ooni').first()).toBeAttached()
+    await page.waitForTimeout(2000)
+    await page
+      .getByRole('link', { name: 'GOSIP home' })
+      .scrollIntoViewIfNeeded()
+    await page.screenshot({
+      path: `test-results/live/${name}-digital.png`,
+      fullPage: true,
+    })
+    await page.getByRole('button', { name: '24 hours', exact: true }).click()
+    await expect(page.locator('.event-card')).toHaveCount(0)
+    await page.getByRole('button', { name: '3 days', exact: true }).click()
+    await page.reload()
+    await expect(
+      page.getByRole('checkbox', { name: 'OONI digital measurements' }),
+    ).toBeChecked()
+    await expect(page.locator('.event-card.kind-ooni').first()).toBeVisible()
+    console.log(
+      `${name}: OONI ${newSources.ooni.health.record_count} country totals; globe/details/licence/delay/reload passed.`,
+    )
     await quakes.check()
     await hazardToggle.check()
     await page

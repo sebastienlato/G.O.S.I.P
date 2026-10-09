@@ -2139,3 +2139,9 @@ dialog::backdrop {
     scroll-behavior: auto !important;
   }
 }
+
+/* Compact measurement totals keep their suffix together in the feed gutter. */
+.kind-ooni .card-magnitude {
+  font-size: 15px;
+  white-space: nowrap;
+}

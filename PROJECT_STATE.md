@@ -1,11 +1,12 @@
-# Project state — Phase 16 blocked at scheduler prerequisite
+# Project state — Phase 16 digital world
 
-## Current preflight — 2026-10-09
+## Current delivery — 2026-10-09
 
-- Scheduler verifier fails: current HTTPS release is a push, not schedule. Actual schedule run 37917198418 (10:22:29 UTC, source c4bea4648873b56dcce36a0b7a36a491e3d7f420) has successful build/deploy/cleanup and zero artifacts, but later pushes replaced it; no newer schedule run was recorded at the preflight check. Do not weaken the verifier, reset registration, or start digital implementation until fresh scheduled HTTPS data/health is verified. Prepared owner escalation updated in BETA_READINESS.
-- Completed independent imagery prerequisite: removed Esri imagery/reference labels/CSP host after item-specific entitlement review. Keyless default is dated NASA GIBS; optional owner ion imagery/terrain/cities stays. Privacy, attribution and design docs updated; no paid service/account or source-key action. Digital candidates have preflight notes in DATA_POLICY only; no new digital layer.
-- Checks: 228 unit tests, root/Pages typecheck-build, 28 desktop/mobile repository-path checks pass. Final local site 12,365,098 bytes, below 25 MB; inspected globe screenshots. Updated HTTPS smoke for current console layout and approved imagery hosts. Published release and actual HTTPS evidence are recorded below.
-- NEXT_PHASE_KICKOFF remains a Phase 16 continuation, not Phase 17: the explicit scheduler gate prevents phase completion.
+- Scheduler prerequisite passed unchanged before implementation: real schedule run [37964180735](https://github.com/sebastienlato/G.O.S.I.P/actions/runs/37964180735), created 17:08:47 UTC, source `5b3ec930c9eec770c01ba0289a0438fca20e179d`. Successful build/deploy/cleanup, zero artifacts, matching schedule HTTPS stamp and all five fresh healthy mirrors retrieved 17:09:07 UTC. This supersedes the prior blocker/Community action; workflow registration unchanged, no owner action needed. Timing remains best effort.
+- Added live OONI country/day web-connectivity measurement totals, delayed ≥24h. Country context globe icons, Digital toggle, independent source health, details/licence, search/categories/windows and same-origin snapshots. 100 KB/250 rows; totals ≥1,000 only, no outcome/raw sensitive details. Provider publication/update/generation unknown; counts are tests, not outages, censorship, users or networks. Latest delayed day only; use 3/7 days.
+- Real local ingestion healthy: 98 selected country/territory totals from 141 rows (94 map anchors, four feed-only), UTC day October 7. CC BY-NC-SA data licence stays separate from Apache software. No key/account/backend/billing; IODA and Radar deferred with current review. Replaced digital lab/examples retire permanently; legacy links migrate, native unchanged.
+- Checks: 236 unit tests, root/Pages builds/typecheck, 30 desktop/mobile repository-path browser checks passed; inspected desktop/320px source/feed/static layouts. Candidate ~12.4 MB (<25 MB). Final HTTPS deployment evidence follows below after release verification. No Safari/Firefox/native/full accessibility claim; Cesium chunk warning remains.
+- Next phase: Phase 17 (space), only in a new chat via prompts/NEXT_PHASE_KICKOFF.md after this delivery's deployment is verified.
 
 ## Earlier release evidence (historical)
 

@@ -1,4 +1,5 @@
-import { firmsAvailable } from '../state/explorer'
+import { OoniCredit } from './OoniBody'
+import { firmsAvailable, ooniAvailable } from '../state/explorer'
 import { assetPath } from '../state/assetPath'
 import { localSourceAccess } from '../state/sourceAccess'
 
@@ -37,6 +38,17 @@ export default function PrivacySources() {
       </p>
       <h3>Sources & licenses</h3>
       <ul>
+        {ooniAvailable && (
+          <li>
+            <strong>OONI:</strong> Delayed country/day web-connectivity
+            measurement totals. No raw probes, networks, tested URLs or outcome
+            classifications. Browser reads same-origin snapshots only.{' '}
+            <OoniCredit />
+            <a href="https://api.ooni.io/" target="_blank" rel="noreferrer">
+              OONI data source ↗
+            </a>
+          </li>
+        )}
         {firmsAvailable && (
           <li>
             <strong>NASA FIRMS / LANCE:</strong> Global NOAA-20 VIIRS detections

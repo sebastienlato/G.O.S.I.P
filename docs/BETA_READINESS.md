@@ -1,4 +1,12 @@
-# Live public layers — Phase 13
+# Current release status — Phase 16
+
+Scheduler gate **passed before implementation**, unchanged verifier: [schedule run 37964180735](https://github.com/sebastienlato/G.O.S.I.P/actions/runs/37964180735), source `5b3ec930c9eec770c01ba0289a0438fca20e179d`, created 2026-10-09 17:08:47 UTC, matching scheduled HTTPS release, five healthy mirrors retrieved 17:09:07 UTC, build/deploy/cleanup success and zero artifacts. Earlier open-blocker/Community diagnostic text below is historical and superseded; no posting needed. Best-effort timing/drop/inactivity limitations remain; workflow registration is unchanged.
+
+Phase 16 implements delayed OONI country/day measurement counts, source health, country-context globe icons and separate CC BY-NC-SA licensing. No account/key/payment/new service. 236 unit and 30 desktop/mobile repository-path checks pass, root/Pages builds/typecheck pass; desktop/320px digital screenshots inspected. ~12.4 MB candidate under 25 MB. Final deployed-source/HTTPS smoke evidence will be appended after verification.
+
+## Historical release evidence
+
+### Live public layers — Phase 13
 
 Public URL: https://sebastienlato.github.io/G.O.S.I.P/ . Existing PUBLIC repository, HTTPS, no custom domain. Pages source changed from legacy branch to GitHub Actions through the authenticated API; gh-pages preserved at `6bac523599f604fd3e7c2f6e7e4b3bed083b494d`.
 

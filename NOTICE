@@ -11,3 +11,9 @@ Third-party software and geography retain separate rights and notices:
 - public/WORLD_ATLAS_LICENSE.txt
 USGS/ANSS and NOAA/NWS material is not covered by GOSIP copyright.
 No source or hosting provider endorses this project.
+
+OONI published and adapted country/day measurement data is separate from
+Apache-2.0 software: © Open Observatory of Network Interference (OONI),
+CC BY-NC-SA 4.0 (https://creativecommons.org/licenses/by-nc-sa/4.0/).
+Source https://api.ooni.io/; GOSIP selects delayed daily web-connectivity
+totals of at least 1,000 measurements and omits outcome counters.

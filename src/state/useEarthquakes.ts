@@ -1,3 +1,4 @@
+import { decodeOoni, OONI_MAX_BYTES } from '../data/ooni'
 import { decodeNews, NEWS_MAX_BYTES } from '../data/news'
 import { decodeFIRMS, FIRMS_MAX_BYTES } from '../data/firms'
 import { decodeDWD, DWD_MAX_BYTES } from '../data/dwd'
@@ -124,4 +125,8 @@ export function useFire(enabled: boolean) {
 
 export function useNews(enabled: boolean) {
   return usePublished(enabled, 'news', decodeNews, NEWS_MAX_BYTES)
+}
+
+export function useOoni(enabled: boolean) {
+  return usePublished(enabled, 'ooni', decodeOoni, OONI_MAX_BYTES)
 }

@@ -1,3 +1,4 @@
+import { isOoni } from '../data/ooni'
 import { isNews } from '../data/news'
 import { isFireSummary } from '../data/firms'
 import { isWarning } from '../data/dwd'
@@ -40,6 +41,8 @@ export function eventAge(
   referenceTime: number,
   demoClock: Props['demoClock'],
 ) {
+  if (isOoni(event))
+    return `UTC day ${event.interval_start.slice(0, 10)} · ≥24h delayed`
   if (isFireSummary(event))
     return `24h window to ${formatTimestamp(event.interval_end)}`
   if (isWarning(event))
@@ -92,6 +95,13 @@ export default function EventCard({
           <span className="card-magnitude">
             {quake.magnitude === null ? '–' : quake.magnitude.toFixed(1)}
           </span>
+        ) : isOoni(event) ? (
+          <span className="card-magnitude">
+            {Intl.NumberFormat('en', {
+              notation: 'compact',
+              maximumFractionDigits: 1,
+            }).format(event.measurement_count)}
+          </span>
         ) : isFireSummary(event) ? (
           <span className="card-magnitude">{event.detection_count}</span>
         ) : (
@@ -134,6 +144,12 @@ export default function EventCard({
               NASA EONET
             </span>
           )}
+          {isOoni(event) && (
+            <span>
+              OONI · tests, not outages ·{' '}
+              {event.coordinates ? 'country context' : 'feed only'}
+            </span>
+          )}
           {isNews(event) && (
             <span>
               Attributed claim · Global Voices · {event.author} · feed only
@@ -151,7 +167,8 @@ export default function EventCard({
             !hazard &&
             !isWarning(event) &&
             !isFireSummary(event) &&
-            !isNews(event) && (
+            !isNews(event) &&
+            !isOoni(event) && (
               <span>
                 {label}
                 {event.region ? ` · ${event.region}` : ''}

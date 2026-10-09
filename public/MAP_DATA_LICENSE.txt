@@ -7,3 +7,10 @@ Derived files: world.geojson, world.svg. Rebuild with npm run data:map.
 Package notice preserved separately in WORLD_ATLAS_LICENSE.txt.
 This generalized and historical geography is illustrative, not authoritative for borders.
 No remote tile or map service is used. No provider quota, billing account, or runtime fee.
+
+Country context anchors (Phase 16): Natural Earth 1:110m admin-0 label points,
+natural-earth-vector commit ca96624a56bd078437bca8184e78163e5039ad19.
+Source: https://github.com/nvkelso/natural-earth-vector/blob/ca96624a56bd078437bca8184e78163e5039ad19/geojson/ne_110m_admin_0_countries.geojson
+Label points rounded to whole degrees; country context, never observation positions.
+Rebuild src/data/countryContext.json with scripts/build-country-context.mjs <downloaded-geojson>.
+Public-domain terms rechecked 2026-10-09; no runtime request or service added.

@@ -69,3 +69,5 @@ Data colours (`encoding.ts`): magnitude <4 `#e9b44c`, 4–4.9 `#f08a3e`, 5–5.9
 3. Add a row in `LayerToggles` (`components/FeedSource.tsx`): `aria-label` must contain the visible label; add its `LiveStatus` block; extend `MapLegend` only if drawn on the globe.
 4. Feed card: lead with the most scannable value in the left column, title second, mono meta (age, key measure, provider).
 5. Check 1440×900, 390 and 320 wide; the control panel must show every layer without scrolling at 1440×1000.
+
+Phase 16 digital: OONI uses a network line icon and `ooniColor` #82aaff; fixed-size country-context badges, no severity ranking or grid. Compact count in the card gutter, exact total in details, delayed UTC day visible on every card. Country label anchors are not measurement positions; unmapped countries stay feed-only.

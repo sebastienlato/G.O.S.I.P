@@ -10,7 +10,9 @@ try {
   const { ingestDWD } = await server.ssrLoadModule('/ingest/dwd.ts')
   const { ingestFIRMS } = await server.ssrLoadModule('/ingest/firms.ts')
   const { ingestNews } = await server.ssrLoadModule('/ingest/news.ts')
+  const { ingestOoni } = await server.ssrLoadModule('/ingest/ooni.ts')
   const results = await Promise.all([
+    ingestOoni(),
     ingestUSGS(),
     ingestEONET(),
     ingestDWD(),

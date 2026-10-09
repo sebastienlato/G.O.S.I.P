@@ -1,3 +1,4 @@
+import { decodeOoni } from './src/data/ooni.ts'
 import { decodeFIRMS } from './src/data/firms.ts'
 import { readFileSync } from 'node:fs'
 import { defineConfig } from 'vitest/config'
@@ -8,6 +9,16 @@ function hasFireSnapshot() {
   try {
     return (
       decodeFIRMS(readFileSync('public/data/firms.json', 'utf8'), Date.now())
+        .snapshot !== null
+    )
+  } catch {
+    return false
+  }
+}
+function hasOoniSnapshot() {
+  try {
+    return (
+      decodeOoni(readFileSync('public/data/ooni.json', 'utf8'), Date.now())
         .snapshot !== null
     )
   } catch {
@@ -25,6 +36,9 @@ const imageryHosts = [
 ].join(' ')
 export default defineConfig(({ mode }) => ({
   define: {
+    __OONI_AVAILABLE__: JSON.stringify(
+      process.env.GOSIP_TEST_OONI === '1' || hasOoniSnapshot(),
+    ),
     __FIRMS_AVAILABLE__: JSON.stringify(
       process.env.GOSIP_TEST_FIRMS === '1' || hasFireSnapshot(),
     ),

@@ -20,12 +20,15 @@ export type Source =
   | 'digital-demo'
 export const firmsAvailable =
   typeof __FIRMS_AVAILABLE__ !== 'undefined' && __FIRMS_AVAILABLE__
-export type LiveLayer = 'usgs' | 'eonet' | 'dwd' | 'firms' | 'news'
+export const ooniAvailable =
+  typeof __OONI_AVAILABLE__ !== 'undefined' && __OONI_AVAILABLE__
+export type LiveLayer = 'usgs' | 'eonet' | 'dwd' | 'firms' | 'news' | 'ooni'
 export const liveLayerKeys: LiveLayer[] = [
   'usgs',
   'eonet',
   'dwd',
   'news',
+  ...(ooniAvailable ? ['ooni' as const] : []),
   ...(firmsAvailable ? ['firms' as const] : []),
 ]
 export const defaultLiveLayers: LiveLayer[] = liveLayerKeys.filter(

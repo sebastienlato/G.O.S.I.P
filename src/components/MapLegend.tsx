@@ -1,6 +1,11 @@
-import { firmsAvailable } from '../state/explorer'
+import { firmsAvailable, ooniAvailable } from '../state/explorer'
 import { heatGradientCss } from '../state/heat'
-import { hazardColors, magnitudeSize, magnitudeSteps } from '../state/encoding'
+import {
+  ooniColor,
+  hazardColors,
+  magnitudeSize,
+  magnitudeSteps,
+} from '../state/encoding'
 import KindIcon from './KindIcon'
 
 const samples = [3, 4.5, 5.5, 6.5]
@@ -48,6 +53,14 @@ export default function MapLegend() {
           </span>
           <span>Storm</span>
         </p>
+        {ooniAvailable && (
+          <p className="legend-row">
+            <span className="legend-badge" aria-hidden="true">
+              <KindIcon kind="ooni" color={ooniColor} size={15} />
+            </span>
+            <span>Digital measurements · country context</span>
+          </p>
+        )}
         {firmsAvailable && (
           <p className="legend-row" aria-label="Thermal detection density">
             <span

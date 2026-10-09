@@ -1,3 +1,4 @@
+import OoniStatus from './OoniStatus'
 import { localSourceAccess } from '../state/sourceAccess'
 import { additionalLayers, type AdditionalSource } from '../data/additional'
 import type {
@@ -6,10 +7,12 @@ import type {
   useWarnings,
   useFire,
   useNews,
+  useOoni,
 } from '../state/useEarthquakes'
 import {
   liveLayerKeys,
   firmsAvailable,
+  ooniAvailable,
   type LiveLayer,
   type Source,
 } from '../state/explorer'
@@ -22,8 +25,10 @@ import {
   warningColor,
   fireColor,
   newsColor,
+  ooniColor,
 } from '../state/encoding'
 
+type Ooni = ReturnType<typeof useOoni>
 type News = ReturnType<typeof useNews>
 type Quakes = ReturnType<typeof useEarthquakes>
 type Fires = ReturnType<typeof useFire>
@@ -34,6 +39,11 @@ const layerMeta: Record<
   LiveLayer,
   { label: string; name: string; provider: string }
 > = {
+  ooni: {
+    label: 'Digital',
+    name: 'OONI digital measurements',
+    provider: 'OONI',
+  },
   news: {
     label: 'Reports',
     name: 'Global Voices reports',
@@ -65,6 +75,7 @@ const layerIcon: Record<
   Exclude<LiveLayer, 'eonet'>,
   { kind: MarkerKind; color: string }
 > = {
+  ooni: { kind: 'ooni', color: ooniColor },
   usgs: { kind: 'quake', color: magnitudeSteps[1].color },
   dwd: { kind: 'warning', color: warningColor },
   news: { kind: 'news', color: newsColor },
@@ -81,6 +92,7 @@ export function LayerToggles({
   warnings,
   fires,
   news,
+  ooni,
 }: {
   liveLayers: LiveLayer[]
   onToggle: (layer: LiveLayer) => void
@@ -90,6 +102,7 @@ export function LayerToggles({
   warnings: Warnings
   fires: Fires
   news: News
+  ooni: Ooni
 }) {
   const state = {
     usgs: quakes,
@@ -97,6 +110,7 @@ export function LayerToggles({
     dwd: warnings,
     firms: fires,
     news,
+    ooni,
   }
   return (
     <fieldset className="layer-toggles">
@@ -168,7 +182,6 @@ export function SimulationLab({
     ...(!firmsAvailable
       ? [['fire-demo', 'Fire examples · simulated'] as [Source, string]]
       : []),
-    ['digital-demo', 'Digital world · simulated'],
     ...Object.entries(additionalLayers).map(
       ([key, layer]): [Source, string] => [
         key as AdditionalSource,
@@ -216,6 +229,7 @@ export function LiveStatus({
   warnings,
   fires,
   news,
+  ooni,
 }: {
   liveLayers: LiveLayer[]
   quakes: Quakes
@@ -223,6 +237,7 @@ export function LiveStatus({
   warnings: Warnings
   fires: Fires
   news: News
+  ooni: Ooni
 }) {
   const { snapshot, health, loading, error, stale, waitSeconds, offline } =
     quakes
@@ -231,9 +246,11 @@ export function LiveStatus({
       <h2 className="section-title">Sources and freshness</h2>
       <p className="section-lede">
         Coming next: floods, {!firmsAvailable && 'fire detections, '}broader
-        weather coverage, more news sources, digital, space and movement.
+        weather coverage, more news sources, {!ooniAvailable && 'digital, '}
+        space and movement.
       </p>
       <div className="status-grid">
+        {liveLayers.includes('ooni') && <OoniStatus ooni={ooni} />}
         {liveLayers.includes('news') && (
           <div className="source-status" aria-label="Global Voices status">
             <strong
