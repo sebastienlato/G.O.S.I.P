@@ -1,3 +1,4 @@
+import { decodeLaunches } from './src/data/launches.ts'
 import { decodeOoni } from './src/data/ooni.ts'
 import { decodeFIRMS } from './src/data/firms.ts'
 import { readFileSync } from 'node:fs'
@@ -25,6 +26,18 @@ function hasOoniSnapshot() {
     return false
   }
 }
+function hasLaunchSnapshot() {
+  try {
+    return (
+      decodeLaunches(
+        readFileSync('public/data/launches.json', 'utf8'),
+        Date.now(),
+      ).snapshot !== null
+    )
+  } catch {
+    return false
+  }
+}
 // Globe imagery/terrain hosts the visitor's browser may contact (D52).
 const imageryHosts = [
   'https://gibs.earthdata.nasa.gov',
@@ -36,6 +49,9 @@ const imageryHosts = [
 ].join(' ')
 export default defineConfig(({ mode }) => ({
   define: {
+    __LAUNCHES_AVAILABLE__: JSON.stringify(
+      process.env.GOSIP_TEST_LAUNCHES === '1' || hasLaunchSnapshot(),
+    ),
     __OONI_AVAILABLE__: JSON.stringify(
       process.env.GOSIP_TEST_OONI === '1' || hasOoniSnapshot(),
     ),

@@ -1,7 +1,12 @@
-import { firmsAvailable, ooniAvailable } from '../state/explorer'
+import {
+  firmsAvailable,
+  ooniAvailable,
+  launchesAvailable,
+} from '../state/explorer'
 import { heatGradientCss } from '../state/heat'
 import {
   ooniColor,
+  launchColor,
   hazardColors,
   magnitudeSize,
   magnitudeSteps,
@@ -53,6 +58,14 @@ export default function MapLegend() {
           </span>
           <span>Storm</span>
         </p>
+        {launchesAvailable && (
+          <p className="legend-row">
+            <span className="legend-badge" aria-hidden="true">
+              <KindIcon kind="launch" color={launchColor} size={15} />
+            </span>
+            <span>Scheduled launch · site context</span>
+          </p>
+        )}
         {ooniAvailable && (
           <p className="legend-row">
             <span className="legend-badge" aria-hidden="true">

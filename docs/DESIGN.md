@@ -71,3 +71,5 @@ Data colours (`encoding.ts`): magnitude <4 `#e9b44c`, 4–4.9 `#f08a3e`, 5–5.9
 5. Check 1440×900, 390 and 320 wide; the control panel must show every layer without scrolling at 1440×1000.
 
 Phase 16 digital: OONI uses a network line icon and `ooniColor` #82aaff; fixed-size country-context badges, no severity ranking or grid. Compact count in the card gutter, exact total in details, delayed UTC day visible on every card. Country label anchors are not measurement positions; unmapped countries stay feed-only.
+
+Phase 17 space: shared rocket line icon, `launchColor` #d5a6ff, fixed-size launch-site context badges. Feed leads with scheduled UTC date at supplied precision. No countdown, moving spacecraft or observed-launch styling. Space follows existing independent layer controls; forward window meaning is shown in the filter summary and source details.

@@ -1,6 +1,13 @@
-# Project state — Phase 16 complete and deployed
+# Project state — Phase 17 implementation complete; deployment pending verification
 
 ## Current delivery — 2026-10-09
+
+- Added Space: selected LL2 / The Space Devs public launch schedules, independent toggle/count/freshness, rocket globe/site icons, forward windows and source details. Rounded 1° fixed-site context only, nullable unknown times/locations, supplied NET precision and catalog update; no observation/outcome or orbital tracking claim.
+- One identified no-key request/run, first 20 upcoming entries, 500 KB input / 100 KB publication. Science/communications/technology-test types only; military/unknown/crew/resupply categories and coarse dates omitted. Initial production ingestion healthy: 3 selected of 20 considered, 471 catalog total; one schedule inside next 7 days. Partial coverage explicit. NOAA SWPC/CelesTrak reviewed/deferred in DATA_POLICY.
+- Retired web space lab/legacy links and two generic space examples; other labs remain separate, native fixtures unchanged. Browser data remains same-origin; no CSP, workflow registration/cadence, archive, account/key or billing change. Owner $0 safeguard still true.
+- Checks: npm ci, 244 unit tests, root/Pages builds/typecheck and 34 repository-path desktop/mobile browser tests passed. Visually inspected 1440/390/320 globe, feed, site selection and stale source status. Candidate ~12.4 MB (<25 MB); actual deployment verification follows. Cesium large lazy-chunk warning remains; no Safari/Firefox/native/full accessibility claim. No owner action required. Stop before Phase 18; next chat prompt is prompts/NEXT_PHASE_KICKOFF.md.
+
+## Phase 16 delivery (historical)
 
 - Scheduler prerequisite passed unchanged before implementation: real schedule run [37964180735](https://github.com/sebastienlato/G.O.S.I.P/actions/runs/37964180735), created 17:08:47 UTC, source `5b3ec930c9eec770c01ba0289a0438fca20e179d`. Successful build/deploy/cleanup, zero artifacts, matching schedule HTTPS stamp and all five fresh healthy mirrors retrieved 17:09:07 UTC. This supersedes the prior blocker/Community action; workflow registration unchanged, no owner action needed. Timing remains best effort.
 - Added live OONI country/day web-connectivity measurement totals, delayed ≥24h. Country context globe icons, Digital toggle, independent source health, details/licence, search/categories/windows and same-origin snapshots. 100 KB/250 rows; totals ≥1,000 only, no outcome/raw sensitive details. Provider publication/update/generation unknown; counts are tests, not outages, censorship, users or networks. Latest delayed day only; use 3/7 days.

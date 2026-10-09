@@ -17,3 +17,7 @@ Apache-2.0 software: © 2020 Open Observatory of Network Interference (OONI),
 CC BY-NC-SA 4.0 (https://creativecommons.org/licenses/by-nc-sa/4.0/).
 Source https://api.ooni.io/; GOSIP selects delayed daily web-connectivity
 totals of at least 1,000 measurements and omits outcome counters.
+
+Launch schedules: Launch Library 2 / The Space Devs. Selected metadata and
+rounded launch-site context by GOSIP; no endorsement. Provider data terms:
+https://github.com/TheSpaceDevs/Tutorials/blob/main/faqs/faq_TSD.md

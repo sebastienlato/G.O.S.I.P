@@ -1,3 +1,4 @@
+import { isLaunch, launchTimeLabel } from '../data/launches'
 import { isOoni } from '../data/ooni'
 import { isNews } from '../data/news'
 import { isFireSummary } from '../data/firms'
@@ -41,6 +42,7 @@ export function eventAge(
   referenceTime: number,
   demoClock: Props['demoClock'],
 ) {
+  if (isLaunch(event)) return launchTimeLabel(event)
   if (isOoni(event))
     return `UTC day ${event.interval_start.slice(0, 10)} · ≥24h delayed`
   if (isFireSummary(event))
@@ -144,6 +146,7 @@ export default function EventCard({
               NASA EONET
             </span>
           )}
+          {isLaunch(event) && <span>LL2 · {event.status} · site context</span>}
           {isOoni(event) && (
             <span>
               OONI · tests, not outages ·{' '}
@@ -168,7 +171,8 @@ export default function EventCard({
             !isWarning(event) &&
             !isFireSummary(event) &&
             !isNews(event) &&
-            !isOoni(event) && (
+            !isOoni(event) &&
+            !isLaunch(event) && (
               <span>
                 {label}
                 {event.region ? ` · ${event.region}` : ''}

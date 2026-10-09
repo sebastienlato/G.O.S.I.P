@@ -1,3 +1,4 @@
+import { decodeLaunches, LAUNCH_MAX_BYTES } from '../data/launches'
 import { decodeOoni, OONI_MAX_BYTES } from '../data/ooni'
 import { decodeNews, NEWS_MAX_BYTES } from '../data/news'
 import { decodeFIRMS, FIRMS_MAX_BYTES } from '../data/firms'
@@ -129,4 +130,8 @@ export function useNews(enabled: boolean) {
 
 export function useOoni(enabled: boolean) {
   return usePublished(enabled, 'ooni', decodeOoni, OONI_MAX_BYTES)
+}
+
+export function useLaunches(enabled: boolean) {
+  return usePublished(enabled, 'launches', decodeLaunches, LAUNCH_MAX_BYTES)
 }

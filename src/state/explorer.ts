@@ -22,12 +22,16 @@ export const firmsAvailable =
   typeof __FIRMS_AVAILABLE__ !== 'undefined' && __FIRMS_AVAILABLE__
 export const ooniAvailable =
   typeof __OONI_AVAILABLE__ !== 'undefined' && __OONI_AVAILABLE__
-export type LiveLayer = 'usgs' | 'eonet' | 'dwd' | 'firms' | 'news' | 'ooni'
+export const launchesAvailable =
+  typeof __LAUNCHES_AVAILABLE__ !== 'undefined' && __LAUNCHES_AVAILABLE__
+export type LiveLayer =
+  'usgs' | 'eonet' | 'dwd' | 'firms' | 'news' | 'ooni' | 'launches'
 export const liveLayerKeys: LiveLayer[] = [
   'usgs',
   'eonet',
   'dwd',
   'news',
+  ...(launchesAvailable ? ['launches' as const] : []),
   ...(ooniAvailable ? ['ooni' as const] : []),
   ...(firmsAvailable ? ['firms' as const] : []),
 ]

@@ -78,7 +78,7 @@ try {
       hazards.health,
     )
     const newSources = {}
-    for (const key of ['dwd', 'firms', 'news', 'ooni']) {
+    for (const key of ['dwd', 'firms', 'news', 'ooni', 'launches']) {
       const response = await context.request.get(
         new URL(`data/${key}.json`, site).href,
       )
@@ -244,6 +244,9 @@ try {
     await page
       .getByRole('checkbox', { name: /Global Voices reports/ })
       .uncheck()
+    await page
+      .getByRole('checkbox', { name: 'Space launch schedules' })
+      .uncheck()
     await expect(page.locator('.event-card')).toHaveCount(0)
     await expect(
       page.getByText('All live layers are off', { exact: true }),
@@ -329,6 +332,68 @@ try {
     await expect(page.locator('.event-card.kind-ooni').first()).toBeVisible()
     console.log(
       `${name}: OONI ${newSources.ooni.health.record_count} country totals; globe/details/licence/delay/reload passed.`,
+    )
+    // Verify the actual bounded space publication and its globe context.
+    await page.goto(site + '?live=launches&hours=168')
+    await expect(
+      page.getByText('Interactive map', { exact: true }),
+    ).toBeVisible({ timeout: 120000 })
+    await expect(
+      page.getByText('Live catalog · scheduled launches', { exact: true }),
+    ).toBeVisible()
+    assert(newSources.launches.snapshot.feed.considered <= 20)
+    assert.equal(newSources.launches.health.generated_at, null)
+    assert(
+      newSources.launches.snapshot.feed.rows.every(
+        (r) => r.coordinates === null || r.coordinates.every(Number.isInteger),
+      ),
+    )
+    const launchCard = page.locator('.event-card.kind-launch').first()
+    if (await launchCard.count()) {
+      await launchCard.click()
+      const launchDialog = page.getByRole('dialog')
+      await expect(launchDialog).toContainText('SCHEDULED LAUNCH · LL2')
+      await expect(launchDialog).toContainText(
+        'Unknown · no launch observation asserted',
+      )
+      if (
+        await launchDialog
+          .getByRole('button', { name: 'Show on map', exact: true })
+          .count()
+      ) {
+        await launchDialog
+          .getByRole('button', { name: 'Show on map', exact: true })
+          .click()
+        await expect(
+          page.locator('.map-canvas .kind-launch').first(),
+        ).toBeVisible({ timeout: 15000 })
+        await expect(page.locator('.hud-readout')).toContainText('1,400 km', {
+          timeout: 15000,
+        })
+      } else await page.keyboard.press('Escape')
+    }
+    await page.screenshot({
+      path: `test-results/live/${name}-space.png`,
+      fullPage: true,
+    })
+    if (name === 'mobile') {
+      await page.setViewportSize({ width: 320, height: 740 })
+      await page.screenshot({
+        path: 'test-results/live/mobile-320-space.png',
+        fullPage: true,
+      })
+      assert(
+        await page.evaluate(
+          () => document.documentElement.scrollWidth <= innerWidth,
+        ),
+      )
+    }
+    await page.reload()
+    await expect(
+      page.getByRole('checkbox', { name: 'Space launch schedules' }),
+    ).toBeChecked()
+    console.log(
+      `${name}: LL2 ${newSources.launches.health.record_count} selected schedules; actual space globe/details/precision/reload passed.`,
     )
     await quakes.check()
     await hazardToggle.check()

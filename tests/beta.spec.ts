@@ -1,3 +1,6 @@
+import { parseLaunches, publishLaunches } from '../src/data/launches'
+import { extractLaunches } from '../ingest/launches'
+import { launchFixture } from './fixtures/launches'
 import { parseOoni, publishOoni, ooniWindow } from '../src/data/ooni'
 import { parseNews, publishNews } from '../src/data/news'
 import { dwdFixture, firmsCSV } from './fixtures/phase14'
@@ -104,6 +107,16 @@ const ooniPublished = publishOoni(ooniSnapshot, {
   record_count: 2,
 })
 
+const launchSnapshot = parseLaunches(extractLaunches(launchFixture(now)), now)
+const launchPublished = publishLaunches(launchSnapshot, {
+  source: 'launches',
+  status: 'ok',
+  error: null,
+  generated_at: null,
+  attempted_at: launchSnapshot.retrieved_at,
+  fetched_at: launchSnapshot.retrieved_at,
+  record_count: 1,
+})
 const base = '/G.O.S.I.P/'
 const imageryHost =
   /^(gibs\.earthdata\.nasa\.gov|([a-z0-9-]+\.)*cesium\.com|([a-z0-9-]+\.)*virtualearth\.net|tile\.googleapis\.com)$/
@@ -128,6 +141,10 @@ test.beforeEach(async ({ context, page }) => {
     if (url.origin !== origin || !url.pathname.startsWith(base)) {
       failures.push(url.href)
       await route.abort()
+      return
+    }
+    if (url.pathname.endsWith('/data/launches.json')) {
+      await route.fulfill({ json: launchPublished })
       return
     }
     if (url.pathname.endsWith('/data/ooni.json')) {
@@ -234,9 +251,9 @@ for (const mode of ['view=list', 'map=static']) {
     if (info.project.name === 'mobile')
       await page.setViewportSize({ width: 320, height: 740 })
     for (const [source, count] of [
-      ['demo', 12],
+      ['demo', 10],
       ['digital-demo', 2],
-      ['space-demo', 4],
+      ['space-demo', 1],
       ['aviation-demo', 4],
       ['maritime-demo', 4],
     ] as const) {
@@ -355,7 +372,7 @@ for (const source of ['nws']) {
     await page
       .getByRole('button', { name: 'Explore simulated examples', exact: true })
       .click()
-    await expect(page.locator('.event-card')).toHaveCount(7)
+    await expect(page.locator('.event-card')).toHaveCount(5)
     expect(new URL(page.url()).pathname).toBe(base)
   })
 }
@@ -558,7 +575,7 @@ test('independent live layers combine map/feed, clear selection and survive shar
   await page
     .getByRole('button', { name: 'Other examples · simulated', exact: true })
     .click()
-  await expect(page.locator('.event-card')).toHaveCount(7)
+  await expect(page.locator('.event-card')).toHaveCount(5)
   await expect(
     page.locator('.event-card').filter({ hasText: 'EONET' }),
   ).toHaveCount(0)
@@ -893,4 +910,133 @@ test('digital aggregates replace simulations, preserve delayed intervals and ret
   ).toBeVisible()
   await page.reload()
   await expect(toggle).not.toBeChecked()
+})
+
+test('space schedules replace the lab, use forward windows and retain independent failed data', async ({
+  page,
+  context,
+}, info) => {
+  await page.goto(
+    `${origin}${base}?source=space-demo&map=static&layers=physical&country=example`,
+  )
+  const toggle = page.getByRole('checkbox', { name: 'Space launch schedules' })
+  await expect(toggle).toBeChecked()
+  await expect(page.locator('.event-card.kind-launch')).toHaveCount(1)
+  await expect(page.locator('.static-map .kind-launch')).toHaveCount(1)
+  await expect(
+    page.getByRole('button', { name: 'Space · simulated', exact: true }),
+  ).toHaveCount(0)
+  await page.locator('.event-card.kind-launch').click()
+  const dialog = page.getByRole('dialog')
+  await expect(dialog).toContainText('SCHEDULED LAUNCH · LL2')
+  await expect(dialog).toContainText('minute precision')
+  await expect(dialog).toContainText('Unknown · no launch observation asserted')
+  await expect(dialog).toContainText('Rounded to 1°')
+  await page.keyboard.press('Escape')
+  await page.getByRole('button', { name: '24 hours', exact: true }).click()
+  await expect(page.locator('.event-card')).toHaveCount(0)
+  await page.getByRole('button', { name: '3 days', exact: true }).click()
+  await expect(page.locator('.event-card')).toHaveCount(1)
+  await page
+    .getByRole('checkbox', { name: 'OONI digital measurements' })
+    .check()
+  await expect(page.locator('.event-card')).toHaveCount(3)
+  await page.getByRole('searchbox', { name: 'Search events' }).fill('spaceport')
+  await expect(page.locator('.event-card')).toHaveCount(1)
+  await page.getByRole('searchbox', { name: 'Search events' }).fill('')
+  await page
+    .getByRole('checkbox', { name: 'OONI digital measurements' })
+    .uncheck()
+  await page.reload()
+  await expect(toggle).toBeChecked()
+  await context.route('**/data/launches.json', (route) =>
+    route.fulfill({
+      json: {
+        ...launchPublished,
+        snapshot: null,
+        health: {
+          ...launchPublished.health,
+          status: 'failed',
+          record_count: 0,
+          fetched_at: null,
+          error: 'Launches request failed.',
+        },
+      },
+    }),
+  )
+  await page.clock.setFixedTime(now + 61_000)
+  await page
+    .getByText('Space freshness & source details', { exact: true })
+    .click()
+  await page
+    .getByRole('button', { name: 'Refresh space data', exact: true })
+    .click()
+  await expect(
+    page.getByText('STALE · last available launch schedules', { exact: true }),
+  ).toBeVisible()
+  await expect(page.locator('.event-card')).toHaveCount(1)
+  await page.locator('.event-card').click()
+  await expect(dialog).toContainText('STALE · retained schedule')
+  await page.keyboard.press('Escape')
+  if (info.project.name === 'mobile')
+    await page.setViewportSize({ width: 320, height: 740 })
+  await page.screenshot({
+    path: `test-results/phase17-${info.project.name}-space-static.png`,
+    fullPage: true,
+  })
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true)
+  await toggle.uncheck()
+  await page.reload()
+  await expect(toggle).not.toBeChecked()
+  await expect(
+    page.getByText('All live layers are off', { exact: true }),
+  ).toBeVisible()
+})
+
+test('space sites use shared globe icons and camera selection on desktop and phone', async ({
+  page,
+}, info) => {
+  test.setTimeout(120_000)
+  await page.goto(`${origin}${base}?live=launches&hours=168`)
+  await expect(page.getByText('Interactive map', { exact: true })).toBeVisible({
+    timeout: 20000,
+  })
+  await expect(page.locator('.map-canvas .kind-launch')).toHaveCount(1)
+  await page.locator('.event-card.kind-launch').click()
+  await expect(page.getByRole('dialog')).toContainText('Launch Library 2')
+  await page
+    .getByRole('dialog')
+    .getByRole('button', { name: 'Show on map', exact: true })
+    .click()
+  await expect(page.locator('.map-canvas .kind-launch')).toBeVisible({
+    timeout: 15000,
+  })
+  await expect(page.locator('.hud-readout')).toContainText('1,400 km', {
+    timeout: 15000,
+  })
+  await page.screenshot({
+    path: `test-results/phase17-${info.project.name}-space-globe.png`,
+    fullPage: true,
+  })
+  if (info.project.name === 'desktop') {
+    for (const label of await page.locator('.layer-toggle').all()) {
+      const box = await label.boundingBox()
+      expect(box!.y + box!.height).toBeLessThan(1000)
+    }
+  } else {
+    await page.setViewportSize({ width: 320, height: 740 })
+    await page.screenshot({
+      path: 'test-results/phase17-mobile-320-space-globe.png',
+      fullPage: true,
+    })
+  }
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true)
 })

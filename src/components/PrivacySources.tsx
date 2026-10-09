@@ -1,5 +1,9 @@
 import { OoniCredit } from './OoniBody'
-import { firmsAvailable, ooniAvailable } from '../state/explorer'
+import {
+  firmsAvailable,
+  ooniAvailable,
+  launchesAvailable,
+} from '../state/explorer'
 import { assetPath } from '../state/assetPath'
 import { localSourceAccess } from '../state/sourceAccess'
 
@@ -38,6 +42,21 @@ export default function PrivacySources() {
       </p>
       <h3>Sources & licenses</h3>
       <ul>
+        {launchesAvailable && (
+          <li>
+            <strong>Launch Library 2 / The Space Devs:</strong> Selected public
+            launch schedules and rounded site context, reformatted by GOSIP.
+            Plans, not observations; no images, telemetry or orbits copied.
+            Same-origin snapshots only.{' '}
+            <a
+              href="https://github.com/TheSpaceDevs/Tutorials/blob/main/faqs/faq_TSD.md"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Data terms ↗
+            </a>
+          </li>
+        )}
         {ooniAvailable && (
           <li>
             <strong>OONI:</strong> Delayed country/day web-connectivity
@@ -149,10 +168,10 @@ export default function PrivacySources() {
         </li>
         <li>
           <strong>Coming:</strong> {!firmsAvailable && 'fire, '}broader weather,
-          more news sources, digital, space, aviation and maritime.{' '}
-          <strong>Simulation lab:</strong> original GOSIP fixtures. No live
-          digital, space, aviation or maritime data is connected. Examples are
-          never evidence of actual conditions.
+          more news sources, satellite orbits, space weather, aviation and
+          maritime. <strong>Simulation lab:</strong> original GOSIP fixtures. No
+          live satellite tracking, space weather, aviation or maritime data is
+          connected. Examples are never evidence of actual conditions.
         </li>
         <li>
           <strong>Globe:</strong> CesiumJS (Apache-2.0). Imagery: NASA GIBS

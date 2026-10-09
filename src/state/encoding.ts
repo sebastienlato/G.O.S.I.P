@@ -1,3 +1,4 @@
+import { isLaunch } from '../data/launches'
 import { isOoni } from '../data/ooni'
 import { isNews } from '../data/news'
 import { isFireSummary } from '../data/firms'
@@ -13,6 +14,7 @@ export const magnitudeSteps = [
   { min: 5, label: '5–5.9', color: '#e8553a' },
   { min: 6, label: '6 and above', color: '#d42d55' },
 ] as const
+export const launchColor = '#d5a6ff'
 export const ooniColor = '#82aaff'
 export const newsColor = '#f3a77b'
 export const fireColor = '#ffd23f'
@@ -31,6 +33,7 @@ export const magnitudeSize = (magnitude: number | null) =>
     : Math.round(Math.min(40, 11 + Math.max(0, magnitude - 2.5) ** 1.3 * 3.4))
 
 export type MarkerKind =
+  | 'launch'
   | 'ooni'
   | 'news'
   | 'quake'
@@ -54,6 +57,14 @@ export function encode(
   referenceTime: number,
   occurredAt: string,
 ): Encoding {
+  if (isLaunch(event))
+    return {
+      kind: 'launch',
+      color: launchColor,
+      size: 26,
+      freshness: 1,
+      recent: false,
+    }
   if (isOoni(event))
     return {
       kind: 'ooni',
