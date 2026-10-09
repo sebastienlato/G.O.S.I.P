@@ -43,10 +43,10 @@ Data colours (`encoding.ts`): magnitude <4 `#e9b44c`, 4–4.9 `#f08a3e`, 5–5.9
 ## Globe (`src/components/WorldMap.tsx`)
 
 - CesiumJS via `@cesium/engine` only (the widgets bundle needs `eval`). Runtime assets copied by `scripts/copy-cesium.mjs` into `public/cesium/` (gitignored). Loaded lazily; `?view=list` and `?map=static` never load it.
-- Imagery: Satellite = Cesium ion Bing aerial with a token, else Esri World Imagery (keyless); NASA today = GIBS VIIRS true colour (latest complete day); Night = GIBS Black Marble. The globe is evenly lit with no ground haze (D55): a live day/night terminator turned half the planet black and the haze washed out data colours. Bundled Natural Earth II stays underneath as the offline base. Optional labels (Esri reference) and, with a token, world terrain + Google photorealistic 3D cities via ion.
+- Imagery: Satellite = Cesium ion Bing aerial with a token, else Esri World Imagery (keyless); NASA today = GIBS VIIRS true colour (latest complete day); Night = GIBS Black Marble. The globe is evenly lit with no ground haze (D55): a live day/night terminator turned half the planet black and the haze washed out data colours. Bundled Natural Earth II stays underneath as the offline base. Optional labels (Esri reference) and, with a token, world terrain + Google photorealistic 3D cities via ion. The 3D tiles cover the planet and hide every imagery layer, so they only take over below 250 km (back above 400 km); from orbit heat, Night and labels stay visible.
 - Point records = accessible DOM buttons projected each render (hidden on the far side). Dense area data (FIRMS 2° cells) = a heat imagery layer (see Marks), clickable, reached by keyboard through the feed.
 - Selection draws a target reticle with coordinates. Feed selection and Show on map fly the camera (instant under reduced motion). Filtering never moves the camera.
-- WebGL failure falls back to the static SVG map automatically.
+- WebGL failure falls back to the static SVG map automatically. The static map draws the same heat field (click resolves the cell) and the same point markers.
 
 ## Layout
 

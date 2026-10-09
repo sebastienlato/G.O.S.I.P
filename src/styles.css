@@ -918,26 +918,36 @@ select {
 }
 .static-map {
   position: absolute;
-  inset: 0 var(--hud-right) 0 var(--hud-left);
+  inset: 64px var(--hud-right) 64px var(--hud-left);
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
+  container-type: size;
 }
 .static-world {
   position: relative;
-  width: 100%;
+  /* Largest 2:1 box that fits both dimensions. */
+  width: min(100cqw, 200cqh);
   aspect-ratio: 2 / 1;
   flex-shrink: 0;
+  border: 1px solid var(--edge);
 }
 .static-world img {
   display: block;
   width: 100%;
   height: 100%;
 }
-.static-marker {
+.static-world .static-heat {
   position: absolute;
-  transform: translate(-50%, -50%);
+  inset: 0;
+  opacity: 0.9;
+  pointer-events: none;
+}
+/* Must beat .event-marker { position: relative } declared later. */
+.static-world .static-marker {
+  position: absolute;
+  margin: calc(var(--hit) / -2) 0 0 calc(var(--hit) / -2);
 }
 .hud-frame {
   position: absolute;

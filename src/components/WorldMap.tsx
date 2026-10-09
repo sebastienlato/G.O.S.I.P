@@ -39,6 +39,9 @@ type MapState = 'loading' | 'ready' | 'fallback'
 const ionToken = import.meta.env.VITE_CESIUM_ION_TOKEN?.trim() || ''
 const HOME = { lon: -35, lat: 20 }
 const homeHeight = (width: number) => (width < 700 ? 1.8e7 : 2.05e7)
+/** 3D cities take over below CITIES_ON and hand back above CITIES_OFF (m). */
+const CITIES_ON = 250_000
+const CITIES_OFF = 400_000
 const reducedMotion = () =>
   typeof matchMedia !== 'undefined' &&
   matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -139,6 +142,23 @@ export default function WorldMap({
         }))
         .sort((a, b) => drawOrder(a.enc, b.enc)),
     [events, referenceTime],
+  )
+  // FIRMS 2° cells: drawn as a heat field on both the globe and static map.
+  const cells = useMemo(
+    () =>
+      encoded.flatMap(({ event }) =>
+        isFireSummary(event)
+          ? [
+              {
+                id: event.id,
+                lon: event.coordinates[0],
+                lat: event.coordinates[1],
+                count: event.detection_count,
+              },
+            ]
+          : [],
+      ),
+    [encoded],
   )
   const container = useRef<HTMLDivElement>(null)
   const credits = useRef<HTMLDivElement>(null)
@@ -300,6 +320,20 @@ export default function WorldMap({
               scene.requestRender()
             }
           }
+          // Photorealistic 3D tiles cover the whole planet and hide every
+          // imagery layer (heat, night, labels), so they only take over near
+          // the ground; hysteresis avoids flicker at the threshold.
+          const tiles = current.tileset
+          if (tiles) {
+            const close =
+              camera.positionCartographic.height <
+              (tiles.show ? CITIES_OFF : CITIES_ON)
+            if (tiles.show !== close || scene.globe.show === close) {
+              tiles.show = close
+              scene.globe.show = !close
+              scene.requestRender()
+            }
+          }
           if (altitude.current) {
             const h = camera.positionCartographic.height
             altitude.current.textContent =
@@ -445,9 +479,10 @@ export default function WorldMap({
       void C.createGooglePhotorealistic3DTileset()
         .then((tileset) => {
           if (cancelled || !globe.current) return tileset.destroy()
+          // Shown/hidden by camera height in postRender.
+          tileset.show = false
           widget.scene.primitives.add(tileset)
           globe.current.tileset = tileset
-          widget.scene.globe.show = false
           widget.scene.requestRender()
         })
         .catch(() => setCities(false))
@@ -486,18 +521,6 @@ export default function WorldMap({
       widget.imageryLayers.remove(layers.heat, true)
       delete layers.heat
     }
-    const cells = encoded.flatMap(({ event }) =>
-      isFireSummary(event)
-        ? [
-            {
-              id: event.id,
-              lon: event.coordinates[0],
-              lat: event.coordinates[1],
-              count: event.detection_count,
-            },
-          ]
-        : [],
-    )
     if (cells.length) {
       for (const c of cells) current.cells.set(`${c.lon},${c.lat}`, c.id)
       const heat = new C.ImageryLayer(
@@ -547,7 +570,7 @@ export default function WorldMap({
       })
     }
     widget.scene.requestRender()
-  }, [encoded, state])
+  }, [encoded, cells, state])
 
   // Selection: marker state plus a target reticle (works for cells too).
   useEffect(() => {
@@ -621,6 +644,23 @@ export default function WorldMap({
 
   const useFallback = staticView || state === 'fallback'
   const loading = !staticView && state === 'loading'
+  const staticHeat = useMemo(
+    () =>
+      useFallback && cells.length
+        ? buildHeatCanvas(cells).toDataURL('image/png')
+        : '',
+    [useFallback, cells],
+  )
+  // Static map: clicks on the heat field resolve to the 2° cell beneath.
+  const pickStaticCell = (e: React.MouseEvent<HTMLDivElement>) => {
+    if ((e.target as HTMLElement).closest('button') || !cells.length) return
+    const box = e.currentTarget.getBoundingClientRect()
+    const lon = ((e.clientX - box.left) / box.width) * 360 - 180
+    const lat = 90 - ((e.clientY - box.top) / box.height) * 180
+    const cell = (deg: number) => 2 * Math.floor(deg / 2) + 1
+    const hit = cells.find((c) => c.lon === cell(lon) && c.lat === cell(lat))
+    if (hit) onSelect(hit.id)
+  }
   return (
     <section className="map-scene" aria-label="Event map">
       <div
@@ -630,32 +670,41 @@ export default function WorldMap({
       />
       {useFallback && (
         <div className="static-map" data-testid="static-map">
-          <div className="static-world">
+          {/* Mouse shortcut only; every cell is also a feed card. */}
+          <div className="static-world" onClick={pickStaticCell}>
             <img
               src={assetPath('/world.svg')}
               alt="World map with approximate regional event locations"
             />
-            {encoded.map(({ event, enc }) => (
-              <button
-                key={event.id}
-                className={`${markerClass(enc)} static-marker ${selectedId === event.id ? 'selected' : ''}`}
-                style={{
-                  left: `${(event.coordinates[0] + 180) / 3.6}%`,
-                  top: `${(90 - event.coordinates[1]) / 1.8}%`,
-                  ...markerVars(enc),
-                }}
-                aria-label={markerLabel(event)}
-                aria-pressed={selectedId === event.id}
-                title={`${event.title} · ${eventBadge(event)}`}
-                onClick={() => onSelect(event.id)}
-              >
-                <span>
-                  {enc.kind !== 'quake' && enc.kind !== 'fire' && (
-                    <KindIcon kind={enc.kind} />
-                  )}
-                </span>
-              </button>
-            ))}
+            {staticHeat && (
+              <img
+                className="static-heat"
+                src={staticHeat}
+                alt=""
+                aria-hidden="true"
+              />
+            )}
+            {encoded.map(({ event, enc }) =>
+              isFireSummary(event) ? null : (
+                <button
+                  key={event.id}
+                  className={`${markerClass(enc)} static-marker ${selectedId === event.id ? 'selected' : ''}`}
+                  style={{
+                    left: `${(event.coordinates[0] + 180) / 3.6}%`,
+                    top: `${(90 - event.coordinates[1]) / 1.8}%`,
+                    ...markerVars(enc),
+                  }}
+                  aria-label={markerLabel(event)}
+                  aria-pressed={selectedId === event.id}
+                  title={`${event.title} · ${eventBadge(event)}`}
+                  onClick={() => onSelect(event.id)}
+                >
+                  <span>
+                    {enc.kind !== 'quake' && <KindIcon kind={enc.kind} />}
+                  </span>
+                </button>
+              ),
+            )}
           </div>
         </div>
       )}
@@ -747,7 +796,7 @@ export default function WorldMap({
               {ionToken && (
                 <button
                   aria-pressed={cities}
-                  title="Photorealistic 3D cities (Google via Cesium ion)"
+                  title="Photorealistic 3D cities below 250 km (Google via Cesium ion)"
                   onClick={() => setCities(!cities)}
                 >
                   3D cities

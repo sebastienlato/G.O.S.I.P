@@ -610,7 +610,9 @@ test('fire and German warnings combine with independent toggles, details, validi
   ).toBeChecked()
   await expect(page.locator('.event-card.kind-warning')).toHaveCount(1)
   await expect(page.locator('.event-card.kind-fire')).toHaveCount(1)
-  await expect(page.locator('.static-marker')).toHaveCount(4)
+  // Thermal cells are a heat field, not marker buttons, on both maps.
+  await expect(page.locator('.static-marker')).toHaveCount(3)
+  await expect(page.locator('.static-heat')).toHaveCount(1)
   await page.locator('.event-card.kind-warning').click()
   await expect(page.getByRole('dialog')).toContainText('Not supplied')
   await expect(page.getByRole('dialog')).toContainText('CC BY 4.0')
@@ -739,24 +741,26 @@ test('global thermal feed is paged while all cells remain searchable and mapped'
   await context.route('**/data/firms.json', (r) => r.fulfill({ json: large }))
   await page.goto(`${origin}${base}?map=static&live=firms`)
   await expect(page.locator('.event-card')).toHaveCount(50)
-  await expect(page.locator('.static-marker')).toHaveCount(120)
+  await expect(page.locator('.static-marker')).toHaveCount(0)
+  await expect(page.locator('.static-heat')).toBeVisible()
   await expect(page.getByLabel('Feed pages')).toContainText('1–50 of 120')
   await page.getByRole('button', { name: 'Next', exact: true }).click()
   await expect(page.getByLabel('Feed pages')).toContainText('51–100 of 120')
   await page.getByRole('button', { name: 'Next', exact: true }).click()
   await expect(page.locator('.event-card')).toHaveCount(20)
-  await page
-    .getByRole('button', {
-      name: /FIRMS thermal detections: 1 thermal detection/,
-    })
-    .first()
-    .focus()
-  await page.keyboard.press('Enter')
+  // Clicking the heat field selects the 2° cell beneath (-179°, -89°).
+  const world = page.locator('.static-world')
+  const box = (await world.boundingBox())!
+  await world.dispatchEvent('click', {
+    clientX: box.x + box.width * (1 / 360),
+    clientY: box.y + box.height * (179 / 180),
+  })
+  await expect(page.getByRole('dialog')).toContainText('1 thermal detection')
   await page.keyboard.press('Escape')
   await expect(page.getByLabel('Feed pages')).toContainText('1–50 of 120')
   await page
     .getByRole('searchbox', { name: 'Search events' })
     .fill('120 thermal')
   await expect(page.locator('.event-card')).toHaveCount(1)
-  await expect(page.locator('.static-marker')).toHaveCount(1)
+  await expect(page.locator('.static-heat')).toBeVisible()
 })
