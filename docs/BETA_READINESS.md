@@ -23,4 +23,8 @@ Public URL: https://sebastienlato.github.io/G.O.S.I.P/ . Existing PUBLIC reposit
 
 CSP blocks provider USGS requests and unapproved connections; local development NWS remains allowed by CSP but host-gated. No-referrer preserved. Pages controls response headers/CDN cache; no custom frame-ancestors/nosniff/Permissions-Policy header guarantee. Client freshness is based on original data times, never HTTP cache time. Simulation lab persists during transition; default live view has no invented observations. Multi-source toggles and real archive are future phases.
 
-Deployment verification will be recorded here after publication.
+## Published verification
+
+Actions run [37866336402](https://github.com/sebastienlato/G.O.S.I.P/actions/runs/37866336402) succeeded: build, deployment and cleanup. Live release.json matches `88f9ad0acd50518b42960b1b7a0a7549ec47c8ab`. Pages API: built/workflow/HTTPS, unchanged URL. Public data and health agree: 309 real records, provider generation 2026-10-09 00:44:16 UTC, retrieval 00:45:13 UTC (October 8 owner timezone), status ok. No test data substituted. Desktop/mobile HTTPS smoke passed for interactive/static maps, list, details, privacy, reload, no overflow and no external data requests. Screenshots in ignored test-results/live inspected. Temporary artifact count for the run is zero after cleanup; one-day retention remains the cancellation fallback. No remaining owner action.
+
+Scheduled timing itself is not guaranteed or proven by one push-triggered run. Default live view is USGS only; other live layers and a real historical archive remain future work. Old source-less simulation links now open live USGS; explicit source=demo links preserve simulation intent. Final docs commit is newer than this verified release; future scheduled deployments use latest main.

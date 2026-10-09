@@ -2,7 +2,7 @@
 
 Web first; iOS paused. Every phase delivers a working increment on the public site, focused checks, commit/push and the next kickoff. $0 default; owner-created free keys/accounts allowed. Never add billing or paid service without explicit approval. Review each source's current rights and limits; blocked sources do not stall other work. Fixtures become test-only; during transition the separate simulation lab is never the default. End state: no simulated public layers.
 
-12. **Live foundation:** scheduled bounded USGS ingestion, health/last-good retention, official Pages Actions deployment, real clock and earthquakes by default.
+12. **Live foundation — complete and deployed:** scheduled bounded USGS ingestion, health/last-good retention, official Pages Actions deployment, real clock and earthquakes by default.
 13. **Global hazards + multiple live layers:** combined layer toggles, map/feed and per-source freshness. Review GDACS, NASA EONET, EMSC, NWS alerts, NOAA NHC and USGS/Smithsonian volcano notices; ship viable sources. Retire replaced simulations.
 14. **Fire & weather:** NASA FIRMS (owner-created free key), lawful weather warnings beyond the US, optional point forecasts (review Open-Meteo terms). Retire simulated fire.
 15. **World news & reports:** attributed original-language headline/metadata + link-out; review GDELT, ReliefWeb approved appname and broadcaster/agency terms. Deterministic grouping, no verification claims. Retire simulated reports.
