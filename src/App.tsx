@@ -1,3 +1,5 @@
+import { isNews } from './data/news'
+import { useNews } from './state/useEarthquakes'
 import { isFireSummary } from './data/firms'
 import { isWarning } from './data/dwd'
 import { isHazard } from './data/eonet'
@@ -18,7 +20,7 @@ import {
   digitalFamilies,
 } from './data/digital'
 import DigitalSource from './components/DigitalSource'
-import { isReport, reportExamples, reportLanguages } from './data/reports'
+import { isReport, reportLanguages } from './data/reports'
 import ReportSource from './components/ReportSource'
 import EnvironmentSource from './components/EnvironmentSource'
 import { useWeather } from './state/useWeather'
@@ -26,7 +28,12 @@ import { fireExamples } from './data/fire'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Info, Link, List, Map, Search, ShieldCheck } from 'lucide-react'
 import WorldMap from './components/WorldMap'
-import { categoryKeys, liveLayerKeys, firmsAvailable } from './state/explorer'
+import {
+  categoryKeys,
+  liveLayerKeys,
+  defaultLiveLayers,
+  firmsAvailable,
+} from './state/explorer'
 import { useExplorerFilters } from './state/useExplorerFilters'
 import EventDetail from './components/EventDetail'
 import EventFeed from './components/EventFeed'
@@ -98,6 +105,7 @@ export default function App() {
   )
   const hazards = useHazards(source === 'usgs' && liveLayers.includes('eonet'))
   const warnings = useWarnings(source === 'usgs' && liveLayers.includes('dwd'))
+  const news = useNews(source === 'usgs' && liveLayers.includes('news'))
   const fires = useFire(source === 'usgs' && liveLayers.includes('firms'))
   const liveEvents = useMemo(
     () => [
@@ -106,6 +114,7 @@ export default function App() {
         : []),
       ...(liveLayers.includes('eonet') ? (hazards.snapshot?.events ?? []) : []),
       ...(liveLayers.includes('dwd') ? (warnings.snapshot?.events ?? []) : []),
+      ...(liveLayers.includes('news') ? (news.snapshot?.events ?? []) : []),
       ...(liveLayers.includes('firms') ? (fires.snapshot?.events ?? []) : []),
     ],
     [
@@ -114,6 +123,7 @@ export default function App() {
       hazards.snapshot,
       warnings.snapshot,
       fires.snapshot,
+      news.snapshot,
     ],
   )
   const weather = useWeather(source === 'nws')
@@ -133,7 +143,7 @@ export default function App() {
     : source === 'demo'
       ? categoryKeys
       : live
-        ? ['physical', 'environment']
+        ? ['physical', 'environment', 'civic']
         : digital
           ? ['digital']
           : reports
@@ -147,7 +157,7 @@ export default function App() {
     : digital
       ? digitalExamples
       : reports
-        ? reportExamples
+        ? []
         : source === 'demo'
           ? demoEvents
           : source === 'fire-demo'
@@ -229,6 +239,13 @@ export default function App() {
     setDetailId(id)
   }, [])
   useEffect(() => {
+    if (source === 'reports-demo')
+      updateFilters({
+        source: 'usgs',
+        liveLayers: ['news'],
+        hours: 72,
+        cursor: null,
+      })
     if (firmsAvailable && source === 'fire-demo')
       updateFilters({
         source: 'usgs',
@@ -272,14 +289,16 @@ export default function App() {
       region: '',
       selectedCategories: categoryKeys,
       hours: 24,
-      liveLayers: [...liveLayerKeys],
+      liveLayers: [...defaultLiveLayers],
       language: 'all',
       reportStatus: 'all',
       digitalFamily: 'all',
       digitalResult: 'all',
     })
   const isFiltered =
-    (live && liveLayers.length !== liveLayerKeys.length) ||
+    (live &&
+      (liveLayers.length !== defaultLiveLayers.length ||
+        liveLayers.some((key) => !defaultLiveLayers.includes(key)))) ||
     cursor !== null ||
     country !== '' ||
     region !== '' ||
@@ -351,6 +370,7 @@ export default function App() {
         liveLayers.includes('eonet') ? hazards : null,
         liveLayers.includes('dwd') ? warnings : null,
         liveLayers.includes('firms') ? fires : null,
+        liveLayers.includes('news') ? news : null,
       ].filter((s) => s !== null)
     : []
   const retrievals = activeLive
@@ -512,9 +532,7 @@ export default function App() {
         <a href="#" className="brand" aria-label="GOSIP home">
           <span className="wordmark">GOSIP</span>
           <span className="brand-line">
-            {isDemo
-              ? 'Simulation lab'
-              : 'Live hazards, weather and thermal detections'}
+            {isDemo ? 'Simulation lab' : 'Live hazards and attributed reports'}
           </span>
         </a>
         <div
@@ -560,16 +578,19 @@ export default function App() {
                     !e.is_demo &&
                     !isHazard(e) &&
                     !isWarning(e) &&
-                    !isFireSummary(e),
+                    !isFireSummary(e) &&
+                    !isNews(e),
                 ).length,
                 eonet: events.filter(isHazard).length,
                 dwd: events.filter(isWarning).length,
                 firms: events.filter(isFireSummary).length,
+                news: events.filter(isNews).length,
               }}
               quakes={earthquakes}
               hazards={hazards}
               warnings={warnings}
               fires={fires}
+              news={news}
             />
           ) : (
             <button
@@ -790,7 +811,7 @@ export default function App() {
                 ? 'Local fixtures. No live connection.'
                 : source === 'nws'
                   ? 'NWS predictions, not observations or alerts.'
-                  : 'Sources remain independent. Detection counts are not confirmed fires; warnings are not observed impacts.'
+                  : 'Sources remain independent. Detection counts are not confirmed fires; warnings are not observed impacts; reports are attributed claims.'
             }
           />
         </div>
@@ -802,6 +823,7 @@ export default function App() {
               hazards={hazards}
               warnings={warnings}
               fires={fires}
+              news={news}
             />
           )}
           {!sourceDisabled && (
@@ -835,8 +857,8 @@ export default function App() {
           </p>
           <p>
             Data: USGS / ANSS · NASA EONET · DWD
-            {firmsAvailable && ' · NASA FIRMS'} · Natural Earth. Not an
-            emergency service.
+            {firmsAvailable && ' · NASA FIRMS'} · Global Voices · Natural Earth.
+            Not an emergency service.
           </p>
         </footer>
       </main>
@@ -864,15 +886,17 @@ export default function App() {
           }}
           onShowOnMap={() => showOnMap(detailEvent.id)}
           stale={
-            isFireSummary(detailEvent)
-              ? fires.stale
-              : isWarning(detailEvent)
-                ? warnings.stale
-                : isHazard(detailEvent)
-                  ? hazards.stale
-                  : source === 'nws'
-                    ? weather.stale
-                    : earthquakes.stale
+            isNews(detailEvent)
+              ? news.stale
+              : isFireSummary(detailEvent)
+                ? fires.stale
+                : isWarning(detailEvent)
+                  ? warnings.stale
+                  : isHazard(detailEvent)
+                    ? hazards.stale
+                    : source === 'nws'
+                      ? weather.stale
+                      : earthquakes.stale
           }
           onClose={closeEvent}
         />

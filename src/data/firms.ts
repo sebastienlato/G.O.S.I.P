@@ -2,7 +2,7 @@ import type { ExplorerEvent } from './events.ts'
 import type { PublishedSnapshot, SourceHealth } from './published.ts'
 import { object, iso } from './dwd.ts'
 export const FIRMS_MAX_BYTES = 200_000
-export const FIRMS_AREA = '-170,15,-50,75'
+export const FIRMS_AREA = 'world'
 export const FIRMS_PRODUCT = 'VIIRS_NOAA20_NRT'
 export interface FireSummary {
   kind: 'fire-summary'
@@ -37,7 +37,8 @@ export interface FireSnapshot {
   feed: {
     product: typeof FIRMS_PRODUCT
     area: typeof FIRMS_AREA
-    day: string
+    interval_start: string
+    interval_end: string
     cells: number[][]
   }
 }
@@ -46,15 +47,14 @@ export function parseFIRMS(input: unknown, now: number): FireSnapshot {
   if (
     f.product !== FIRMS_PRODUCT ||
     f.area !== FIRMS_AREA ||
-    typeof f.day !== 'string' ||
-    !/^\d{4}-\d{2}-\d{2}$/.test(f.day) ||
     !Array.isArray(f.cells) ||
     f.cells.length > 2500
   )
     throw Error('Invalid fire summary')
-  const start = iso(`${f.day}T00:00:00.000Z`, now),
-    end = new Date(Date.parse(start) + 86400_000).toISOString()
-  if (Date.parse(end) > now - 86400_000) throw Error('Insufficient delay')
+  const start = iso(f.interval_start, now),
+    end = iso(f.interval_end, now)
+  if (Date.parse(end) - Date.parse(start) !== 86400_000)
+    throw Error('Invalid window')
   const ids = new Set<string>()
   let total = 0
   const events = f.cells.map((cell): FireSummary => {
@@ -63,20 +63,20 @@ export function parseFIRMS(input: unknown, now: number): FireSnapshot {
     if (
       !Number.isInteger(lon) ||
       !Number.isInteger(lat) ||
-      lon < -169 ||
-      lon > -49 ||
-      lat < 15 ||
-      lat > 75 ||
+      lon < -179 ||
+      lon > 179 ||
+      lat < -89 ||
+      lat > 89 ||
       Math.abs(lon % 2) !== 1 ||
       Math.abs(lat % 2) !== 1 ||
       !Number.isSafeInteger(count) ||
       count < 1 ||
-      count > 60000
+      count > 500000
     )
       throw Error('Invalid grid/count')
     total += count
-    if (total > 60000) throw Error('Too many detections')
-    const id = `firms-${f.day}-${lon}-${lat}`
+    if (total > 500000) throw Error('Too many detections')
+    const id = `firms-${end}-${lon}-${lat}`
     if (ids.has(id)) throw Error('Duplicate grid')
     ids.add(id)
     return {
@@ -84,12 +84,12 @@ export function parseFIRMS(input: unknown, now: number): FireSnapshot {
       id,
       title: `${count} thermal detections`,
       summary:
-        'NASA FIRMS NOAA-20 VIIRS detections in the North American sector, aggregated by GOSIP into a 2° cell and UTC day. Not confirmed fires.',
+        'NASA FIRMS NOAA-20 VIIRS detections worldwide, aggregated by GOSIP into a 2° cell over the preceding 24 hours. Not confirmed fires.',
       category: 'environment',
       coordinates: [lon, lat],
       region: `2° cell centred ${lat}°, ${lon}°`,
       country: '',
-      day: f.day as string,
+      day: end.slice(0, 10),
       interval_start: start,
       interval_end: end,
       occurred_at: null,
@@ -103,7 +103,7 @@ export function parseFIRMS(input: unknown, now: number): FireSnapshot {
       is_demo: false,
       freshness: 'retrieved',
       coverage_note:
-        'North American sector: 170°W–50°W, 15°N–75°N; not complete continental coverage. At least 24 hours delayed. Cell centres are display anchors, not detection positions or fire boundaries. Thermal anomalies can have multiple causes; counts are satellite detections, not distinct fires, impacts or corroboration. One sensor and one UTC day; cloud, overpass and processing gaps limit coverage. Generation/publication/update times and individual positions are not published.',
+        'Global most-recent NRT window; no additional GOSIP delay. Cell centres are display anchors, not detection positions or fire boundaries. Thermal anomalies can have multiple causes; counts are satellite detections, not distinct fires, impacts or corroboration. One sensor and a rolling 24-hour window; cloud, overpass and processing gaps limit coverage. Generation/publication/update times and individual positions are not published.',
     }
   })
   return {
@@ -113,7 +113,8 @@ export function parseFIRMS(input: unknown, now: number): FireSnapshot {
     feed: {
       product: FIRMS_PRODUCT,
       area: FIRMS_AREA,
-      day: f.day,
+      interval_start: start,
+      interval_end: end,
       cells: f.cells,
     },
   }

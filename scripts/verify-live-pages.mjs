@@ -67,7 +67,7 @@ try {
       hazards.health,
     )
     const newSources = {}
-    for (const key of ['dwd', 'firms']) {
+    for (const key of ['dwd', 'firms', 'news']) {
       const response = await context.request.get(
         new URL(`data/${key}.json`, site).href,
       )
@@ -87,10 +87,11 @@ try {
         assert(Date.now() - Date.parse(p.health.generated_at) < 45 * 60_000)
       if (key === 'firms') {
         assert.equal(p.health.generated_at, null)
-        assert.equal(p.snapshot.feed.area, '-170,15,-50,75')
+        assert.equal(p.snapshot.feed.area, 'world')
         assert(
-          Date.parse(p.snapshot.feed.day + 'T00:00:00Z') + 86400_000 <=
-            Date.now() - 86400_000,
+          Date.parse(p.snapshot.feed.interval_end) -
+            Date.parse(p.snapshot.feed.interval_start) ===
+            86400_000,
         )
         assert(
           p.snapshot.feed.cells.every(
@@ -98,6 +99,22 @@ try {
               c.length === 3 &&
               Math.abs(c[0] % 2) === 1 &&
               Math.abs(c[1] % 2) === 1,
+          ),
+        )
+      }
+      if (key === 'news') {
+        assert(
+          p.snapshot.feed.every(
+            (r) =>
+              Date.parse(r.published_at) <=
+              Date.parse(p.snapshot.retrieved_at) - 86400_000,
+          ),
+        )
+        assert(
+          p.snapshot.feed.every(
+            (r) =>
+              Object.keys(r).sort().join(',') ===
+              'author,published_at,title,url',
           ),
         )
       }
@@ -112,10 +129,13 @@ try {
         page.getByText('Live EONET global hazards', { exact: true }),
       ).toBeVisible()
       await expect(
-        page.getByText('Live DWD weather warnings', { exact: true }),
+        page.getByRole('checkbox', { name: /DWD weather/ }),
+      ).not.toBeChecked()
+      await expect(
+        page.getByText('Live Global Voices reports', { exact: true }),
       ).toBeVisible()
       await expect(
-        page.getByText('Live FIRMS · delayed daily summary', { exact: true }),
+        page.getByText('Live FIRMS · global thermal summary', { exact: true }),
       ).toBeVisible()
       await expect(page.locator('.event-card').first()).toBeVisible()
       await expect(page.locator('.demo-banner')).toHaveCount(0)
@@ -173,10 +193,29 @@ try {
     await hazardToggle.uncheck()
     await page.getByRole('checkbox', { name: /DWD weather/ }).uncheck()
     await page.getByRole('checkbox', { name: /FIRMS thermal/ }).uncheck()
+    await page
+      .getByRole('checkbox', { name: /Global Voices reports/ })
+      .uncheck()
     await expect(page.locator('.event-card')).toHaveCount(0)
     await expect(
       page.getByText('All live layers are off', { exact: true }),
     ).toBeVisible()
+    await page.getByRole('checkbox', { name: /Global Voices reports/ }).check()
+    if (newSources.news.health.record_count) {
+      await page.locator('.event-card.kind-news').first().click()
+      await expect(page.getByRole('dialog')).toContainText('CC BY 3.0')
+      await expect(page.getByRole('dialog')).toContainText(
+        'not a verified incident',
+      )
+      await expect(
+        page.getByRole('dialog').getByRole('button', { name: 'Show on map' }),
+      ).toHaveCount(0)
+      await page.keyboard.press('Escape')
+    }
+    await page.screenshot({
+      path: `test-results/live/${name}-reports.png`,
+      fullPage: true,
+    })
     await page.getByRole('checkbox', { name: /DWD weather/ }).check()
     if (newSources.dwd.health.record_count) {
       await page.locator('.event-card.kind-warning').first().click()
@@ -197,7 +236,7 @@ try {
       .getByRole('link', { name: 'GOSIP home' })
       .scrollIntoViewIfNeeded()
     await page.screenshot({
-      path: `test-results/live/${name}-phase14.png`,
+      path: `test-results/live/${name}-phase15.png`,
       fullPage: true,
     })
     await quakes.check()
@@ -215,7 +254,7 @@ try {
     ).toBeVisible()
     assert.deepEqual(failures, [])
     console.log(
-      `${name}: DWD ${newSources.dwd.health.record_count} warnings; FIRMS ${newSources.firms.health.record_count} cells for ${newSources.firms.snapshot.feed.day}, generated unknown. New source details and toggles passed.`,
+      `${name}: DWD ${newSources.dwd.health.record_count} warnings; FIRMS ${newSources.firms.health.record_count} cells for ${newSources.firms.snapshot.feed.interval_end}, generated unknown. New source details and toggles passed.`,
     )
     console.log(
       `${name}: live release ${source}, ${body.health.record_count} USGS records + ${hazards.health.record_count} EONET catalog entries; EONET fetched ${hazards.health.fetched_at}; USGS generated ${body.health.generated_at}, fetched ${body.health.fetched_at}; map/list/static/details/privacy, independent layer toggles, empty/reload and same-origin-only requests passed.`,

@@ -47,13 +47,13 @@ it('filters upcoming warnings forward and thermal days backward without merging'
   f.warnings['100000001'][0].start = now + 12 * 3600000
   f.warnings['100000001'][0].end = now + 24 * 3600000
   const warning = parseDWD(f, now).events,
-    fires = parseFIRMS(aggregateFIRMS(firmsCSV(day), day), now).events
+    fires = parseFIRMS(aggregateFIRMS(firmsCSV(day), now), now).events
   expect(
     filterEvents([...warning, ...fires], '', categoryKeys, 6, now),
-  ).toHaveLength(0)
+  ).toHaveLength(1)
   expect(
     filterEvents([...warning, ...fires], '', categoryKeys, 24, now),
-  ).toHaveLength(1)
+  ).toHaveLength(2)
   expect(
     filterEvents([...warning, ...fires], '', categoryKeys, 72, now),
   ).toHaveLength(2)
@@ -67,7 +67,7 @@ it('only publishes delayed 2 degree daily counts, not precise observations or se
   const result = await ingestFIRMS(
     key,
     stub((url, options) => {
-      expect(url).toContain(`/-170,15,-50,75/1/${day}`)
+      expect(url).toContain(`/world/2`)
       expect(options?.redirect).toBe('error')
       expect(options?.headers).toHaveProperty('User-Agent')
       return fire()
@@ -93,9 +93,9 @@ it('only publishes delayed 2 degree daily counts, not precise observations or se
     'bright_ti4',
   ])
     expect(JSON.stringify(result)).not.toContain(privateValue)
-  expect(() => parseFIRMS({ ...s.feed, day: '2026-10-08' }, now)).toThrow(
-    'delay',
-  )
+  expect(() =>
+    parseFIRMS({ ...s.feed, interval_end: '2026-10-10T12:00:00.000Z' }, now),
+  ).toThrow('Invalid')
   expect(() => parseFIRMS({ ...s.feed, cells: [[20.2, 11, 2]] }, now)).toThrow()
 })
 it.each(['dwd', 'firms'] as const)(
@@ -178,12 +178,12 @@ it('rejects executable JSONP, unsafe text, malformed geometry/time/schema and du
   expect(() => parseDWD(f, now)).toThrow()
   for (const csv of [
     firmsCSV(day).replace('50.1234', '1000'),
-    firmsCSV(day).replace('1200', '2560'),
-    firmsCSV(day).replace('1200', ''),
+    firmsCSV(day).replace('0000', '2560'),
+    firmsCSV(day).replace('0000', ''),
     firmsCSV(day).replace('N20', 'N21'),
     firmsCSV(day) + firmsCSV(day).split('\n')[1] + '\n',
   ])
-    expect(() => aggregateFIRMS(csv, day)).toThrow()
+    expect(() => aggregateFIRMS(csv, now)).toThrow()
 })
 it('missing key never requests FIRMS or reveals credentials; safe last-good fallback remains', async () => {
   const calls: string[] = []

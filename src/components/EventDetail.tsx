@@ -1,3 +1,5 @@
+import { isNews } from '../data/news'
+import NewsBody from './NewsBody'
 import { isFireSummary } from '../data/firms'
 import FireBody from './FireBody'
 import { isWarning } from '../data/dwd'
@@ -35,10 +37,12 @@ export default function EventDetail({
   const digital = isDigital(event)
   const report = isReport(event)
   const forecast = isForecast(event)
+  const news = isNews(event)
   const fire = isFireSummary(event)
   const warning = isWarning(event)
   const hazard = isHazard(event)
-  const quake = !event.is_demo && !forecast && !hazard && !warning && !fire
+  const quake =
+    !event.is_demo && !forecast && !hazard && !warning && !fire && !news
   const thermal = 'kind' in event && event.kind === 'thermal'
   const dialog = useRef<HTMLDialogElement>(null)
   useEffect(() => {
@@ -86,7 +90,15 @@ export default function EventDetail({
         </div>
         <h2
           id="detail-title"
-          lang={warning ? 'de' : report ? event.source_language : undefined}
+          lang={
+            news
+              ? 'en'
+              : warning
+                ? 'de'
+                : report
+                  ? event.source_language
+                  : undefined
+          }
           dir="auto"
         >
           {event.title}
@@ -102,40 +114,44 @@ export default function EventDetail({
         </p>
         <div className="simulation-note">
           <strong>
-            {fire
-              ? 'THERMAL DETECTIONS · FIRMS'
-              : warning
-                ? 'WEATHER WARNING · DWD'
-                : hazard
-                  ? 'CURATED HAZARD · NASA EONET'
-                  : digital
-                    ? 'SIMULATED · DIGITAL MEASUREMENT'
-                    : report
-                      ? 'SIMULATED · ATTRIBUTED CLAIM'
-                      : event.is_demo
-                        ? 'SIMULATED EVENT'
-                        : forecast
-                          ? 'WEATHER FORECAST · NWS'
-                          : event.status === 'deleted'
-                            ? 'WITHDRAWN BY PROVIDER'
-                            : 'EARTHQUAKE OBSERVATION'}
+            {news
+              ? 'ATTRIBUTED REPORT · GLOBAL VOICES'
+              : fire
+                ? 'THERMAL DETECTIONS · FIRMS'
+                : warning
+                  ? 'WEATHER WARNING · DWD'
+                  : hazard
+                    ? 'CURATED HAZARD · NASA EONET'
+                    : digital
+                      ? 'SIMULATED · DIGITAL MEASUREMENT'
+                      : report
+                        ? 'SIMULATED · ATTRIBUTED CLAIM'
+                        : event.is_demo
+                          ? 'SIMULATED EVENT'
+                          : forecast
+                            ? 'WEATHER FORECAST · NWS'
+                            : event.status === 'deleted'
+                              ? 'WITHDRAWN BY PROVIDER'
+                              : 'EARTHQUAKE OBSERVATION'}
           </strong>
           <span>
-            {fire
-              ? 'Delayed, coarse satellite detection counts. Not confirmed fires, causes or impacts.'
-              : warning
-                ? 'Provider warning for a validity interval. Not an observed impact; check current official guidance.'
-                : hazard
-                  ? 'Curated natural-event metadata for general information. Not an official warning, sensor detection or verified impact.'
-                  : digital
-                    ? 'Invented measurement scenario. Not a confirmed outage, intentional censorship or real provider observation.'
-                    : report
-                      ? 'An invented publisher’s claim, not a verified incident. No real-world event or independent corroboration is asserted.'
-                      : event.is_demo
-                        ? 'Invented for this prototype. Not a real-world report, alert, or verified observation.'
-                        : forecast
-                          ? 'Prediction for a future validity interval. Not a measurement, official alert, or confirmed impact. Check the current NWS source for warnings.'
-                          : 'Provider estimate subject to revision. Review status concerns source parameters, not verified damage, casualties or an emergency alert.'}
+            {news
+              ? 'A publisher’s claim, not a verified incident. No corroboration or impact assessment.'
+              : fire
+                ? 'Coarse satellite detection counts. Not confirmed fires, causes or impacts.'
+                : warning
+                  ? 'Provider warning for a validity interval. Not an observed impact; check current official guidance.'
+                  : hazard
+                    ? 'Curated natural-event metadata for general information. Not an official warning, sensor detection or verified impact.'
+                    : digital
+                      ? 'Invented measurement scenario. Not a confirmed outage, intentional censorship or real provider observation.'
+                      : report
+                        ? 'An invented publisher’s claim, not a verified incident. No real-world event or independent corroboration is asserted.'
+                        : event.is_demo
+                          ? 'Invented for this prototype. Not a real-world report, alert, or verified observation.'
+                          : forecast
+                            ? 'Prediction for a future validity interval. Not a measurement, official alert, or confirmed impact. Check the current NWS source for warnings.'
+                            : 'Provider estimate subject to revision. Review status concerns source parameters, not verified damage, casualties or an emergency alert.'}
           </span>
         </div>
         {playback && (
@@ -146,7 +162,9 @@ export default function EventDetail({
           </p>
         )}
         <>
-          {fire ? (
+          {news ? (
+            <NewsBody event={event} stale={stale} />
+          ) : fire ? (
             <FireBody event={event} stale={stale} />
           ) : warning ? (
             <WarningBody event={event} stale={stale} />

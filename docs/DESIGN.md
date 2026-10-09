@@ -22,7 +22,7 @@ The web explorer reads like an instrument: the map comes first, colour carries d
 | `--chalk` / `--mist` / `--faint` | `#e7eeeb` / `#9db1b7` / `#6f8890` | Text levels |
 | `--ok` / `--warn` / `--lab` | `#7fd1ae` / `#e9b44c` / `#b9a7f2` | Healthy, stale, simulation |
 
-Data colours (`encoding.ts`): magnitude below 4 `#e9b44c`, 4–4.9 `#f08a3e`, 5–5.9 `#e8553a`, 6+ `#d42d55`; volcanoes `#f07cae` (triangle); storms `#62c6e8` (eye ring); delayed FIRMS cells `#c1a1f4` (diamond); DWD warnings `#a5d6a7` (square, feed-only).
+Data colours (`encoding.ts`): magnitude below 4 `#e9b44c`, 4–4.9 `#f08a3e`, 5–5.9 `#e8553a`, 6+ `#d42d55`; volcanoes `#f07cae` (triangle); storms `#62c6e8` (eye ring); FIRMS cells `#ffd23f` (diamond); DWD warnings `#cfd8dc` (square, feed-only).
 
 ## Type
 
@@ -50,3 +50,5 @@ Data colours (`encoding.ts`): magnitude below 4 `#e9b44c`, 4–4.9 `#f08a3e`, 5�
 `App.tsx` owns state and composition. `EventFeed` / `EventCard` render the feed, `WorldMap` + `MapLegend` the map, `FeedSource.tsx` exports `LayerToggles`, `LiveStatus` and `SimulationLab`, `AboutDialog` the about/privacy dialog.
 
 Phase 14: category buttons live in a disclosure to keep the desktop rail on one row. Phones use a two-column toggle grid and wrapped time/view controls. Thermal cards lead with the detection count, not a fire count; warning cards show original-language title, validity and DWD level.
+
+Phase 15: reports use peach `#f3a77b` and an outlined document glyph (feed-only), with an explicit attributed-claim label and byline. Five toggles retain the single desktop rail and two-column mobile grid. DWD defaults off; live Global affairs joins the category disclosure. Report detail and source status carry delay/rights/coverage caveats.

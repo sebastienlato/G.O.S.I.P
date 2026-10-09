@@ -1,3 +1,4 @@
+import { decodeNews, NEWS_MAX_BYTES } from '../data/news'
 import { decodeFIRMS, FIRMS_MAX_BYTES } from '../data/firms'
 import { decodeDWD, DWD_MAX_BYTES } from '../data/dwd'
 import { useCallback, useEffect, useRef, useState } from 'react'
@@ -119,4 +120,8 @@ export function useWarnings(enabled: boolean) {
 
 export function useFire(enabled: boolean) {
   return usePublished(enabled, 'firms', decodeFIRMS, FIRMS_MAX_BYTES)
+}
+
+export function useNews(enabled: boolean) {
+  return usePublished(enabled, 'news', decodeNews, NEWS_MAX_BYTES)
 }

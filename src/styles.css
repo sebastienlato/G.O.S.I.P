@@ -1825,3 +1825,20 @@ dialog::backdrop {
     margin-left: auto;
   }
 }
+
+.glyph-news {
+  width: 13px;
+  height: 16px;
+  border: 2px solid var(--mark);
+  border-radius: 1px;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0 3px,
+    var(--mark) 3px 4px
+  );
+}
+.glyph-news i {
+  width: 9px;
+  height: 12px;
+  border-radius: 1px;
+}

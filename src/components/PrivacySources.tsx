@@ -30,11 +30,10 @@ export default function PrivacySources() {
       <ul>
         {firmsAvailable && (
           <li>
-            <strong>NASA FIRMS / LANCE:</strong> North American sector NOAA-20
-            VIIRS detections aggregated by GOSIP into 2° cells and a UTC day,
-            delayed at least 24 hours. No precise source positions or inferred
-            causes. We acknowledge NASA LANCE, part of ESDIS; data provided as
-            is.{' '}
+            <strong>NASA FIRMS / LANCE:</strong> Global NOAA-20 VIIRS detections
+            aggregated by GOSIP into 2° cells over the latest 24 hours, without
+            added delay. No precise source positions or inferred causes. We
+            acknowledge NASA LANCE, part of ESDIS; data provided as is.{' '}
             <a
               href="https://www.earthdata.nasa.gov/data/projects/lance"
               target="_blank"
@@ -106,11 +105,33 @@ export default function PrivacySources() {
           </a>
         </li>
         <li>
+          <strong>Global Voices:</strong> English-edition headline metadata and
+          bylines under{' '}
+          <a
+            href="https://creativecommons.org/licenses/by/3.0/"
+            target="_blank"
+            rel="noreferrer"
+          >
+            CC BY 3.0
+          </a>
+          . Credit each author and link to the original; selected and
+          reformatted by GOSIP, no endorsement. Attributed claims, delayed 24
+          hours, feed only. No full articles, photos, translations or summaries
+          copied.{' '}
+          <a
+            href="https://globalvoices.org/about/global-voices-attribution-policy/"
+            target="_blank"
+            rel="noreferrer"
+          >
+            Republishing policy ↗
+          </a>
+        </li>
+        <li>
           <strong>Coming:</strong> {!firmsAvailable && 'fire, '}broader weather,
-          reports, digital, space, aviation and maritime.{' '}
+          more news sources, digital, space, aviation and maritime.{' '}
           <strong>Simulation lab:</strong> original GOSIP fixtures. No live
-          report, digital, space, aviation or maritime data is connected.
-          Examples are never evidence of actual conditions.
+          digital, space, aviation or maritime data is connected. Examples are
+          never evidence of actual conditions.
         </li>
         <li>
           <strong>Map:</strong> Natural Earth 4.1.0 public-domain geography via

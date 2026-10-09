@@ -36,7 +36,7 @@ jobs:
           FIRMS_MAP_KEY: ${{ secrets.FIRMS_MAP_KEY }}
       - run: npm run build:pages
       - name: Stamp source revision
-        run: node -e 'require("fs").writeFileSync("dist/release.json", JSON.stringify({source_commit:process.env.GITHUB_SHA}))'
+        run: node -e 'require("fs").writeFileSync("dist/release.json", JSON.stringify({source_commit:process.env.GITHUB_SHA,event:process.env.GITHUB_EVENT_NAME,run_id:process.env.GITHUB_RUN_ID,built_at:new Date().toISOString()}))'
       - name: Enforce artifact budget
         env:
           GH_TOKEN: ${{ github.token }}

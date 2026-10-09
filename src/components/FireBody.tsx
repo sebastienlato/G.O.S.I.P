@@ -33,7 +33,7 @@ export default function FireBody({
           <dd>{e.day}</dd>
         </div>
         <div>
-          <dt>Daily interval (exclusive end)</dt>
+          <dt>Observation window (exclusive end)</dt>
           <dd>
             {formatTimestamp(e.interval_start)} →{' '}
             {formatTimestamp(e.interval_end)}
@@ -60,7 +60,7 @@ export default function FireBody({
           <dd>
             {stale
               ? 'STALE · retained daily summary'
-              : 'Recent retrieval · deliberately delayed observations'}
+              : 'Recent retrieval · NRT observations'}
           </dd>
         </div>
       </dl>

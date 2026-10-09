@@ -1,3 +1,4 @@
+import { isNews } from '../data/news'
 import { isFireSummary } from '../data/firms'
 import { isWarning } from '../data/dwd'
 import { isHazard, hazardKinds } from '../data/eonet'
@@ -38,7 +39,7 @@ export function eventAge(
   referenceTime: number,
   demoClock: Props['demoClock'],
 ) {
-  if (isFireSummary(event)) return `Detected ${event.day} UTC · delayed ≥24h`
+  if (isFireSummary(event)) return `Detected ${event.day} UTC · preceding 24h`
   if (isWarning(event))
     return `Valid ${formatTimestamp(event.valid_from)} → ${event.valid_until ? formatTimestamp(event.valid_until) : 'end not supplied'}`
   if (isForecast(event))
@@ -49,7 +50,7 @@ export function eventAge(
     ? 'Geometry dated '
     : isDigital(event)
       ? 'Interval ended '
-      : isReport(event) || isAdditional(event)
+      : isNews(event) || isReport(event) || isAdditional(event)
         ? 'Published '
         : ''
   const suffix =
@@ -99,7 +100,7 @@ export default function EventCard({
           lang={
             isWarning(event)
               ? 'de'
-              : isReport(event)
+              : isReport(event) || isNews(event)
                 ? event.source_language
                 : undefined
           }
@@ -128,6 +129,11 @@ export default function EventCard({
               NASA EONET
             </span>
           )}
+          {isNews(event) && (
+            <span>
+              Attributed claim · Global Voices · {event.author} · feed only
+            </span>
+          )}
           {isWarning(event) && (
             <span>
               DWD · Level {event.level} · {event.region} · Germany · feed only
@@ -136,13 +142,17 @@ export default function EventCard({
           {isFireSummary(event) && (
             <span>NASA FIRMS · 2° cell · {event.region}</span>
           )}
-          {!quake && !hazard && !isWarning(event) && !isFireSummary(event) && (
-            <span>
-              {label}
-              {event.region ? ` · ${event.region}` : ''}
-              {event.country ? ` / ${event.country}` : ''}
-            </span>
-          )}
+          {!quake &&
+            !hazard &&
+            !isWarning(event) &&
+            !isFireSummary(event) &&
+            !isNews(event) && (
+              <span>
+                {label}
+                {event.region ? ` · ${event.region}` : ''}
+                {event.country ? ` / ${event.country}` : ''}
+              </span>
+            )}
         </span>
         {isAdditional(event) && (
           <span className="card-detail">

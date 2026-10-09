@@ -1,6 +1,7 @@
 import { firmsAvailable } from '../state/explorer'
 import {
   fireColor,
+  newsColor,
   warningColor,
   hazardColors,
   magnitudeSize,
@@ -66,6 +67,14 @@ export default function MapLegend() {
           />
           <span>DWD warnings · feed only</span>
         </p>
+        <p className="legend-row">
+          <span
+            className="glyph glyph-news"
+            style={{ '--mark': newsColor } as React.CSSProperties}
+            aria-hidden="true"
+          />
+          <span>Reports · attributed · feed only</span>
+        </p>
         {firmsAvailable && (
           <p className="legend-row">
             <span
@@ -73,7 +82,7 @@ export default function MapLegend() {
               style={{ '--mark': fireColor } as React.CSSProperties}
               aria-hidden="true"
             />
-            <span>Thermal · 2° cell · delayed ≥24h</span>
+            <span>Thermal · 2° cell · preceding 24h</span>
           </p>
         )}
       </div>

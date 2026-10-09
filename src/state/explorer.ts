@@ -20,13 +20,17 @@ export type Source =
   | 'digital-demo'
 export const firmsAvailable =
   typeof __FIRMS_AVAILABLE__ !== 'undefined' && __FIRMS_AVAILABLE__
-export type LiveLayer = 'usgs' | 'eonet' | 'dwd' | 'firms'
+export type LiveLayer = 'usgs' | 'eonet' | 'dwd' | 'firms' | 'news'
 export const liveLayerKeys: LiveLayer[] = [
   'usgs',
   'eonet',
   'dwd',
+  'news',
   ...(firmsAvailable ? ['firms' as const] : []),
 ]
+export const defaultLiveLayers: LiveLayer[] = liveLayerKeys.filter(
+  (key) => key !== 'dwd',
+)
 export interface ExplorerFilters {
   liveLayers: LiveLayer[]
   source: Source
@@ -45,7 +49,7 @@ export interface ExplorerFilters {
 }
 export const defaultFilters: ExplorerFilters = {
   source: 'usgs',
-  liveLayers: [...liveLayerKeys],
+  liveLayers: [...defaultLiveLayers],
   cursor: null,
   country: '',
   region: '',
@@ -79,11 +83,11 @@ export function parseFilters(search: string): ExplorerFilters {
       ? liveLayerKeys.filter((key) => requestedLive.includes(key))
       : live.length === 0 && params.get('source') === 'usgs'
         ? ['usgs' as const]
-        : [...liveLayerKeys]
+        : [...defaultLiveLayers]
   return {
     liveLayers:
       params.has('source') && params.get('source') !== 'usgs'
-        ? [...liveLayerKeys]
+        ? [...defaultLiveLayers]
         : liveLayers,
     cursor: supportsPlayback(params.get('source') ?? 'usgs')
       ? parseCursor(params.get('at'))
@@ -138,7 +142,8 @@ export function serializeFilters(filters: ExplorerFilters): string {
   const params = new URLSearchParams()
   if (
     filters.source === 'usgs' &&
-    filters.liveLayers.length !== liveLayerKeys.length
+    (filters.liveLayers.length !== defaultLiveLayers.length ||
+      filters.liveLayers.some((key) => !defaultLiveLayers.includes(key)))
   )
     params.set(
       'live',

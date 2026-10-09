@@ -1,3 +1,4 @@
+import { isNews } from '../data/news'
 import { isFireSummary } from '../data/firms'
 import { isWarning } from '../data/dwd'
 import { isHazard } from '../data/eonet'
@@ -11,8 +12,9 @@ export const magnitudeSteps = [
   { min: 5, label: '5–5.9', color: '#e8553a' },
   { min: 6, label: '6 and above', color: '#d42d55' },
 ] as const
-export const fireColor = '#c1a1f4'
-export const warningColor = '#a5d6a7'
+export const newsColor = '#f3a77b'
+export const fireColor = '#ffd23f'
+export const warningColor = '#cfd8dc'
 export const hazardColors = { volcanoes: '#f07cae', severeStorms: '#62c6e8' }
 
 export const magnitudeColor = (magnitude: number | null) =>
@@ -27,7 +29,7 @@ export const magnitudeSize = (magnitude: number | null) =>
     : Math.round(Math.min(36, 7 + Math.max(0, magnitude - 2.5) ** 1.3 * 3.2))
 
 export type MarkerKind =
-  'quake' | 'volcano' | 'storm' | 'warning' | 'fire' | 'example'
+  'news' | 'quake' | 'volcano' | 'storm' | 'warning' | 'fire' | 'example'
 export interface Encoding {
   kind: MarkerKind
   color: string
@@ -43,6 +45,14 @@ export function encode(
   referenceTime: number,
   occurredAt: string,
 ): Encoding {
+  if (isNews(event))
+    return {
+      kind: 'news',
+      color: newsColor,
+      size: 16,
+      freshness: 1,
+      recent: false,
+    }
   const age = Math.max(0, referenceTime - Date.parse(occurredAt))
   const freshness = Math.max(0.4, 1 - (age / (7 * 86_400_000)) * 0.6)
   if (isFireSummary(event))

@@ -13,6 +13,7 @@ export interface IngestionAdapter<T extends SnapshotBase> {
   url: string
   publicationMaxBytes?: number
   maxBytes: number
+  readResponse?: (response: Response, now: number) => Promise<unknown>
   decodeResponse?: (raw: string) => unknown
   parse: (raw: unknown, now: number) => T
   validate: (snapshot: T, now: number) => void
@@ -45,9 +46,22 @@ export async function ingestSource<T extends SnapshotBase>(
   let error: string | null = null
   let stage = 'request'
   try {
-    const raw = await get(adapter.url)
+    const raw = adapter.readResponse
+      ? await adapter.readResponse(
+          await fetcher(adapter.url, {
+            signal: AbortSignal.timeout(12_000),
+            redirect: 'error',
+            cache: 'no-cache',
+            headers: {
+              'User-Agent':
+                'GOSIP/1.0 (+https://github.com/sebastienlato/G.O.S.I.P)',
+            },
+          }),
+          now,
+        )
+      : (adapter.decodeResponse ?? JSON.parse)(await get(adapter.url))
     stage = 'parse'
-    snapshot = adapter.parse((adapter.decodeResponse ?? JSON.parse)(raw), now)
+    snapshot = adapter.parse(raw, now)
     stage = 'validation'
     adapter.validate(snapshot, now)
     if (

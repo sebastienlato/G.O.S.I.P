@@ -5,6 +5,7 @@ import type {
   useEarthquakes,
   useWarnings,
   useFire,
+  useNews,
 } from '../state/useEarthquakes'
 import {
   liveLayerKeys,
@@ -18,8 +19,10 @@ import {
   magnitudeSteps,
   warningColor,
   fireColor,
+  newsColor,
 } from '../state/encoding'
 
+type News = ReturnType<typeof useNews>
 type Quakes = ReturnType<typeof useEarthquakes>
 type Fires = ReturnType<typeof useFire>
 type Warnings = ReturnType<typeof useWarnings>
@@ -29,9 +32,14 @@ const layerMeta: Record<
   LiveLayer,
   { label: string; name: string; provider: string }
 > = {
+  news: {
+    label: 'Reports',
+    name: 'Global Voices reports',
+    provider: 'Global Voices',
+  },
   firms: {
     label: 'Thermal cells',
-    name: 'FIRMS thermal cells (delayed detections)',
+    name: 'FIRMS thermal cells (NRT detections)',
     provider: 'NASA FIRMS',
   },
   dwd: {
@@ -60,6 +68,7 @@ export function LayerToggles({
   hazards,
   warnings,
   fires,
+  news,
 }: {
   liveLayers: LiveLayer[]
   onToggle: (layer: LiveLayer) => void
@@ -68,8 +77,15 @@ export function LayerToggles({
   hazards: Hazards
   warnings: Warnings
   fires: Fires
+  news: News
 }) {
-  const state = { usgs: quakes, eonet: hazards, dwd: warnings, firms: fires }
+  const state = {
+    usgs: quakes,
+    eonet: hazards,
+    dwd: warnings,
+    firms: fires,
+    news,
+  }
   return (
     <fieldset className="layer-toggles">
       <legend className="sr-only">Live layers</legend>
@@ -101,10 +117,15 @@ export function LayerToggles({
                 magnitudeSteps.map((step) => (
                   <i key={step.label} style={{ background: step.color }} />
                 ))
-              ) : key === 'dwd' || key === 'firms' ? (
+              ) : key === 'dwd' || key === 'firms' || key === 'news' ? (
                 <i
                   style={{
-                    background: key === 'dwd' ? warningColor : fireColor,
+                    background:
+                      key === 'news'
+                        ? newsColor
+                        : key === 'dwd'
+                          ? warningColor
+                          : fireColor,
                   }}
                 />
               ) : (
@@ -136,7 +157,6 @@ export function SimulationLab({
     ...(!firmsAvailable
       ? [['fire-demo', 'Fire examples · simulated'] as [Source, string]]
       : []),
-    ['reports-demo', 'Global reports · simulated'],
     ['digital-demo', 'Digital world · simulated'],
     ...Object.entries(additionalLayers).map(
       ([key, layer]): [Source, string] => [
@@ -184,12 +204,14 @@ export function LiveStatus({
   hazards,
   warnings,
   fires,
+  news,
 }: {
   liveLayers: LiveLayer[]
   quakes: Quakes
   hazards: Hazards
   warnings: Warnings
   fires: Fires
+  news: News
 }) {
   const { snapshot, health, loading, error, stale, waitSeconds, offline } =
     quakes
@@ -198,9 +220,95 @@ export function LiveStatus({
       <h2 className="section-title">Sources and freshness</h2>
       <p className="section-lede">
         Coming next: floods, {!firmsAvailable && 'fire detections, '}broader
-        weather coverage, news, digital, space and movement.
+        weather coverage, more news sources, digital, space and movement.
       </p>
       <div className="status-grid">
+        {liveLayers.includes('news') && (
+          <div className="source-status" aria-label="Global Voices status">
+            <strong
+              className={
+                !news.snapshot || news.stale ? 'status-warn' : 'status-ok'
+              }
+              aria-live="polite"
+            >
+              {news.loading
+                ? 'Loading report headlines…'
+                : !news.snapshot
+                  ? 'Global Voices unavailable'
+                  : news.stale
+                    ? 'STALE · last available reports'
+                    : 'Live Global Voices reports'}
+            </strong>
+            {news.snapshot && (
+              <p>
+                Retrieved {formatTimestamp(news.snapshot.retrieved_at)} ·{' '}
+                {news.snapshot.events.length} headlines. Choose 3 or 7 days for
+                reports delayed 24 hours.
+              </p>
+            )}
+            {news.error && <p className="source-error">{news.error}</p>}
+            {news.snapshot?.events.length === 0 && (
+              <p>
+                Valid feed with no eligible headlines. This does not mean no
+                news.
+              </p>
+            )}
+            <details className="disclosure">
+              <summary>Reports freshness & source details</summary>
+              <div className="disclosure-body">
+                <p>
+                  Global Voices English-edition headlines and bylines, as
+                  supplied. Attributed claims, not verified incidents. Feed
+                  only; no inferred locations, translations, summaries or
+                  corroboration. Publication and retrieval remain distinct;
+                  occurrence and article update are unknown. At least 24 hours
+                  delayed; bounded to the latest feed and past 7 days.
+                </p>
+                <p>
+                  Credit Global Voices and each bylined author.{' '}
+                  <a
+                    href="https://creativecommons.org/licenses/by/3.0/"
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    CC BY 3.0
+                  </a>
+                  . Metadata selected and reformatted by GOSIP. No endorsement;
+                  linked articles and third-party media have their own terms.
+                </p>
+                <p>
+                  Provider checks every 15 minutes; published snapshots checked
+                  every 15 minutes. Stale after 45 minutes without a successful
+                  pipeline check or on failure. Retrieval does not establish
+                  editorial freshness. No feed generation time used.
+                </p>
+                {news.health && (
+                  <p>
+                    Last pipeline attempt{' '}
+                    {formatTimestamp(news.health.attempted_at)} · Status:{' '}
+                    {news.health.status}.
+                  </p>
+                )}
+                <a
+                  href="https://globalvoices.org/about/global-voices-attribution-policy/"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Global Voices attribution policy ↗
+                </a>
+                <button
+                  onClick={() => void news.refresh()}
+                  disabled={
+                    news.loading || news.offline || news.waitSeconds > 0
+                  }
+                >
+                  Refresh reports
+                </button>
+              </div>
+            </details>
+          </div>
+        )}
+
         {liveLayers.includes('usgs') && (
           <div className="source-status">
             <div aria-live="polite">
@@ -455,14 +563,14 @@ export function LiveStatus({
                   ? 'FIRMS unavailable · no detections loaded'
                   : fires.stale
                     ? 'STALE · last available FIRMS summary'
-                    : 'Live FIRMS · delayed daily summary'}
+                    : 'Live FIRMS · global thermal summary'}
             </strong>
             {fires.snapshot && (
               <p>
-                North American sector · {fires.snapshot.feed.day} UTC ·{' '}
+                Global · {fires.snapshot.feed.interval_end.slice(0, 10)} UTC ·{' '}
                 {fires.snapshot.events.length} occupied 2° cells · retrieved{' '}
-                {formatTimestamp(fires.snapshot.retrieved_at)}. Use 3 or 7 days
-                to include delayed detections.
+                {formatTimestamp(fires.snapshot.retrieved_at)}. Preceding 24
+                hours.
               </p>
             )}
             {fires.error && <p className="source-error">{fires.error}</p>}
@@ -476,11 +584,10 @@ export function LiveStatus({
               <summary>FIRMS freshness & source details</summary>
               <div className="disclosure-body">
                 <p>
-                  NASA FIRMS / LANCE · NOAA-20 VIIRS · North American sector
-                  (170°W–50°W, 15°N–75°N). GOSIP publishes one UTC day, at least
-                  24 hours delayed, aggregated into 2° cells. Counts are
-                  detections, not confirmed fires or impacts. No individual
-                  positions, times or inferred causes.
+                  NASA FIRMS / LANCE · NOAA-20 VIIRS · Global. GOSIP aggregates
+                  the most recent 24 hours into 2° cells, without added delay.
+                  Counts are detections, not confirmed fires or impacts. No
+                  individual positions, times or inferred causes.
                 </p>
                 <p>
                   We acknowledge NASA LANCE, part of ESDIS.{' '}

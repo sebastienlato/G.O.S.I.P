@@ -9,10 +9,12 @@ try {
   const { ingestEONET } = await server.ssrLoadModule('/ingest/eonet.ts')
   const { ingestDWD } = await server.ssrLoadModule('/ingest/dwd.ts')
   const { ingestFIRMS } = await server.ssrLoadModule('/ingest/firms.ts')
+  const { ingestNews } = await server.ssrLoadModule('/ingest/news.ts')
   const results = await Promise.all([
     ingestUSGS(),
     ingestEONET(),
     ingestDWD(),
+    ingestNews(),
     ingestFIRMS(process.env.FIRMS_MAP_KEY),
   ])
   await mkdir('public/data', { recursive: true })

@@ -1,3 +1,4 @@
+import { isNews, type NewsEvent } from './news'
 import { isFireSummary, type FireSummary } from './firms'
 import { isWarning, type WarningEvent } from './dwd'
 import { isHazard, type HazardEvent } from './eonet'
@@ -63,6 +64,7 @@ export interface EarthquakeEvent extends Omit<
   depth_km: number | null
 }
 export type ExplorerEvent =
+  | NewsEvent
   | FireSummary
   | WarningEvent
   | HazardEvent
@@ -74,27 +76,29 @@ export type ExplorerEvent =
   | DigitalEvent
   | AdditionalEvent
 export const eventBadge = (event: ExplorerEvent) =>
-  isFireSummary(event)
-    ? 'THERMAL DETECTIONS · FIRMS'
-    : isWarning(event)
-      ? 'WEATHER WARNING · DWD'
-      : isHazard(event)
-        ? 'CURATED HAZARD · EONET'
-        : isAdditional(event)
-          ? `SIMULATED · ${event.family.toUpperCase()}`
-          : isDigital(event)
-            ? 'SIMULATED · DIGITAL MEASUREMENT'
-            : isReport(event)
-              ? 'SIMULATED · ATTRIBUTED CLAIM'
-              : event.is_demo
-                ? 'SIMULATED'
-                : isForecast(event)
-                  ? 'FORECAST · NWS'
-                  : event.status === 'deleted'
-                    ? 'WITHDRAWN · USGS'
-                    : 'OBSERVATION · USGS'
+  isNews(event)
+    ? 'ATTRIBUTED REPORT · GLOBAL VOICES'
+    : isFireSummary(event)
+      ? 'THERMAL DETECTIONS · FIRMS'
+      : isWarning(event)
+        ? 'WEATHER WARNING · DWD'
+        : isHazard(event)
+          ? 'CURATED HAZARD · EONET'
+          : isAdditional(event)
+            ? `SIMULATED · ${event.family.toUpperCase()}`
+            : isDigital(event)
+              ? 'SIMULATED · DIGITAL MEASUREMENT'
+              : isReport(event)
+                ? 'SIMULATED · ATTRIBUTED CLAIM'
+                : event.is_demo
+                  ? 'SIMULATED'
+                  : isForecast(event)
+                    ? 'FORECAST · NWS'
+                    : event.status === 'deleted'
+                      ? 'WITHDRAWN · USGS'
+                      : 'OBSERVATION · USGS'
 export const markerLabel = (event: ExplorerEvent) =>
-  `${isFireSummary(event) ? 'FIRMS delayed thermal detections' : isWarning(event) ? 'DWD weather warning' : isHazard(event) ? 'EONET curated hazard' : isAdditional(event) ? `Simulated ${event.family} example` : isDigital(event) ? 'Simulated digital measurement' : isReport(event) ? 'Simulated report' : event.is_demo ? 'Simulated' : isForecast(event) ? 'NWS forecast' : 'USGS observation'}: ${event.title}${event.country || event.region ? `, ${event.country || event.region}` : ''}`
+  `${isNews(event) ? 'Attributed report' : isFireSummary(event) ? 'FIRMS thermal detections' : isWarning(event) ? 'DWD weather warning' : isHazard(event) ? 'EONET curated hazard' : isAdditional(event) ? `Simulated ${event.family} example` : isDigital(event) ? 'Simulated digital measurement' : isReport(event) ? 'Simulated report' : event.is_demo ? 'Simulated' : isForecast(event) ? 'NWS forecast' : 'USGS observation'}: ${event.title}${event.country || event.region ? `, ${event.country || event.region}` : ''}`
 
 type Seed = [Category, string, string, string, number, number, number, string]
 const seeds: Seed[] = [
@@ -399,7 +403,7 @@ export function filterEvents(
                   Date.parse(e.occurred_at) < referenceTime
                 : Date.parse(eventTime(e)) >= cutoff &&
                   Date.parse(eventTime(e)) <= referenceTime) &&
-        `${e.title} ${e.summary} ${e.region} ${e.country} ${categories[e.category].label} ${isAdditional(e) ? `${e.family} ${additionalBases[e.basis]} ${e.unit}` : ''} ${isDigital(e) ? `${e.source_name} ${e.method} ${digitalFamilies[e.family]} ${digitalResults[e.result]} ${e.network_asn === null ? '' : `AS${e.network_asn}`}` : ''} ${isReport(e) ? `${e.source_name} ${e.source_language} ${e.translation?.title ?? ''} ${e.translation?.summary ?? ''}` : ''}`
+        `${e.title} ${e.source_name} ${isNews(e) ? e.author : ''} ${e.summary} ${e.region} ${e.country} ${categories[e.category].label} ${isAdditional(e) ? `${e.family} ${additionalBases[e.basis]} ${e.unit}` : ''} ${isDigital(e) ? `${e.source_name} ${e.method} ${digitalFamilies[e.family]} ${digitalResults[e.result]} ${e.network_asn === null ? '' : `AS${e.network_asn}`}` : ''} ${isReport(e) ? `${e.source_name} ${e.source_language} ${e.translation?.title ?? ''} ${e.translation?.summary ?? ''}` : ''}`
           .toLocaleLowerCase()
           .includes(q),
     )
@@ -411,19 +415,21 @@ export function filterEvents(
 }
 // Reports and additional summaries use publication; digital uses interval end.
 export const eventTime = (event: ExplorerEvent): string =>
-  isFireSummary(event)
-    ? event.interval_end
-    : isWarning(event)
-      ? event.valid_from
-      : isHazard(event)
-        ? event.geometry_at
-        : isAdditional(event)
-          ? event.published_at
-          : isDigital(event)
-            ? event.interval_end
-            : isReport(event)
-              ? event.published_at
-              : event.occurred_at
+  isNews(event)
+    ? event.published_at
+    : isFireSummary(event)
+      ? event.interval_end
+      : isWarning(event)
+        ? event.valid_from
+        : isHazard(event)
+          ? event.geometry_at
+          : isAdditional(event)
+            ? event.published_at
+            : isDigital(event)
+              ? event.interval_end
+              : isReport(event)
+                ? event.published_at
+                : event.occurred_at
 export type MappedEvent = ExplorerEvent & { coordinates: [number, number] }
 export const hasCoordinates = (event: ExplorerEvent): event is MappedEvent =>
   event.coordinates !== null
@@ -453,34 +459,36 @@ export function formatTimestamp(iso: string | number): string {
 }
 
 export const locationMeaning = (event: ExplorerEvent) =>
-  isFireSummary(event)
-    ? '2° cell centre · daily summary, not a detection position'
-    : isWarning(event)
-      ? 'District warning · feed only, no coordinates supplied'
-      : isHazard(event)
-        ? event.coordinates
-          ? 'Approximate latest geometry · not hazard extent'
-          : 'Polygon retained in source · feed only'
-        : isAdditional(event)
-          ? event.location_precision === 'region'
-            ? 'Broad illustrative context · not a vehicle or orbital position'
-            : event.location_precision === 'withheld'
-              ? 'Location withheld for safety · not mapped'
-              : 'Location not supplied · not mapped'
-          : isDigital(event)
+  isNews(event)
+    ? 'Feed only · no location inferred'
+    : isFireSummary(event)
+      ? '2° cell centre · daily summary, not a detection position'
+      : isWarning(event)
+        ? 'District warning · feed only, no coordinates supplied'
+        : isHazard(event)
+          ? event.coordinates
+            ? 'Approximate latest geometry · not hazard extent'
+            : 'Polygon retained in source · feed only'
+          : isAdditional(event)
             ? event.location_precision === 'region'
-              ? 'Broad illustrative region · not a probe or outage extent'
+              ? 'Broad illustrative context · not a vehicle or orbital position'
               : event.location_precision === 'withheld'
                 ? 'Location withheld for safety · not mapped'
                 : 'Location not supplied · not mapped'
-            : isReport(event)
+            : isDigital(event)
               ? event.location_precision === 'region'
-                ? 'Broad illustrative region · not an incident position'
+                ? 'Broad illustrative region · not a probe or outage extent'
                 : event.location_precision === 'withheld'
                   ? 'Location withheld for safety · not mapped'
                   : 'Location not supplied · not mapped'
-              : event.is_demo
-                ? 'Approximate location'
-                : isForecast(event)
-                  ? 'Forecast location'
-                  : 'Estimated epicentre'
+              : isReport(event)
+                ? event.location_precision === 'region'
+                  ? 'Broad illustrative region · not an incident position'
+                  : event.location_precision === 'withheld'
+                    ? 'Location withheld for safety · not mapped'
+                    : 'Location not supplied · not mapped'
+                : event.is_demo
+                  ? 'Approximate location'
+                  : isForecast(event)
+                    ? 'Forecast location'
+                    : 'Estimated epicentre'

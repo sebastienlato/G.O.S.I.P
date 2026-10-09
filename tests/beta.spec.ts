@@ -1,3 +1,4 @@
+import { parseNews, publishNews } from '../src/data/news'
 import { dwdFixture, firmsCSV } from './fixtures/phase14'
 import { parseDWD, publishDWD } from '../src/data/dwd'
 import { parseFIRMS, publishFIRMS } from '../src/data/firms'
@@ -46,7 +47,7 @@ const emptyWarnings = publishDWD(
   { ...warningPublished.health, record_count: 0 },
 )
 const fireSnapshot = parseFIRMS(
-  aggregateFIRMS(firmsCSV(fireDay(now)), fireDay(now)),
+  aggregateFIRMS(firmsCSV(fireDay(now)), now),
   now,
 )
 const firePublished = publishFIRMS(fireSnapshot, {
@@ -55,6 +56,27 @@ const firePublished = publishFIRMS(fireSnapshot, {
   error: null,
   attempted_at: new Date(now).toISOString(),
   fetched_at: fireSnapshot.retrieved_at,
+  generated_at: null,
+  record_count: 1,
+})
+
+const newsSnapshot = parseNews(
+  [
+    {
+      title: 'Test world report headline',
+      url: 'https://globalvoices.org/2026/10/01/test-world-report/',
+      author: 'Test Writer',
+      published_at: new Date(now - 30 * 3600000).toISOString(),
+    },
+  ],
+  now,
+)
+const newsPublished = publishNews(newsSnapshot, {
+  source: 'news',
+  status: 'ok',
+  error: null,
+  attempted_at: new Date(now).toISOString(),
+  fetched_at: newsSnapshot.retrieved_at,
   generated_at: null,
   record_count: 1,
 })
@@ -75,6 +97,10 @@ test.beforeEach(async ({ context, page }) => {
     if (url.origin !== origin || !url.pathname.startsWith(base)) {
       failures.push(url.href)
       await route.abort()
+      return
+    }
+    if (url.pathname.endsWith('/data/news.json')) {
+      await route.fulfill({ json: newsPublished })
       return
     }
     if (url.pathname.endsWith('/data/dwd.json')) {
@@ -113,7 +139,7 @@ test('repository map loads geography, worker and markers with production CSP', a
   await expect(page.getByText('Interactive map', { exact: true })).toBeVisible({
     timeout: 15000,
   })
-  await expect(page.locator('.map-canvas .event-marker')).toHaveCount(3)
+  await expect(page.locator('.map-canvas .event-marker')).toHaveCount(4)
   expect(resources.some((url) => url.endsWith(`${base}world.geojson`))).toBe(
     true,
   )
@@ -145,7 +171,6 @@ for (const mode of ['view=list', 'map=static']) {
       await page.setViewportSize({ width: 320, height: 740 })
     for (const [source, count] of [
       ['demo', 15],
-      ['reports-demo', 6],
       ['digital-demo', 6],
       ['space-demo', 4],
       ['aviation-demo', 4],
@@ -182,53 +207,62 @@ for (const mode of ['view=list', 'map=static']) {
   })
 }
 
-test('repository report originals, evidence, copied links and history keep subpath', async ({
+test('real reports replace old lab links and preserve attribution, delays and same-origin failures', async ({
   page,
   context,
 }) => {
-  await context.grantPermissions(['clipboard-read', 'clipboard-write'], {
-    origin,
-  })
-  await page.goto(
-    `${origin}${base}?source=reports-demo&view=list&reports=corrected`,
-  )
-  const card = page.locator('.event-card').first()
-  await card.focus()
-  await page.keyboard.press('Enter')
+  await page.goto(`${origin}${base}?source=reports-demo&view=list`)
+  await expect(page.locator('.event-card.kind-news')).toHaveCount(1)
+  await expect(
+    page.getByRole('checkbox', { name: 'Global Voices reports' }),
+  ).toBeChecked()
+  await page.locator('.event-card.kind-news').click()
   const dialog = page.getByRole('dialog')
-  for (const label of [
-    'Open original fixture (plain text)',
-    'Read the original fixture evidence',
-  ]) {
-    const link = dialog.getByRole('link', { name: label })
-    await expect(link).toHaveAttribute(
-      'href',
-      `${base}reports/report-demo-forum.txt`,
-    )
-    const [popup] = await Promise.all([
-      context.waitForEvent('page'),
-      link.click(),
-    ])
-    await expect(popup.locator('body')).toContainText('NOT REAL NEWS')
-    await popup.close()
-  }
+  await expect(dialog).toContainText('Test Writer')
+  await expect(dialog).toContainText('not a verified incident')
+  await expect(dialog).toContainText('Not supplied')
+  await expect(dialog).toContainText('CC BY 3.0')
+  await expect(
+    dialog.getByRole('link', { name: 'Original Global Voices report' }),
+  ).toHaveAttribute('href', newsSnapshot.events[0].source_url)
+  await expect(dialog.getByRole('button', { name: 'Show on map' })).toHaveCount(
+    0,
+  )
   await page.keyboard.press('Escape')
-  await expect(card).toBeFocused()
-  await page.getByRole('button', { name: '7 days', exact: true }).click()
-  await page.getByRole('button', { name: 'Copy view link' }).click()
-  const shared = await page.evaluate(() => navigator.clipboard.readText())
-  expect(new URL(shared).pathname).toBe(base)
-  expect(new URL(shared).searchParams.get('reports')).toBe('corrected')
+  await page.getByRole('button', { name: '24 hours', exact: true }).click()
+  await expect(page.locator('.event-card')).toHaveCount(0)
+  await page.getByRole('button', { name: '3 days', exact: true }).click()
+  await context.route('**/data/news.json', (route) =>
+    route.fulfill({
+      json: {
+        ...newsPublished,
+        snapshot: null,
+        health: {
+          ...newsPublished.health,
+          status: 'failed',
+          record_count: 0,
+          fetched_at: null,
+          error: 'News request failed.',
+        },
+      },
+    }),
+  )
+  await page.clock.setFixedTime(now + 61_000)
   await page
-    .getByRole('button', { name: 'Other examples · simulated', exact: true })
+    .getByText('Reports freshness & source details', { exact: true })
     .click()
-  await expect(page.locator('.event-card')).toHaveCount(15)
-  await page.goBack()
-  await expect(page.locator('.event-card')).toHaveCount(1)
-  await page.goto(shared)
+  await page
+    .getByRole('button', { name: 'Refresh reports', exact: true })
+    .click()
+  await expect(
+    page.getByText('STALE · last available reports', { exact: true }),
+  ).toBeVisible()
+  await expect(page.locator('.event-card.kind-news')).toHaveCount(1)
   await page.reload()
-  await expect(page.getByLabel('Report updates')).toHaveValue('corrected')
-  expect(new URL(page.url()).pathname).toBe(base)
+  await expect(
+    page.getByText('Global Voices unavailable', { exact: true }),
+  ).toBeVisible()
+  await expect(page.locator('.event-card')).toHaveCount(0)
 })
 
 for (const source of ['nws']) {
@@ -335,7 +369,10 @@ for (const mode of ['view=list', 'map=static']) {
     page,
   }) => {
     await page.goto(`${origin}${base}?${mode}`)
-    await expect(page.locator('.event-card')).toHaveCount(4)
+    await expect(
+      page.getByRole('checkbox', { name: /DWD weather/ }),
+    ).not.toBeChecked()
+    await expect(page.locator('.event-card')).toHaveCount(5)
     await expect(page.locator('.clock')).toContainText('Live view clock')
     await expect(
       page.getByText('Live USGS earthquakes', { exact: true }),
@@ -346,13 +383,13 @@ for (const mode of ['view=list', 'map=static']) {
         exact: true,
       }),
     ).not.toBeVisible()
-    await page.locator('.event-card').first().click()
+    await page.locator('.event-card.kind-quake').first().click()
     await expect(page.getByRole('dialog')).toContainText(
       snapshot.events[0].provider_id,
     )
     await page.keyboard.press('Escape')
     await page.reload()
-    await expect(page.locator('.event-card')).toHaveCount(4)
+    await expect(page.locator('.event-card')).toHaveCount(5)
     await page.clock.setFixedTime(now + 46 * 60_000)
     await expect(
       page.getByText('STALE · last available observations', { exact: true }),
@@ -376,7 +413,7 @@ test('pipeline failure retains observations with stale status and missing snapsh
     }),
   )
   await page.goto(`${origin}${base}?view=list`)
-  await expect(page.locator('.event-card')).toHaveCount(4)
+  await expect(page.locator('.event-card')).toHaveCount(5)
   await expect(
     page.getByText('STALE · last available observations', { exact: true }),
   ).toBeVisible()
@@ -389,14 +426,14 @@ test('pipeline failure retains observations with stale status and missing snapsh
   await expect(
     page.getByText('Published snapshot unavailable.', { exact: false }),
   ).toBeVisible()
-  await expect(page.locator('.event-card')).toHaveCount(4)
+  await expect(page.locator('.event-card')).toHaveCount(5)
   await page.reload()
   await expect(
     page.getByText('USGS unavailable · no observations loaded', {
       exact: true,
     }),
   ).toBeVisible()
-  await expect(page.locator('.event-card')).toHaveCount(2)
+  await expect(page.locator('.event-card')).toHaveCount(3)
 })
 
 test('independent live layers combine map/feed, clear selection and survive share/reload/back', async ({
@@ -486,7 +523,7 @@ test('EONET failure is independent, browser failure retains memory and valid emp
   await expect(
     page.getByText('STALE · last available EONET catalog', { exact: true }),
   ).toBeVisible()
-  await expect(page.locator('.event-card')).toHaveCount(4)
+  await expect(page.locator('.event-card')).toHaveCount(5)
   await context.route('**/data/eonet.json', (route) =>
     route.fulfill({ json: {} }),
   )
@@ -498,12 +535,12 @@ test('EONET failure is independent, browser failure retains memory and valid emp
   await expect(page.getByLabel('EONET status')).toContainText(
     'Previously loaded records are retained',
   )
-  await expect(page.locator('.event-card')).toHaveCount(4)
+  await expect(page.locator('.event-card')).toHaveCount(5)
   await page.reload()
   await expect(
     page.getByText('EONET unavailable · no catalog loaded', { exact: true }),
   ).toBeVisible()
-  await expect(page.locator('.event-card')).toHaveCount(2)
+  await expect(page.locator('.event-card')).toHaveCount(3)
   await context.route('**/data/eonet.json', (route) =>
     route.fulfill({
       json: {
@@ -520,7 +557,7 @@ test('EONET failure is independent, browser failure retains memory and valid emp
   await expect(
     page.getByText('Valid empty catalog response.', { exact: false }),
   ).toBeVisible()
-  await expect(page.locator('.event-card')).toHaveCount(2)
+  await expect(page.locator('.event-card')).toHaveCount(3)
 })
 
 test('fire and German warnings combine with independent toggles, details, validity and safe map semantics', async ({
@@ -530,7 +567,9 @@ test('fire and German warnings combine with independent toggles, details, validi
   await context.route('**/data/dwd.json', (r) =>
     r.fulfill({ json: warningPublished }),
   )
-  await page.goto(`${origin}${base}?map=static&hours=72`)
+  await page.goto(
+    `${origin}${base}?map=static&hours=72&live=usgs,eonet,dwd,firms`,
+  )
   await expect(
     page.getByRole('checkbox', { name: /FIRMS thermal/ }),
   ).toBeChecked()
@@ -586,7 +625,7 @@ test('fire and German warnings combine with independent toggles, details, validi
     })
   }
   await page.getByRole('button', { name: '24 hours', exact: true }).click()
-  await expect(page.locator('.event-card.kind-fire')).toHaveCount(0)
+  await expect(page.locator('.event-card.kind-fire')).toHaveCount(1)
   await page.clock.setFixedTime(now + 2 * 3600000)
   await expect(page.locator('.event-card.kind-warning')).toHaveCount(0)
   await page.goto(`${origin}${base}?source=fire-demo`)
@@ -602,7 +641,9 @@ test('warning and fire failures retain original data and cannot hide healthy sou
   await context.route('**/data/dwd.json', (r) =>
     r.fulfill({ json: warningPublished }),
   )
-  await page.goto(`${origin}${base}?view=list&hours=72`)
+  await page.goto(
+    `${origin}${base}?view=list&hours=72&live=usgs,eonet,dwd,firms`,
+  )
   await expect(page.locator('.event-card.kind-warning')).toHaveCount(1)
   await expect(page.locator('.event-card.kind-fire')).toHaveCount(1)
   await context.route('**/data/dwd.json', (r) =>
