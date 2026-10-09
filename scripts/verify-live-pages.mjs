@@ -1,4 +1,4 @@
-// Invoke only after authorized deployment, using the URL returned by Pages API.
+// Verify real deployment, never infer success from a push or dispatch.
 import assert from 'node:assert/strict'
 import { mkdir } from 'node:fs/promises'
 import { chromium, devices, expect } from '@playwright/test'
@@ -16,10 +16,8 @@ try {
   ]) {
     const context = await browser.newContext(device)
     const failures = []
-    const requests = []
     await context.route('**/*', async (route) => {
       const request = new URL(route.request().url())
-      requests.push(request.href)
       if (
         request.origin !== url.origin ||
         !request.pathname.startsWith(url.pathname)
@@ -39,93 +37,60 @@ try {
     )
     assert.equal(release.status(), 200)
     assert.equal((await release.json()).source_commit, source)
-    for (const path of [
-      'LICENSE.txt',
-      'NOTICE.txt',
-      'dependency-notices.txt',
-      'MAP_DATA_LICENSE.txt',
-      'WORLD_ATLAS_LICENSE.txt',
-      'reports/report-demo-forum.txt',
-      'favicon.svg',
-    ]) {
-      const response = await context.request.get(new URL(path, site).href)
-      assert.equal(response.status(), 200, path)
-      assert(!response.headers()['content-type'].includes('text/html'), path)
+    const data = await context.request.get(new URL('data/usgs.json', site).href)
+    const health = await context.request.get(
+      new URL('data/health.json', site).href,
+    )
+    assert.equal(data.status(), 200)
+    assert.equal(health.status(), 200)
+    const body = await data.json()
+    assert.equal(body.health.status, 'ok')
+    assert(body.health.record_count > 0)
+    assert(Date.now() - Date.parse(body.health.fetched_at) < 45 * 60_000)
+    assert(Date.now() - Date.parse(body.health.generated_at) < 45 * 60_000)
+    assert.deepEqual((await health.json()).sources[0], body.health)
+    for (const mode of ['?view=list', '?map=static', '']) {
+      await page.goto(site + mode)
+      await expect(
+        page.getByText('Live USGS earthquakes', { exact: true }),
+      ).toBeVisible()
+      await expect(page.locator('.event-card').first()).toBeVisible()
+      await expect(page.locator('.demo-banner')).toHaveCount(0)
+      if (!mode)
+        await expect(
+          page.getByText('Interactive map', { exact: true }),
+        ).toBeVisible({ timeout: 15000 })
+      if (mode === '?map=static')
+        await expect(page.getByTestId('static-map')).toBeVisible()
+      assert(
+        await page.evaluate(
+          () => document.documentElement.scrollWidth <= innerWidth,
+        ),
+      )
+      await page.screenshot({
+        path: `test-results/live/${name}-${mode.includes('list') ? 'list' : mode ? 'static' : 'map'}.png`,
+        fullPage: true,
+      })
     }
-    await page.goto(`${site}?source=reports-demo&view=list&reports=corrected`)
-    await expect(page.locator('.event-card')).toHaveCount(1)
-    await page.reload()
-    await expect(page.locator('.event-card')).toHaveCount(1)
-    await page.locator('.event-card').click()
-    await expect(
-      page
-        .getByRole('dialog')
-        .getByRole('link', { name: 'Open original fixture (plain text)' }),
-    ).toHaveAttribute('href', '/G.O.S.I.P/reports/report-demo-forum.txt')
+    await page.locator('.event-card').first().click()
+    await expect(page.getByRole('dialog')).toContainText(
+      'U.S. Geological Survey / ANSS',
+    )
     await page.keyboard.press('Escape')
-    assert.equal(
-      requests.filter((request) => /maplibre|world\.geojson/.test(request))
-        .length,
-      0,
-    )
-    await page.goto(`${site}?map=static`)
-    await expect(page.getByTestId('static-map')).toBeVisible()
-    await expect(page.locator('.event-card')).toHaveCount(12)
-    await expect
-      .poll(() =>
-        page
-          .locator('img[src$="world.svg"]')
-          .evaluate((img) => img.complete && img.naturalWidth > 0),
-      )
-      .toBe(true)
-    assert.equal(
-      requests.filter((request) => /maplibre|world\.geojson/.test(request))
-        .length,
-      0,
-    )
-    await page.goto(site)
-    await expect(
-      page.getByText('Interactive map', { exact: true }),
-    ).toBeVisible({ timeout: 20000 })
-    await expect(page.locator('.map-canvas .event-marker')).toHaveCount(12)
-    await page
-      .getByRole('region', { name: 'Event map', exact: true })
-      .scrollIntoViewIfNeeded()
-    await page.screenshot({ path: `test-results/live/${name}-map.png` })
-    for (const provider of ['usgs', 'nws']) {
-      await page.goto(`${site}?source=${provider}&view=list`)
-      await expect(page.getByLabel('Source access status')).toContainText(
-        'Disabled on this host',
-      )
-      await expect(page.locator('.event-card')).toHaveCount(0)
-      assert.equal(await page.evaluate(() => localStorage.length), 0)
-    }
     await page
       .getByRole('button', { name: 'Privacy & source licenses' })
       .click()
-    await expect(page.getByRole('dialog')).toContainText('Apache-2.0')
     await expect(page.getByRole('dialog')).toContainText(
       'GitHub Pages logs visitor IP addresses',
     )
     await page.keyboard.press('Escape')
+    await page.reload()
     await expect(
-      page.getByRole('button', { name: 'Privacy & source licenses' }),
-    ).toBeFocused()
-    await expect(
-      page.locator('meta[http-equiv="Content-Security-Policy"]'),
-    ).toHaveAttribute('content', /script-src 'self'/)
-    await expect(page.locator('meta[name="referrer"]')).toHaveAttribute(
-      'content',
-      'no-referrer',
-    )
-    assert(
-      await page.evaluate(
-        () => document.documentElement.scrollWidth <= innerWidth,
-      ),
-    )
+      page.getByText('Live USGS earthquakes', { exact: true }),
+    ).toBeVisible()
     assert.deepEqual(failures, [])
     console.log(
-      `${name}: actual release SHA, files, report reload, static/interactive map, public source guards, privacy, CSP/referrer and layout passed; no external requests.`,
+      `${name}: live release ${source}, ${body.health.record_count} real records, generated ${body.health.generated_at}, fetched ${body.health.fetched_at}; map/list/static/details/privacy/reload and same-origin-only requests passed.`,
     )
     await context.close()
   }

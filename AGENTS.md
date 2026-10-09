@@ -1,27 +1,22 @@
-# Autonomous Work instructions — GOSIP
+# Autonomous work — GOSIP
 
-You are the primary engineering agent. Optimize for **working software and momentum**, not bureaucratic compliance. Read README, ROADMAP, PROJECT_STATE, DECISIONS, docs/WORKFLOW and the phase prompt at chat start. This is the initial authoritative GOSIP project package.
+Read README, ROADMAP, PROJECT_STATE, DECISIONS, docs/WORKFLOW and the current phase prompt at chat start. Build working software; decide routine details autonomously. One phase per chat, then stop.
 
-## Operating rules
-1. Build an end-to-end visible milestone every phase, including Phase 0. Decide routine technical details autonomously. No granular approval questions.
-2. Prefer the simplest maintainable implementation. No premature backend, exhaustive specs, 9-gate matrices, independent review loops, or documentation-only phase.
-3. If an optional API, credential, tile service, or dataset is unavailable, use clearly labeled synthetic fixtures or a lawful alternative and keep building.
-4. Run build/typecheck and focused core tests; a browser smoke test if available. Fix important failures. After **three attempts at the same failure**, change approach or isolate/defer noncritical functionality; never claim failing checks pass.
-5. Keep docs short and factual. Update PROJECT_STATE and DECISIONS for material changes, not every small implementation choice.
-6. Finish each phase by writing `prompts/NEXT_PHASE_KICKOFF.md`, committing all phase changes, and **pushing to the existing authorized GitHub remote**. Verify push and clean status. If remote/auth unavailable, ask for the single missing owner action; don't claim success.
-7. Report concisely: delivered features, checks, commit/push, genuine limitations, next prompt. Stop; do not start next phase in same chat.
+## Owner direction (Roadmap 2.0)
+1. Real, live public data is the goal; web first and iOS paused. Free public core access, no mandatory account/paywall/subscription.
+2. Free first: owner-created free accounts/keys are allowed. Batch the single owner actions needed, keep building unrelated work. Keys stay in ingestion secrets, never browser code or git.
+3. $0 by default: never add billing, payment methods, paid tiers/trials/domains or automatic upgrades. Paid options require explicit owner approval; record useful provider/cost/benefit alternatives in DATA_POLICY without activating them.
+4. Static site + scheduled server ingestion: bounded, validated source snapshots and health, official Pages Actions artifact deployment, no data commits. Browser reads same-origin JSON. Check current terms/quotas; fail closed when insufficient.
+5. Review source-specific attribution, redistribution, access, identification and rate limits in ≤10 lines per new source. Take another candidate or request one owner action when blocked. This must not stall UI development.
+6. Retire simulation as each real layer ships. Hide unavailable live layers and list them as coming. During transition simulations must be explicitly separate, labeled and never default. Final public product contains none; fixtures remain for tests.
+7. Real clock and relative windows for real data. Every layer shows last update, stale/failure status, provenance and distinct timestamps; never empty-as-success after failure.
+8. Multiple live layers share map/feed with independent toggles/freshness (Phase 13). Keep copy short; caveats in details/sources. Reports are attributed claims, not verified events. No inferred cause/casualties/corroboration; validate untrusted input.
+9. Safety: no tactical real-time conflict tracking or precise vulnerable-person positions; aggregate/delay or omit sensitive movement. No secret exposure, destructive action outside this workspace, force-push or unapproved account creation.
 
-
-## Zero-cost mandate (mandatory)
-- **$0 spending and $0 charges** for development and the intended public service. Never start a trial requiring billing, add a payment method, activate a paid tier, purchase a domain, or provision a billable service. No automatic upgrade, even when limits are hit.
-- Public core access must remain free, with no mandatory account, paywall, or subscription. Prefer open-source software, freely usable datasets, and hosting that works without billing. Check actual terms and quotas before using a service.
-- If a free API, map-tile service, or hosting quota is insufficient, cache, reduce refresh rates, disable the affected layer, use labeled synthetic data locally, or propose community-hosted alternatives. **Never incur costs to keep the service running.**
-- Do not assume unlimited free traffic or guaranteed zero-cost hosting at scale. Disclose limits, monitor usage where possible, and fail closed to avoid charges.
-- Do not allow this mandate to stall local development: build with synthetic fixtures and offline fallbacks while investigating free options.
-
-## Non-negotiable safeguards
-- No spending, paid plans, account creation, exposing secrets, destructive action outside this fresh workspace, or force-push without explicit permission.
-- Never redistribute third-party feeds publicly without confirming terms for that specific use. This **does not block fixture-backed UI development**.
-- Validate untrusted input. Show provenance, time, uncertainty, and coverage. Do not portray demo events as real or claim news reports are verified.
-- Avoid precise sensitive positions of vulnerable people or tactical real-time conflict tracking; aggregate/delay or omit where warranted.
-- Owner authorizes routine commits and pushes to the configured GOSIP remote as part of this workflow. Initial remote creation/auth may require a one-time owner action.
+## Workflow
+- Deliver an end-to-end visible increment. Simplest maintainable implementation; no documentation-only phases, exhaustive review matrices or unnecessary backends.
+- Run build/typecheck, focused core tests and browser smoke. Fix important failures; after three attempts at the same failure, change approach or isolate/defer noncritical work. Never claim failing checks pass.
+- Keep docs short and factual; update PROJECT_STATE/DECISIONS for material changes.
+- Finish by writing prompts/NEXT_PHASE_KICKOFF.md, committing phase changes and pushing the authorized origin/main (https://github.com/sebastienlato/G.O.S.I.P.git). Verify remote SHA and clean status. No force-push, branch deletion or visibility changes. If auth is missing, request one owner action.
+- Report 5–10 lines: delivery, live URL state, checks, commit/push, needed owner actions, limitations and next prompt. Stop before the next phase.
+- Never assume unlimited free hosting. Owner confirmed no payment method in Phase 12. ZERO_COST_STORAGE_CONFIRMED allows deployment; if payment settings change, require a $0 Actions budget with stop usage before continuing. No automatic upgrades; accept stale data/interruption.

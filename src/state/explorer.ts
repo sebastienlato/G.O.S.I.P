@@ -34,7 +34,7 @@ export interface ExplorerFilters {
   mapMode: 'interactive' | 'static'
 }
 export const defaultFilters: ExplorerFilters = {
-  source: 'demo',
+  source: 'usgs',
   cursor: null,
   country: '',
   region: '',
@@ -61,12 +61,13 @@ export function parseFilters(search: string): ExplorerFilters {
     : categoryKeys
   const hours = params.get('hours')
   return {
-    cursor: supportsPlayback(params.get('source') ?? 'demo')
+    cursor: supportsPlayback(params.get('source') ?? 'usgs')
       ? parseCursor(params.get('at'))
       : null,
     country: parsePlace(params.get('country')),
     region: parsePlace(params.get('region')),
     source: [
+      'demo',
       'usgs',
       'nws',
       'fire-demo',
@@ -75,7 +76,7 @@ export function parseFilters(search: string): ExplorerFilters {
       ...Object.keys(additionalLayers),
     ].includes(params.get('source') ?? '')
       ? (params.get('source') as Source)
-      : 'demo',
+      : 'usgs',
     digitalFamily:
       params.get('source') === 'digital-demo' &&
       Object.hasOwn(digitalFamilies, params.get('digital') ?? '')
@@ -115,7 +116,7 @@ export function serializeFilters(filters: ExplorerFilters): string {
     params.set('at', new Date(filters.cursor).toISOString())
   if (filters.country) params.set('country', filters.country)
   if (filters.region) params.set('region', filters.region)
-  if (filters.source !== 'demo') params.set('source', filters.source)
+  if (filters.source !== 'usgs') params.set('source', filters.source)
   if (filters.source === 'digital-demo') {
     if (filters.digitalFamily !== 'all')
       params.set('digital', filters.digitalFamily)

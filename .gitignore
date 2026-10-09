@@ -11,3 +11,5 @@ native/**/build/
 native/**/TestResults/
 native/**/xcuserdata/
 native/**/*.xcuserstate
+
+public/data/

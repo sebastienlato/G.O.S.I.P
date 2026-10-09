@@ -1,0 +1,86 @@
+{
+  "type": "FeatureCollection",
+  "metadata": {
+    "generated": 1791506277000,
+    "url": "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_week.geojson",
+    "title": "USGS Magnitude 2.5+ Earthquakes, Past Week",
+    "status": 200,
+    "api": "2.7.0",
+    "count": 2
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "mag": 3.1,
+        "place": "225 km ESE of Chiniak, Alaska",
+        "time": 1791494659759,
+        "updated": 1791502605040,
+        "tz": null,
+        "url": "https://earthquake.usgs.gov/earthquakes/eventpage/us6000u120",
+        "detail": "https://earthquake.usgs.gov/earthquakes/feed/v1.0/detail/us6000u120.geojson",
+        "felt": null,
+        "cdi": null,
+        "mmi": null,
+        "alert": null,
+        "status": "reviewed",
+        "tsunami": 0,
+        "sig": 148,
+        "net": "us",
+        "code": "6000u120",
+        "ids": ",aka2026tyuyom,us6000u120,",
+        "sources": ",ak,us,",
+        "types": ",origin,phase-data,",
+        "nst": 62,
+        "dmin": 2.25,
+        "rms": 0.57,
+        "gap": 193,
+        "magType": "ml",
+        "type": "earthquake",
+        "title": "M 3.1 - 225 km ESE of Chiniak, Alaska"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-148.9651, 56.6924, 10]
+      },
+      "id": "us6000u120"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "mag": 4.2,
+        "place": "103 km ENE of Noda, Japan",
+        "time": 1791487381983,
+        "updated": 1791491779040,
+        "tz": null,
+        "url": "https://earthquake.usgs.gov/earthquakes/eventpage/us6000u11a",
+        "detail": "https://earthquake.usgs.gov/earthquakes/feed/v1.0/detail/us6000u11a.geojson",
+        "felt": null,
+        "cdi": null,
+        "mmi": null,
+        "alert": null,
+        "status": "reviewed",
+        "tsunami": 0,
+        "sig": 271,
+        "net": "us",
+        "code": "6000u11a",
+        "ids": ",us6000u11a,",
+        "sources": ",us,",
+        "types": ",origin,phase-data,",
+        "nst": 23,
+        "dmin": 1.433,
+        "rms": 0.86,
+        "gap": 129,
+        "magType": "mb",
+        "type": "earthquake",
+        "title": "M 4.2 - 103 km ENE of Noda, Japan"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [142.9124, 40.5087, 35]
+      },
+      "id": "us6000u11a"
+    }
+  ],
+  "bbox": [-179.9819, -58.1594, 0.3, 179.8762, 69.618, 602.272]
+}

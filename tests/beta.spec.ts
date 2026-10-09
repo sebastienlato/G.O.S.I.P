@@ -1,4 +1,18 @@
 import { expect, test } from '@playwright/test'
+import recorded from './fixtures/usgs-recorded.json' with { type: 'json' }
+import { parseUSGS } from '../src/data/usgs'
+import { publish } from '../src/data/published'
+const now = recorded.metadata.generated + 1000
+const snapshot = parseUSGS(recorded, now)
+const published = publish(snapshot, {
+  source: 'usgs',
+  status: 'ok',
+  error: null,
+  attempted_at: new Date(now).toISOString(),
+  fetched_at: snapshot.retrieved_at,
+  generated_at: snapshot.generated_at,
+  record_count: snapshot.events.length,
+})
 
 const base = '/G.O.S.I.P/'
 const origin = 'https://public.gosip.test'
@@ -7,6 +21,7 @@ const origin = 'https://public.gosip.test'
 // A localhost browser URL would accidentally exercise the enabled adapters.
 const unexpected = new WeakMap<object, string[]>()
 test.beforeEach(async ({ context, page }) => {
+  await page.clock.setFixedTime(now)
   const failures: string[] = []
   unexpected.set(page, failures)
   page.on('pageerror', (error) => failures.push(error.message))
@@ -15,6 +30,10 @@ test.beforeEach(async ({ context, page }) => {
     if (url.origin !== origin || !url.pathname.startsWith(base)) {
       failures.push(url.href)
       await route.abort()
+      return
+    }
+    if (url.pathname.endsWith('/data/usgs.json')) {
+      await route.fulfill({ json: published })
       return
     }
     const response = await route.fetch({
@@ -37,22 +56,22 @@ test('repository map loads geography, worker and markers with production CSP', a
   await expect(page.getByText('Interactive map', { exact: true })).toBeVisible({
     timeout: 15000,
   })
-  await expect(page.locator('.map-canvas .event-marker')).toHaveCount(12)
+  await expect(page.locator('.map-canvas .event-marker')).toHaveCount(2)
   expect(resources.some((url) => url.endsWith(`${base}world.geojson`))).toBe(
     true,
   )
   expect(resources.some((url) => url.includes('maplibre-gl-worker'))).toBe(true)
   const marker = page.getByRole('button', {
-    name: 'Simulated: Forest canopy monitoring, Brazil',
+    name: new RegExp('USGS observation:'),
     exact: true,
   })
-  await marker.click()
-  await expect(page.getByRole('dialog')).toContainText('SIMULATED EVENT')
+  await marker.first().click()
+  await expect(page.getByRole('dialog')).toContainText('USGS')
   await page.keyboard.press('Escape')
-  await expect(marker).toBeFocused()
+  await expect(marker.first()).toBeFocused()
   await page.getByRole('link', { name: 'GOSIP home' }).click()
   await page.screenshot({
-    path: `docs/screenshots/phase-10-${info.project.name}-beta-map.png`,
+    path: `test-results/phase-12-${info.project.name}-beta-map.png`,
     fullPage: true,
   })
   await page.reload()
@@ -68,7 +87,7 @@ for (const mode of ['view=list', 'map=static']) {
     if (info.project.name === 'mobile')
       await page.setViewportSize({ width: 320, height: 740 })
     for (const [source, count] of [
-      ['demo', 18],
+      ['demo', 17],
       ['fire-demo', 4],
       ['reports-demo', 6],
       ['digital-demo', 6],
@@ -100,7 +119,7 @@ for (const mode of ['view=list', 'map=static']) {
     ).toBe(true)
     await page.getByRole('link', { name: 'GOSIP home' }).click()
     await page.screenshot({
-      path: `docs/screenshots/phase-10-${info.project.name}-${mode === 'view=list' ? 'list' : 'static'}-beta.png`,
+      path: `test-results/phase-12-${info.project.name}-${mode === 'view=list' ? 'list' : 'static'}-beta.png`,
       fullPage: true,
     })
   })
@@ -144,9 +163,9 @@ test('repository report originals, evidence, copied links and history keep subpa
   expect(new URL(shared).pathname).toBe(base)
   expect(new URL(shared).searchParams.get('reports')).toBe('corrected')
   await page
-    .getByRole('button', { name: 'Simulated examples', exact: true })
+    .getByRole('button', { name: 'Other examples · simulated', exact: true })
     .click()
-  await expect(page.locator('.event-card')).toHaveCount(18)
+  await expect(page.locator('.event-card')).toHaveCount(17)
   await page.goBack()
   await expect(page.locator('.event-card')).toHaveCount(1)
   await page.goto(shared)
@@ -155,7 +174,7 @@ test('repository report originals, evidence, copied links and history keep subpa
   expect(new URL(page.url()).pathname).toBe(base)
 })
 
-for (const source of ['usgs', 'nws']) {
+for (const source of ['nws']) {
   test(`repository public ${source} stays disabled through reload and recovery`, async ({
     page,
   }) => {
@@ -163,7 +182,7 @@ for (const source of ['usgs', 'nws']) {
       `${origin}${base}?source=${source}&view=list&enableLive=true`,
     )
     await expect(page.getByLabel('Source access status')).toContainText(
-      'Disabled on this host',
+      'Coming to the public explorer',
     )
     await expect(
       page.getByRole('link', { name: 'Visit official provider' }),
@@ -181,7 +200,7 @@ for (const source of ['usgs', 'nws']) {
     await page
       .getByRole('button', { name: 'Explore simulated examples', exact: true })
       .click()
-    await expect(page.locator('.event-card')).toHaveCount(12)
+    await expect(page.locator('.event-card')).toHaveCount(11)
     expect(new URL(page.url()).pathname).toBe(base)
   })
 }
@@ -226,7 +245,7 @@ test('repository privacy licenses and keyboard navigation remain usable at 320px
     el.scrollTop = 0
   })
   await page.screenshot({
-    path: `docs/screenshots/phase-10-${info.project.name}-licensed-privacy.png`,
+    path: `test-results/phase-12-${info.project.name}-licensed-privacy.png`,
   })
   expect(await dialog.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(
     true,
@@ -252,4 +271,74 @@ test('repository privacy licenses and keyboard navigation remain usable at 320px
   expect(blocked.executed).toBeUndefined()
   expect(blocked.violations).toContain('script-src-elem')
   expect(blocked.violations).toContain('connect-src')
+})
+
+for (const mode of ['view=list', 'map=static']) {
+  test(`live default ${mode} uses same-origin data, details and real clock`, async ({
+    page,
+  }) => {
+    await page.goto(`${origin}${base}?${mode}`)
+    await expect(page.locator('.event-card')).toHaveCount(2)
+    await expect(
+      page.getByText('LIVE VIEW CLOCK', { exact: true }),
+    ).toBeVisible()
+    await expect(
+      page.getByText('Live USGS earthquakes', { exact: true }),
+    ).toBeVisible()
+    await expect(
+      page.getByRole('button', {
+        name: 'Other examples · simulated',
+        exact: true,
+      }),
+    ).not.toBeVisible()
+    await page.locator('.event-card').first().click()
+    await expect(page.getByRole('dialog')).toContainText(
+      snapshot.events[0].provider_id,
+    )
+    await page.keyboard.press('Escape')
+    await page.reload()
+    await expect(page.locator('.event-card')).toHaveCount(2)
+    await page.clock.setFixedTime(now + 46 * 60_000)
+    await expect(
+      page.getByText('STALE · last available observations', { exact: true }),
+    ).toBeVisible()
+  })
+}
+test('pipeline failure retains observations with stale status and missing snapshot stays honest', async ({
+  context,
+  page,
+}) => {
+  await context.route('**/data/usgs.json', (route) =>
+    route.fulfill({
+      json: {
+        ...published,
+        health: {
+          ...published.health,
+          status: 'stale',
+          error: 'USGS fetch failed.',
+        },
+      },
+    }),
+  )
+  await page.goto(`${origin}${base}?view=list`)
+  await expect(page.locator('.event-card')).toHaveCount(2)
+  await expect(
+    page.getByText('STALE · last available observations', { exact: true }),
+  ).toBeVisible()
+  await context.route('**/data/usgs.json', (route) =>
+    route.fulfill({ json: {} }),
+  )
+  await page.clock.setFixedTime(now + 61_000)
+  await page.getByRole('button', { name: 'Refresh published data' }).click()
+  await expect(
+    page.getByText('Published snapshot unavailable.', { exact: false }),
+  ).toBeVisible()
+  await expect(page.locator('.event-card')).toHaveCount(2)
+  await page.reload()
+  await expect(
+    page.getByText('USGS unavailable · no observations loaded', {
+      exact: true,
+    }),
+  ).toBeVisible()
+  await expect(page.locator('.event-card')).toHaveCount(0)
 })

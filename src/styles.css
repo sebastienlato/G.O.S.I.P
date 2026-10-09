@@ -1992,3 +1992,12 @@ select:focus-visible,
 summary:focus-visible {
   outline: 2px solid var(--mint);
 }
+
+.place-disclosure {
+  margin-block: 1rem;
+}
+.place-disclosure > summary {
+  cursor: pointer;
+  color: var(--muted);
+  font-size: 0.85rem;
+}

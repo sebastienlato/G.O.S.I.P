@@ -53,7 +53,11 @@ export function encodeSnapshot(snapshot: EarthquakeSnapshot): string {
     },
   })
 }
-export function decodeSnapshot(raw: string, now: number): EarthquakeSnapshot {
+export function decodeSnapshot(
+  raw: string,
+  now: number,
+  retention = RETENTION_MS,
+): EarthquakeSnapshot {
   if (
     raw.length > MAX_BYTES ||
     new TextEncoder().encode(raw).byteLength > MAX_BYTES
@@ -66,7 +70,7 @@ export function decodeSnapshot(raw: string, now: number): EarthquakeSnapshot {
     !Number.isSafeInteger(value.retrieved) ||
     value.retrieved < 0 ||
     value.retrieved > now + 300_000 ||
-    now - value.retrieved >= RETENTION_MS ||
+    now - value.retrieved >= retention ||
     !Number.isInteger(value.rejected) ||
     value.rejected < 0 ||
     !Number.isInteger(value.excluded) ||
@@ -78,7 +82,7 @@ export function decodeSnapshot(raw: string, now: number): EarthquakeSnapshot {
     snapshot.rejected ||
     snapshot.excluded ||
     snapshot.events.length + value.rejected + value.excluded > MAX_RECORDS ||
-    now - Date.parse(snapshot.generated_at) >= RETENTION_MS
+    now - Date.parse(snapshot.generated_at) >= retention
   )
     throw new Error('Invalid or expired cached records')
   return { ...snapshot, rejected: value.rejected, excluded: value.excluded }

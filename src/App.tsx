@@ -66,7 +66,9 @@ import {
   type WindowHours,
 } from './data/events'
 
-const demoEvents = demoProvider.getEvents()
+const demoEvents = demoProvider
+  .getEvents()
+  .filter((event) => event.id !== 'demo-001')
 const noEvents: ExplorerEvent[] = []
 const timeOptions: { value: WindowHours; label: string }[] = [
   { value: 6, label: '6 hours' },
@@ -105,7 +107,7 @@ export default function App() {
     reports ||
     digital ||
     additional !== null
-  const sourceDisabled = !isDemo && !localSourceAccess
+  const sourceDisabled = source === 'nws' && !localSourceAccess
   const availableCategories: Category[] = additional
     ? [additionalLayers[additional].category]
     : source === 'demo'
@@ -358,10 +360,8 @@ export default function App() {
         </div>
         <div className="readiness-bar">
           <p>
-            <strong>
-              {localSourceAccess ? 'Local preview' : 'Simulation preview'}
-            </strong>{' '}
-            · Free access · No account or analytics
+            <strong>{isDemo ? 'Simulation lab' : 'Live public data'}</strong> ·
+            Free access · No account or analytics
           </p>
           <button onClick={() => openAbout(true)}>
             Privacy & source licenses
@@ -381,14 +381,12 @@ export default function App() {
           }}
           {...earthquakes}
         />
-        {!localSourceAccess && (source === 'usgs' || source === 'nws') && (
+        {!localSourceAccess && source === 'nws' && (
           <section
             className="feed-source source-status"
             aria-label="Source access status"
           >
-            <strong>
-              {source === 'usgs' ? 'USGS' : 'NWS'} · Disabled on this host
-            </strong>
+            <strong>NWS · Coming to the public explorer</strong>
             <p>{PUBLIC_SOURCE_NOTE}</p>
             <div className="source-actions">
               <button
@@ -404,9 +402,7 @@ export default function App() {
               </button>
               <a
                 href={
-                  source === 'usgs'
-                    ? 'https://earthquake.usgs.gov/earthquakes/map/'
-                    : 'https://forecast.weather.gov/MapClick.php?lat=40.7128&lon=-74.0060'
+                  'https://forecast.weather.gov/MapClick.php?lat=40.7128&lon=-74.0060'
                 }
                 target="_blank"
                 rel="noreferrer"
@@ -463,17 +459,20 @@ export default function App() {
           </div>
         )}
         {!sourceDisabled && (
-          <HistoryControls
-            key={source}
-            source={source}
-            cursor={cursor}
-            country={country}
-            region={region}
-            hours={hours}
-            events={allEvents}
-            suspended={!!detailId}
-            update={updateFilters}
-          />
+          <details key={source} open={isDemo} className="place-disclosure">
+            <summary>Place filters & history</summary>
+            <HistoryControls
+              key={source}
+              source={source}
+              cursor={cursor}
+              country={country}
+              region={region}
+              hours={hours}
+              events={allEvents}
+              suspended={!!detailId}
+              update={updateFilters}
+            />
+          </details>
         )}
         <div className="filter-bar" aria-label="Event filters">
           <div className="filter-label">
@@ -1064,13 +1063,9 @@ export default function App() {
                 An honest starting point.
               </h2>
               <p>
-                GOSIP is a free global event explorer. Choose USGS earthquake
-                observations, New York NWS forecasts, four synthetic fire
-                examples, six multilingual report fixtures, six synthetic
-                digital measurement scenarios, twelve space/aviation/maritime
-                activity examples, or 18 invented examples across five
-                categories. Simulated examples are never mixed with real
-                observations.
+                GOSIP shows live USGS earthquakes from scheduled public
+                snapshots. Other live layers are coming. The separate simulation
+                lab contains invented examples, never mixed with observations.
               </p>
               <h3>Transparent by design</h3>
               <p>

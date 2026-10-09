@@ -186,7 +186,7 @@ describe('bounded original digital measurements', () => {
       serializeFilters(
         parseFilters('?source=usgs&digital=outage&result=anomaly'),
       ),
-    ).toBe('?source=usgs')
+    ).toBe('')
     expect(
       serializeFilters(
         parseFilters('?source=digital-demo&lang=fr&reports=corrected'),

@@ -192,7 +192,7 @@ export default function HistoryControls({
         <p className="history-note">
           Playback unavailable.{' '}
           {source === 'usgs'
-            ? 'The USGS week snapshot and 24-hour local cache contain no complete revision history or proof of what was known earlier.'
+            ? 'The USGS week snapshot contains no complete revision history or proof of what was known earlier.'
             : 'NWS supplies current forecast validity periods, not archived predictions or past observations.'}{' '}
           Current source controls and times remain active; no simulation is
           substituted.

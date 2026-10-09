@@ -103,7 +103,7 @@ describe('additional original fixtures', () => {
       expect(filters.language).toBe('all')
       expect(parseFilters(serializeFilters(filters))).toEqual(filters)
     }
-    expect(parseFilters('?source=space-live').source).toBe('demo')
+    expect(parseFilters('?source=space-live').source).toBe('usgs')
   })
   it('allows an invented zero sample while keeping gap values null', () => {
     expect(parseAdditionalExamples([{ ...clone(), value: 0 }])[0].value).toBe(0)

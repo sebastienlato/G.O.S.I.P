@@ -4,6 +4,18 @@ For each real feed before public integration, briefly record: official provider,
 
 Normalized event: id, category, title, summary, coordinates/region optional, source_name/source_url optional, occurred_at/published_at optional, collected_at, status, freshness, is_demo, coverage_note optional. Preserve provider identifiers and corrections. Distinguish sensor observations from verified incidents and media reports from confirmed events. Never imply complete worldwide coverage. Treat third-party content as untrusted. Protect privacy and avoid unnecessary tactical precision for sensitive conflict data.
 
+## Phase 12 — public USGS snapshots (2026-10-08, current policy)
+
+- **Scope:** USGS/ANSS [M2.5+ past-week GeoJSON](https://earthquake.usgs.gov/earthquakes/feed/v1.0/geojson.php), public source parameters/place text/IDs/status/times/event links only; no logos, photos, narratives or impact products.
+- **Rights:** [USGS copyrights/credits](https://www.usgs.gov/information-policies-and-instructions/copyrights-and-credits) makes USGS-produced data public domain with third-party exceptions; the previously reviewed [ANSS policy](https://www.usgs.gov/media/files/anss-data-and-products-policy) supports attributed educational redistribution of participant catalog parameters. Credit “U.S. Geological Survey / ANSS” and event links remain visible; no endorsement.
+- **Access:** no key/account/payment. Official summary feed is for automated display and updates each minute; no unlimited numeric quota/SLA assumed. One pipeline request per 15-minute schedule (~96/day), shared by all visitors; no browser requests to USGS. No immediate retries after 429 or any failure.
+- **Bounds:** 12-second request, 2 MB input/publication, ≤2,000 records; reject malformed/empty/all-invalid/old feeds, preserve last-good published observations with original timestamps and stale health. If no usable copy exists, expose failed/no-data; never substitute fixtures.
+- **Freshness/safety:** real device clock, 45-minute stale threshold, distinct attempt/retrieval/generation/event-update/occurrence times. Incomplete M2.5+ coverage, revised estimates and provider review never imply verified impacts or casualties. No sensitive-person positions.
+- **Storage:** only current bounded site snapshot; no git data/history. Recorded real response under tests/fixtures is test-only with source credit; original simulation fixtures are confined to the explicit lab pending retirement.
+- **Paid alternative:** unnecessary for this source; no provider or paid plan selected. All future candidate terms/keys require their own short review.
+
+Earlier phase sections below are historical. D41–D44 and this section supersede prior USGS loopback, persistence, default-simulation and branch-deployment rules; other source restrictions remain until reviewed.
+
 ## Phase 0 assets
 
 - Events: 18 original GOSIP synthetic fixtures; no real incident claims or external source links. Scenario occurrence/publication and fixture snapshot timestamps are distinguished. Broad markers carry no measured precision or confidence.

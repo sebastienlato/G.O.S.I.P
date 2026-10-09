@@ -15,18 +15,15 @@ export default function PrivacySources() {
       </p>
       <p>
         {localSourceAccess
-          ? 'On this loopback host, selecting USGS or NWS can contact that provider directly, revealing your IP address and browser connection information. No credentials are sent.'
-          : 'On this host, USGS and NWS requests are disabled. Simulations and bundled geography work without contacting a data provider.'}{' '}
+          ? 'On this loopback host, selecting the development NWS source can contact that provider directly, revealing your IP address and browser connection information. No credentials are sent.'
+          : 'Earthquakes are read from snapshots on this host. Your browser does not contact USGS. Public NWS is not connected yet.'}{' '}
         Opening an external source link leaves GOSIP and contacts that site.
       </p>
       <p>
-        USGS alone can save a validated snapshot in this browser for up to 24
-        hours from its older source/retrieval time. Cleanup runs when the cache
-        is next accessed or while USGS is active, not while the app is closed.
-        Clear saved USGS cache removes the saved snapshot, keeping loaded data
-        and the separate request cooldown/failure record. Browser site-data
-        controls remove both. NWS stays in page memory; simulations need no
-        storage. No offline cold-start guarantee.
+        Earthquake snapshots remain in page memory. Your browser may cache
+        hosted files normally. Old local USGS storage from earlier versions is
+        no longer read; browser site-data controls can remove it. NWS stays in
+        page memory.
       </p>
       <h3>Sources & licenses</h3>
       <ul>
@@ -43,10 +40,11 @@ export default function PrivacySources() {
           </a>
         </li>
         <li>
-          <strong>NOAA / National Weather Service:</strong> one Lower Manhattan
-          forecast. NWS text and values retain source credit, with GOSIP display
-          labels. NWS material is public domain unless otherwise noted and is
-          not covered by GOSIP copyright. No endorsement or affiliation.{' '}
+          <strong>Coming: NOAA / National Weather Service.</strong> Local
+          development only: one Lower Manhattan forecast. NWS text and values
+          retain source credit, with GOSIP display labels. NWS material is
+          public domain unless otherwise noted and is not covered by GOSIP
+          copyright. No endorsement or affiliation.{' '}
           <a
             href="https://www.weather.gov/disclaimer"
             target="_blank"
@@ -56,9 +54,10 @@ export default function PrivacySources() {
           </a>
         </li>
         <li>
-          <strong>Simulations:</strong> original GOSIP fixtures. No live fire,
-          report, digital, space, aviation or maritime data is connected.
-          Examples are never evidence of actual conditions.
+          <strong>Coming:</strong> fire, weather, reports, digital, space,
+          aviation and maritime. <strong>Simulation lab:</strong> original GOSIP
+          fixtures. No live fire, report, digital, space, aviation or maritime
+          data is connected. Examples are never evidence of actual conditions.
         </li>
         <li>
           <strong>Map:</strong> Natural Earth 4.1.0 public-domain geography via
@@ -116,12 +115,11 @@ export default function PrivacySources() {
         </a>
       </p>
       <p>
-        No paid fallback or automatic upgrade. Real sources are restricted to
-        local loopback use until public access limits are resolved; browser
-        throttling cannot cap total visitor traffic. NWS also documents
-        application identification requirements that need resolution for a
-        public browser client. This prototype is not an emergency service or a
-        complete global record. No provider endorsement is implied.
+        No paid fallback or automatic upgrade. Scheduled ingestion fetches USGS
+        once for all visitors. Schedules can be delayed or disabled after 60
+        days without repository activity. Stale timestamps remain visible even
+        if the pipeline stops. This is not an emergency service. No provider
+        endorsement.
       </p>
     </div>
   )

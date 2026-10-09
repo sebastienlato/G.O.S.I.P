@@ -1,63 +1,83 @@
-import { localSourceAccess } from './sourceAccess'
-import { useEffect, useState, useSyncExternalStore } from 'react'
-import { snapshotIsStale } from '../data/usgs'
-import { CACHE_KEY, CADENCE_KEY } from './earthquakeCache'
-import { createEarthquakeStore } from './earthquakeStore'
-
-const store = createEarthquakeStore({
-  storage: () => window.localStorage,
-  locks: navigator.locks,
-  canFetch: () =>
-    localSourceAccess &&
-    navigator.onLine &&
-    document.visibilityState !== 'hidden',
-})
+import { useCallback, useEffect, useRef, useState } from 'react'
+import {
+  decodePublished,
+  readBounded,
+  LIVE_STALE_MS,
+  type SourceHealth,
+} from '../data/published'
+import type { EarthquakeSnapshot } from '../data/usgs'
+import { assetPath } from './assetPath'
 
 export function useEarthquakes(enabled: boolean) {
-  const state = useSyncExternalStore(store.subscribe, store.getSnapshot)
+  const [snapshot, setSnapshot] = useState<EarthquakeSnapshot | null>(null)
+  const [health, setHealth] = useState<SourceHealth | null>(null)
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
   const [now, setNow] = useState(Date.now)
-  const [offline, setOffline] = useState(!navigator.onLine)
-  useEffect(() => {
-    if (!enabled || !localSourceAccess) return
-    store.start()
-    // UI clock only. Neither timers nor reconnect/visibility events fetch data.
-    const tick = () => {
-      store.expire()
-      setNow(Date.now())
-      setOffline(!navigator.onLine)
-    }
-    tick()
-    const timer = window.setInterval(tick, 1000)
-    const sync = (event: StorageEvent) => {
-      if (
-        event.key === CACHE_KEY ||
-        event.key === CADENCE_KEY ||
-        event.key === null
+  const pending = useRef(false)
+  const retryAt = useRef(0)
+  const refresh = useCallback(async () => {
+    if (
+      pending.current ||
+      Date.now() < retryAt.current ||
+      !navigator.onLine ||
+      document.visibilityState === 'hidden'
+    )
+      return
+    pending.current = true
+    retryAt.current = Date.now() + 60_000
+    setLoading(true)
+    try {
+      const raw = await readBounded(
+        await fetch(assetPath('/data/usgs.json'), {
+          signal: AbortSignal.timeout(12_000),
+          cache: 'no-cache',
+          credentials: 'omit',
+          redirect: 'error',
+        }),
       )
-        store.sync()
+      const next = decodePublished(raw, Date.now())
+      setSnapshot(next.snapshot)
+      setHealth(next.health)
+      setError(next.health.error ?? '')
+    } catch {
+      setError(
+        'Published snapshot unavailable. Previously loaded observations are retained.',
+      )
+    } finally {
+      pending.current = false
+      setLoading(false)
+      setNow(Date.now())
     }
-    window.addEventListener('storage', sync)
-    window.addEventListener('online', tick)
-    window.addEventListener('offline', tick)
+  }, [])
+  useEffect(() => {
+    if (!enabled) return
+    void refresh()
+    const clock = window.setInterval(() => setNow(Date.now()), 1000)
+    const poll = window.setInterval(() => void refresh(), 15 * 60_000)
     return () => {
-      window.clearInterval(timer)
-      window.removeEventListener('storage', sync)
-      window.removeEventListener('online', tick)
-      window.removeEventListener('offline', tick)
+      clearInterval(clock)
+      clearInterval(poll)
     }
-  }, [enabled])
+  }, [enabled, refresh])
   return {
-    ...state,
+    snapshot,
+    health,
+    loading,
+    error,
     now,
-    offline,
-    refresh: async () => {
-      if (localSourceAccess) await store.refresh()
-    },
-    clearCache: store.clearCache,
-    coordinationLimited: store.coordinationLimited,
+    refresh,
+    offline: !navigator.onLine,
+    waitSeconds: Math.max(0, Math.ceil((retryAt.current - now) / 1000)),
     stale:
-      !!state.snapshot &&
-      (!!state.error || snapshotIsStale(state.snapshot, now)),
-    waitSeconds: Math.max(0, Math.ceil((state.retryAt - now) / 1000)),
+      !!snapshot &&
+      (!!error ||
+        health?.status !== 'ok' ||
+        now -
+          Math.min(
+            Date.parse(snapshot.generated_at),
+            Date.parse(snapshot.retrieved_at),
+          ) >
+          LIVE_STALE_MS),
   }
 }

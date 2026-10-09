@@ -11,7 +11,7 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:e2e": "npm run build && playwright test",
+    "test:e2e": "npm run test:beta",
     "data:reports": "node scripts/build-report-documents.mjs",
     "data:map": "node scripts/build-map.mjs",
     "format": "prettier --write src tests scripts *.ts *.json index.html",
@@ -19,7 +19,8 @@
     "data:notices": "node scripts/build-dependency-notices.mjs && node scripts/copy-project-license.mjs",
     "build:pages": "npm run data:notices && tsc --noEmit && vite build --mode pages && node scripts/check-pages-release.mjs",
     "test:beta": "npm run build:pages && BETA_TEST=1 playwright test",
-    "release:pages": "node scripts/publish-pages.mjs"
+    "release:pages": "node scripts/publish-pages.mjs",
+    "ingest": "node ingest/run.mjs"
   },
   "keywords": [],
   "author": "",

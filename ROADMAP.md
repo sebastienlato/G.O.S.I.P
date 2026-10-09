@@ -1,22 +1,18 @@
-# Roadmap 1.0 — 12 build-first phases
+# Roadmap 2.0 — real public data
 
-**Each phase:** working increment, focused tests, commit + authorized push, next-chat kickoff. Never require a real feed to build the interface.
+Web first; iOS paused. Every phase delivers a working increment on the public site, focused checks, commit/push and the next kickoff. $0 default; owner-created free keys/accounts allowed. Never add billing or paid service without explicit approval. Review each source's current rights and limits; blocked sources do not stall other work. Fixtures become test-only; during transition the separate simulation lab is never the default. End state: no simulated public layers.
 
-0. **Working prototype:** initialize React/TS/Vite/Tailwind, map with graceful tile fallback, simulated worldwide events, categories, timeline, feed, details, mobile layout, run scripts, focused tests. **Must run locally.**
-1. **Explorer polish:** refined UX, map interactions, search, clustering as needed, keyboard accessibility, mobile and list view.
-2. **First real feed:** integrate a lawful documented earthquake feed (USGS only if exact use permitted; otherwise alternative), visible source/freshness, demo fallback. Do not block on a provider.
-3. **Refresh and persistence:** minimal API/cache/backend only as needed; bounded ingestion and resilient error states.
-4. **Environment:** add viable fire/weather layers with correct sensor semantics and source permissions.
-5. **Global reports:** geopolitical and major-event reporting, attributed claims, multilingual metadata, correction handling, no false verification.
-6. **Digital world:** internet outages and censorship measurement layers with coverage caveats.
-7. **History:** timeline playback, regional/country exploration, evidence-backed event relationships.
-8. **Additional layers:** space, aviation, maritime where free/legal feasible; defer restricted feeds.
-9. **Public readiness:** security, accessibility, performance, privacy, legal source audit, free-tier budgets.
-10. **Web beta — complete:** owner-authorized GitHub Pages simulation beta deployed and verified; public feeds fail closed, hosting limits disclosed, Apache-2.0 and contribution documentation published.
-11. **iOS — complete:** native SwiftUI simulator client with all 46 shared original fixtures, local map/list, filters, source-specific details and history. No live feeds, signing or paid distribution. See `docs/IOS.md`.
+12. **Live foundation:** scheduled bounded USGS ingestion, health/last-good retention, official Pages Actions deployment, real clock and earthquakes by default.
+13. **Global hazards + multiple live layers:** combined layer toggles, map/feed and per-source freshness. Review GDACS, NASA EONET, EMSC, NWS alerts, NOAA NHC and USGS/Smithsonian volcano notices; ship viable sources. Retire replaced simulations.
+14. **Fire & weather:** NASA FIRMS (owner-created free key), lawful weather warnings beyond the US, optional point forecasts (review Open-Meteo terms). Retire simulated fire.
+15. **World news & reports:** attributed original-language headline/metadata + link-out; review GDELT, ReliefWeb approved appname and broadcaster/agency terms. Deterministic grouping, no verification claims. Retire simulated reports.
+16. **Digital world:** review IODA, Cloudflare Radar free token and OONI aggregated CC BY-NC-SA obligations. No raw sensitive measurements. Retire simulated digital.
+17. **Space:** review Launch Library 2, NOAA SWPC and CelesTrak; retain prediction/observation distinctions. Retire simulated space.
+18. **Aviation & maritime:** safety-aggregated/delayed counts or density, no precise sensitive tracks. Review OpenSky, adsb.lol and AIS providers such as aisstream.io. Hide unsupported live layers; record optional paid alternatives. Retire simulated movement.
+19. **Real history:** bounded 7–30 day rolling archive within verified free limits. Replace fixture playback with actual published snapshots.
+20. **Public launch:** zero simulated public sources; fixtures test-only. Source status, accessibility/performance/security checks, traffic/size budgets and fail-closed fallbacks; concise README.
+21. **Optional, owner approval each:** paid sources, clearly labeled AI translation/summarization/grouping, iOS consuming shared snapshots.
 
-AI is deferred. No project-wide freeze when one data provider is unavailable. Real feed approval applies to the feed, not to all development.
+Candidate lists are starting points, not approvals. No tactical conflict tracking, precise vulnerable-person positions, inferred causes/casualties or implied corroboration. Account-free public access and honest provenance remain mandatory.
 
-**Cost invariant across every phase:** $0 spending, no paid subscriptions/APIs/domains, no billing-enabled infrastructure, no automatic upgrades; free public core access. If quotas or rights prevent a live feed, continue with lawful alternatives or clearly labeled demo data. Public beta must be assessed against actual free-tier limits before deployment.
-
-**Post-roadmap continuation — native view links:** completed explicit copy/share and reviewed offline paste/import, with strict simulation-only validation, web filter parity and paused restoration. No new deployment or paid distribution.
+Phases 0–11 and native view links are complete historical work. The optional native map pan/zoom kickoff is superseded. See docs/PHASES_0_11_HISTORY.md.
