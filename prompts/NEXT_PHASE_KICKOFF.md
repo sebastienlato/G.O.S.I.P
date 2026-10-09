@@ -2,6 +2,8 @@
 
 Act as autonomous lead developer in /Users/sebastienlato/Dev/GOSIP. Run `git pull --ff-only` first. Read AGENTS, README, ROADMAP, PROJECT_STATE, DECISIONS, docs/WORKFLOW, DESIGN, ARCHITECTURE, DATA_POLICY and BETA_READINESS. Inspect status/log/remotes and actual HTTPS release.json/data/health. Use final Phase 18 release evidence in PROJECT_STATE/BETA_READINESS; implementation commit and later evidence-doc commit may differ. One phase only; web first, native paused.
 
+Verified Phase 18 release: `4ea273a78e6037d2de0f78eca724c30c5c0203d2`, push run 37993221800, built 2026-10-09 21:24:36.939 UTC; eight healthy HTTPS mirrors, PortWatch three October 2 regional estimates, 12.52 MB, zero current-run artifacts. 253 unit / 36 repository-path checks and actual desktop/mobile globe smoke passed; 1440/390/320 visuals inspected. Final evidence-doc commit is newer than deployed source. No owner action remains. One legacy Phase 10 gh-pages artifact remains unchanged under the storage guard.
+
 ## Preserve
 
 - D52/D55 satellite globe console, shared glyphs, smooth density, layer/feed/details, real clock and independent source health. NASA GIBS keyless; optional owner ion. No Esri/flat-map redesign/new unreviewed browser imagery provider.
