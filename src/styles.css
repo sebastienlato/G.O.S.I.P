@@ -2012,10 +2012,15 @@ dialog::backdrop {
     order: 2;
     position: static;
     width: auto;
-    max-height: 80svh;
-  }
-  .console.list-view .panel-feed {
     max-height: none;
+  }
+  /* Let long selection text grow without collapsing the usable card area. */
+  .event-feed {
+    height: auto;
+  }
+  .event-cards {
+    flex: 0 0 auto;
+    max-height: 65svh;
   }
   .panel-reference {
     order: 3;

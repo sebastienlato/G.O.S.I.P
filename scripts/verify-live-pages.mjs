@@ -151,10 +151,15 @@ try {
       ).toBeVisible()
       await expect(page.locator('.event-card').first()).toBeVisible()
       await expect(page.locator('.demo-banner')).toHaveCount(0)
-      if (!mode)
+      if (!mode) {
         await expect(
           page.getByText('Interactive map', { exact: true }),
         ).toBeVisible({ timeout: 120000 })
+        // Cesium readiness precedes asynchronous imagery/terrain delivery.
+        await page
+          .waitForLoadState('networkidle', { timeout: 20000 })
+          .catch(() => {})
+      }
       if (mode === '?map=static')
         await expect(page.getByTestId('static-map')).toBeVisible()
       assert(

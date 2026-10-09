@@ -768,6 +768,14 @@ test('global thermal feed is paged while all cells remain searchable and mapped'
   await expect(page.getByRole('dialog')).toContainText('1 thermal detection')
   await page.keyboard.press('Escape')
   await expect(page.getByLabel('Feed pages')).toContainText('1–50 of 120')
+  // A selection plus pagination must leave cards clickable on narrow phones.
+  await page.setViewportSize({ width: 320, height: 740 })
+  await page.locator('.event-card').nth(1).click()
+  await expect(page.getByRole('dialog')).toContainText('2 thermal detections')
+  await page.keyboard.press('Escape')
+  await page.locator('.event-card').nth(2).click()
+  await expect(page.getByRole('dialog')).toContainText('3 thermal detections')
+  await page.keyboard.press('Escape')
   await page
     .getByRole('searchbox', { name: 'Search events' })
     .fill('120 thermal')
