@@ -1,3 +1,4 @@
+import { isMaritime } from '../data/maritime'
 import { assetPath } from '../state/assetPath'
 import { drawOrder, encode, type Encoding } from '../state/encoding'
 import { iconSvg } from '../state/icons'
@@ -113,7 +114,9 @@ type Globe = {
   markers: { el: HTMLButtonElement; cart: CesiumModule.Cartesian3 }[]
   /** FIRMS cell centre "lon,lat" → record id, for picking the heat field. */
   cells: Map<string, string>
-  layers: Partial<Record<'base' | 'night' | 'heat', CesiumModule.ImageryLayer>>
+  layers: Partial<
+    Record<'base' | 'night' | 'heat' | 'maritime', CesiumModule.ImageryLayer>
+  >
   tileset: CesiumModule.Cesium3DTileset | null
   stages: Record<'nvg' | 'ir', CesiumModule.PostProcessStage>
   target: CesiumModule.Cartesian3 | null
@@ -152,6 +155,22 @@ export default function WorldMap({
                 lon: event.coordinates[0],
                 lat: event.coordinates[1],
                 count: event.detection_count,
+              },
+            ]
+          : [],
+      ),
+    [encoded],
+  )
+  const maritimeCells = useMemo(
+    () =>
+      encoded.flatMap(({ event }) =>
+        isMaritime(event)
+          ? [
+              {
+                id: event.id,
+                lon: event.coordinates[0],
+                lat: event.coordinates[1],
+                count: event.count,
               },
             ]
           : [],
@@ -311,6 +330,9 @@ export default function WorldMap({
             if (current.target) place(reticle.current, current.target)
             else reticle.current.hidden = true
           }
+          const density = current.layers.maritime
+          if (density)
+            density.alpha = heatAlpha(camera.positionCartographic.height)
           const heat = current.layers.heat
           if (heat) {
             const alpha = heatAlpha(camera.positionCartographic.height)
@@ -354,9 +376,15 @@ export default function WorldMap({
           if (!cart || !cells?.size) return
           const c = C.Cartographic.fromCartesian(cart)
           const cell = (deg: number) => 2 * Math.floor(deg / 2) + 1
-          const hit = cells.get(
-            `${cell(C.Math.toDegrees(c.longitude))},${cell(C.Math.toDegrees(c.latitude))}`,
+          const broad = (deg: number) => 10 * Math.floor(deg / 10) + 5
+          const maritimeHit = cells.get(
+            `maritime:${broad(C.Math.toDegrees(c.longitude))},${broad(C.Math.toDegrees(c.latitude))}`,
           )
+          const hit =
+            maritimeHit ??
+            cells.get(
+              `${cell(C.Math.toDegrees(c.longitude))},${cell(C.Math.toDegrees(c.latitude))}`,
+            )
           if (hit) select.current(hit)
         }, C.ScreenSpaceEventType.LEFT_CLICK)
         let frame = 0
@@ -450,6 +478,7 @@ export default function WorldMap({
     list.add(base)
     layers.base = base
     if (layers.heat) list.raiseToTop(layers.heat)
+    if (layers.maritime) list.raiseToTop(layers.maritime)
     // Evenly lit globe: a hard day/night terminator hid data and imagery.
     widget.scene.globe.enableLighting = false
     widget.scene.requestRender()
@@ -526,8 +555,31 @@ export default function WorldMap({
       widget.imageryLayers.add(heat)
       layers.heat = heat
     }
+    if (layers.maritime) {
+      widget.imageryLayers.remove(layers.maritime, true)
+      delete layers.maritime
+    }
+    if (maritimeCells.length) {
+      for (const c of maritimeCells)
+        current.cells.set(`maritime:${c.lon},${c.lat}`, c.id)
+      const density = new C.ImageryLayer(
+        new C.SingleTileImageryProvider({
+          url: buildHeatCanvas(maritimeCells, 'maritime').toDataURL(
+            'image/png',
+          ),
+          tileWidth: HEAT_WIDTH,
+          tileHeight: HEAT_HEIGHT,
+          rectangle: C.Rectangle.fromDegrees(-180, -90, 180, 90),
+          credit:
+            'Port estimates: UN Global Platform; IMF PortWatch · selected and aggregated by GOSIP',
+        }),
+      )
+      density.alpha = heatAlpha(widget.camera.positionCartographic.height)
+      widget.imageryLayers.add(density)
+      layers.maritime = density
+    }
     for (const { event, enc } of encoded) {
-      if (isFireSummary(event)) continue
+      if (isFireSummary(event) || isMaritime(event)) continue
       const el = document.createElement('button')
       el.className = markerClass(enc)
       el.dataset.eventId = event.id
@@ -556,7 +608,7 @@ export default function WorldMap({
       })
     }
     widget.scene.requestRender()
-  }, [encoded, cells, state])
+  }, [encoded, cells, maritimeCells, state])
 
   // Selection: marker state plus a target reticle (works for cells too).
   useEffect(() => {
@@ -594,7 +646,11 @@ export default function WorldMap({
       destination: current.C.Cartesian3.fromDegrees(
         event.coordinates[0],
         event.coordinates[1],
-        isFireSummary(event) ? 900_000 : 1_400_000,
+        isMaritime(event)
+          ? 3_500_000
+          : isFireSummary(event)
+            ? 900_000
+            : 1_400_000,
       ),
       duration: reducedMotion() ? 0 : 1.8,
     })
@@ -637,14 +693,28 @@ export default function WorldMap({
         : '',
     [useFallback, cells],
   )
+  const staticMaritime = useMemo(
+    () =>
+      useFallback && maritimeCells.length
+        ? buildHeatCanvas(maritimeCells, 'maritime').toDataURL('image/png')
+        : '',
+    [useFallback, maritimeCells],
+  )
   // Static map: clicks on the heat field resolve to the 2° cell beneath.
   const pickStaticCell = (e: React.MouseEvent<HTMLDivElement>) => {
-    if ((e.target as HTMLElement).closest('button') || !cells.length) return
+    if (
+      (e.target as HTMLElement).closest('button') ||
+      (!cells.length && !maritimeCells.length)
+    )
+      return
     const box = e.currentTarget.getBoundingClientRect()
     const lon = ((e.clientX - box.left) / box.width) * 360 - 180
     const lat = 90 - ((e.clientY - box.top) / box.height) * 180
     const cell = (deg: number) => 2 * Math.floor(deg / 2) + 1
-    const hit = cells.find((c) => c.lon === cell(lon) && c.lat === cell(lat))
+    const broad = (deg: number) => 10 * Math.floor(deg / 10) + 5
+    const hit =
+      maritimeCells.find((c) => c.lon === broad(lon) && c.lat === broad(lat)) ??
+      cells.find((c) => c.lon === cell(lon) && c.lat === cell(lat))
     if (hit) onSelect(hit.id)
   }
   return (
@@ -662,6 +732,14 @@ export default function WorldMap({
               src={assetPath('/world.svg')}
               alt="World map with approximate regional event locations"
             />
+            {staticMaritime && (
+              <img
+                className="static-heat maritime-heat"
+                src={staticMaritime}
+                alt=""
+                aria-hidden="true"
+              />
+            )}
             {staticHeat && (
               <img
                 className="static-heat"
@@ -671,7 +749,7 @@ export default function WorldMap({
               />
             )}
             {encoded.map(({ event, enc }) =>
-              isFireSummary(event) ? null : (
+              isFireSummary(event) || isMaritime(event) ? null : (
                 <button
                   key={event.id}
                   className={`${markerClass(enc)} static-marker ${selectedId === event.id ? 'selected' : ''}`}

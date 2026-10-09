@@ -1,3 +1,4 @@
+import { verifyMaritime } from './verify-maritime.mjs'
 // Verify real deployment, never infer success from a push or dispatch.
 import assert from 'node:assert/strict'
 import { mkdir } from 'node:fs/promises'
@@ -78,7 +79,14 @@ try {
       hazards.health,
     )
     const newSources = {}
-    for (const key of ['dwd', 'firms', 'news', 'ooni', 'launches']) {
+    for (const key of [
+      'dwd',
+      'firms',
+      'news',
+      'ooni',
+      'launches',
+      'maritime',
+    ]) {
       const response = await context.request.get(
         new URL(`data/${key}.json`, site).href,
       )
@@ -395,6 +403,7 @@ try {
     console.log(
       `${name}: LL2 ${newSources.launches.health.record_count} selected schedules; actual space globe/details/precision/reload passed.`,
     )
+    await verifyMaritime(page, site, newSources.maritime, name)
     await quakes.check()
     await hazardToggle.check()
     await page

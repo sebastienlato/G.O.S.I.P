@@ -1,3 +1,4 @@
+import { decodeMaritime, MARITIME_MAX_BYTES } from '../data/maritime'
 import { decodeLaunches, LAUNCH_MAX_BYTES } from '../data/launches'
 import { decodeOoni, OONI_MAX_BYTES } from '../data/ooni'
 import { decodeNews, NEWS_MAX_BYTES } from '../data/news'
@@ -134,4 +135,8 @@ export function useOoni(enabled: boolean) {
 
 export function useLaunches(enabled: boolean) {
   return usePublished(enabled, 'launches', decodeLaunches, LAUNCH_MAX_BYTES)
+}
+
+export function useMaritime(enabled: boolean) {
+  return usePublished(enabled, 'maritime', decodeMaritime, MARITIME_MAX_BYTES)
 }

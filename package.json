@@ -18,7 +18,7 @@
     "format:check": "prettier --check src tests scripts *.ts *.json index.html",
     "data:notices": "node scripts/build-dependency-notices.mjs && node scripts/copy-project-license.mjs",
     "build:pages": "npm run data:notices && node scripts/copy-cesium.mjs && tsc --noEmit && vite build --mode pages && node scripts/check-pages-release.mjs",
-    "test:beta": "GOSIP_TEST_FIRMS=1 GOSIP_TEST_OONI=1 GOSIP_TEST_LAUNCHES=1 npm run build:pages && BETA_TEST=1 playwright test",
+    "test:beta": "GOSIP_TEST_FIRMS=1 GOSIP_TEST_OONI=1 GOSIP_TEST_LAUNCHES=1 GOSIP_TEST_MARITIME=1 npm run build:pages && BETA_TEST=1 playwright test",
     "release:pages": "node scripts/publish-pages.mjs",
     "ingest": "node ingest/run.mjs"
   },

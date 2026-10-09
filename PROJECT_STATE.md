@@ -1,6 +1,13 @@
-# Project state — Phase 17 complete and deployed
+# Project state — Phase 18 implementation complete; deployment verification pending
 
 ## Current delivery — 2026-10-09
+
+- Added Maritime: IMF PortWatch AIS-derived daily port-call estimates for five selected gateways, aggregated into three 10° regions, counts below 20 suppressed and remaining totals rounded down to tens. Smooth cyan globe/static glow, shared ship icon, independent toggle/count/health/details/search/categories/windows. ≥72h delay; supplied UTC day remains distinct from retrieval; unknown individual occurrence/publication/update/generation. No vessel tracks, IDs or disruption inference.
+- Identified no-key request/run, 12 seconds, 50 KB/70 rows input, 30 KB/three rows publication. Fixed 14-to-4-days-ago query, latest returned day requires all five ports; empty/truncated/incomplete data fails and retains original last-good times. Real local ingestion: October 2, North Sea 130–139, East Asia 110–119, Singapore 100–109. Use 7 days; older provider days can age out of visible windows.
+- OpenSky operational licence, ADSB.lol production-contact request and AISStream redistribution gaps documented; deferred, no account/key/provider message or owner action needed for PortWatch. Paid alternative recorded but inactive. Maritime web simulation retired; aviation lab stays explicitly separate, native unchanged. No CSP/provider-browser-data, billing, archive or workflow/cadence changes.
+- Checks: npm ci; 253 unit tests; root/Pages builds/typecheck; 36 repository-path desktop/mobile checks passed. Initial legacy maritime-count assertions updated for real data; eight-layer desktop controls checked against viewport. Final visual and actual deployment evidence follows below. Existing Cesium chunk warning remains; no Safari/Firefox/native/full-accessibility claim. Stop before Phase 19.
+
+## Phase 17 delivery (historical) — 2026-10-09
 
 - Added Space: selected LL2 / The Space Devs public launch schedules, independent toggle/count/freshness, rocket globe/site icons, forward windows and source details. Rounded 1° fixed-site context only, nullable unknown times/locations, supplied NET precision and catalog update; no observation/outcome or orbital tracking claim.
 - One identified no-key request/run, first 20 upcoming entries, 500 KB input / 100 KB publication. Science/communications/technology-test types only; military/unknown/crew/resupply categories and coarse dates omitted. Initial production ingestion healthy: 3 selected of 20 considered, 471 catalog total; one schedule inside next 7 days. Partial coverage explicit. NOAA SWPC/CelesTrak reviewed/deferred in DATA_POLICY.

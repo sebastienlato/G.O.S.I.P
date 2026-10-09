@@ -1,3 +1,4 @@
+import { isMaritime } from '../data/maritime'
 import { isLaunch } from '../data/launches'
 import { isOoni } from '../data/ooni'
 import { isNews } from '../data/news'
@@ -14,6 +15,7 @@ export const magnitudeSteps = [
   { min: 5, label: '5–5.9', color: '#e8553a' },
   { min: 6, label: '6 and above', color: '#d42d55' },
 ] as const
+export const maritimeColor = '#58dfdf'
 export const launchColor = '#d5a6ff'
 export const ooniColor = '#82aaff'
 export const newsColor = '#f3a77b'
@@ -33,6 +35,7 @@ export const magnitudeSize = (magnitude: number | null) =>
     : Math.round(Math.min(40, 11 + Math.max(0, magnitude - 2.5) ** 1.3 * 3.4))
 
 export type MarkerKind =
+  | 'maritime'
   | 'launch'
   | 'ooni'
   | 'news'
@@ -57,6 +60,14 @@ export function encode(
   referenceTime: number,
   occurredAt: string,
 ): Encoding {
+  if (isMaritime(event))
+    return {
+      kind: 'maritime',
+      color: maritimeColor,
+      size: 26,
+      freshness: 1,
+      recent: false,
+    }
   if (isLaunch(event))
     return {
       kind: 'launch',

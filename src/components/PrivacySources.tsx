@@ -1,8 +1,10 @@
+import { MARITIME_CREDIT, MARITIME_TERMS } from '../data/maritime'
 import { OoniCredit } from './OoniBody'
 import {
   firmsAvailable,
   ooniAvailable,
   launchesAvailable,
+  maritimeAvailable,
 } from '../state/explorer'
 import { assetPath } from '../state/assetPath'
 import { localSourceAccess } from '../state/sourceAccess'
@@ -42,6 +44,16 @@ export default function PrivacySources() {
       </p>
       <h3>Sources & licenses</h3>
       <ul>
+        {maritimeAvailable && (
+          <li>
+            <strong>Maritime:</strong> {MARITIME_CREDIT} Delayed 10° regional
+            estimates, no vessel positions.{' '}
+            <a href={MARITIME_TERMS} target="_blank" rel="noreferrer">
+              IMF data reuse terms ↗
+            </a>
+            . Data rights remain separate from Apache software.
+          </li>
+        )}
         {launchesAvailable && (
           <li>
             <strong>Launch Library 2 / The Space Devs:</strong> Selected public
@@ -168,10 +180,11 @@ export default function PrivacySources() {
         </li>
         <li>
           <strong>Coming:</strong> {!firmsAvailable && 'fire, '}broader weather,
-          more news sources, satellite orbits, space weather, aviation and
-          maritime. <strong>Simulation lab:</strong> original GOSIP fixtures. No
-          live satellite tracking, space weather, aviation or maritime data is
-          connected. Examples are never evidence of actual conditions.
+          more news sources, satellite orbits, space weather and aviation
+          {!maritimeAvailable && ', maritime'}. <strong>Simulation lab:</strong>{' '}
+          original GOSIP fixtures. No live satellite tracking, space weather or
+          aviation data is connected. Examples are never evidence of actual
+          conditions.
         </li>
         <li>
           <strong>Globe:</strong> CesiumJS (Apache-2.0). Imagery: NASA GIBS

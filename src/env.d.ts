@@ -9,3 +9,5 @@ interface Window {
 }
 
 declare const __LAUNCHES_AVAILABLE__: boolean
+
+declare const __MARITIME_AVAILABLE__: boolean

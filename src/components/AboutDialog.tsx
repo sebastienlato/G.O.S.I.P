@@ -36,8 +36,9 @@ const AboutDialog = forwardRef<HTMLDialogElement, { privacyOnly: boolean }>(
               <p>
                 GOSIP combines earthquakes, curated hazards, German weather
                 warnings, global thermal summaries, attributed report headlines
-                and delayed OONI measurement totals from public snapshots
-                refreshed every 15 minutes. Each layer keeps its own source,
+                delayed OONI measurement totals, launch schedules and delayed
+                maritime estimates from public snapshots checked on a
+                best-effort 15-minute schedule. Each layer keeps its own source,
                 times and freshness. The separate simulation lab holds invented
                 examples and never mixes them with live data.
               </p>

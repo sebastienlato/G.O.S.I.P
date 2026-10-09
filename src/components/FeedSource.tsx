@@ -1,3 +1,4 @@
+import MaritimeStatus from './MaritimeStatus'
 import LaunchStatus from './LaunchStatus'
 import OoniStatus from './OoniStatus'
 import { localSourceAccess } from '../state/sourceAccess'
@@ -10,12 +11,14 @@ import type {
   useNews,
   useOoni,
   useLaunches,
+  useMaritime,
 } from '../state/useEarthquakes'
 import {
   liveLayerKeys,
   firmsAvailable,
   ooniAvailable,
   launchesAvailable,
+  maritimeAvailable,
   type LiveLayer,
   type Source,
 } from '../state/explorer'
@@ -30,8 +33,10 @@ import {
   newsColor,
   ooniColor,
   launchColor,
+  maritimeColor,
 } from '../state/encoding'
 
+type Maritime = ReturnType<typeof useMaritime>
 type Launches = ReturnType<typeof useLaunches>
 type Ooni = ReturnType<typeof useOoni>
 type News = ReturnType<typeof useNews>
@@ -44,6 +49,11 @@ const layerMeta: Record<
   LiveLayer,
   { label: string; name: string; provider: string }
 > = {
+  maritime: {
+    label: 'Maritime',
+    name: 'Maritime port-call estimates',
+    provider: 'IMF PortWatch',
+  },
   launches: {
     label: 'Space',
     name: 'Space launch schedules',
@@ -85,6 +95,7 @@ const layerIcon: Record<
   Exclude<LiveLayer, 'eonet'>,
   { kind: MarkerKind; color: string }
 > = {
+  maritime: { kind: 'maritime', color: maritimeColor },
   launches: { kind: 'launch', color: launchColor },
   ooni: { kind: 'ooni', color: ooniColor },
   usgs: { kind: 'quake', color: magnitudeSteps[1].color },
@@ -105,6 +116,7 @@ export function LayerToggles({
   news,
   ooni,
   launches,
+  maritime,
 }: {
   liveLayers: LiveLayer[]
   onToggle: (layer: LiveLayer) => void
@@ -116,6 +128,7 @@ export function LayerToggles({
   news: News
   ooni: Ooni
   launches: Launches
+  maritime: Maritime
 }) {
   const state = {
     usgs: quakes,
@@ -125,6 +138,7 @@ export function LayerToggles({
     news,
     ooni,
     launches,
+    maritime,
   }
   return (
     <fieldset className="layer-toggles">
@@ -197,7 +211,7 @@ export function SimulationLab({
       ? [['fire-demo', 'Fire examples · simulated'] as [Source, string]]
       : []),
     ...Object.entries(additionalLayers)
-      .filter(([key]) => key !== 'space-demo')
+      .filter(([key]) => key !== 'space-demo' && key !== 'maritime-demo')
       .map(([key, layer]): [Source, string] => [
         key as AdditionalSource,
         `${layer.label} · simulated`,
@@ -245,6 +259,7 @@ export function LiveStatus({
   news,
   ooni,
   launches,
+  maritime,
 }: {
   liveLayers: LiveLayer[]
   quakes: Quakes
@@ -254,6 +269,7 @@ export function LiveStatus({
   news: News
   ooni: Ooni
   launches: Launches
+  maritime: Maritime
 }) {
   const { snapshot, health, loading, error, stale, waitSeconds, offline } =
     quakes
@@ -264,9 +280,12 @@ export function LiveStatus({
         Coming next: floods, {!firmsAvailable && 'fire detections, '}broader
         weather coverage, more news sources, {!ooniAvailable && 'digital, '}
         {!launchesAvailable && 'launch schedules, '}satellite orbits and
-        movement.
+        aviation{!maritimeAvailable && ', maritime'}.
       </p>
       <div className="status-grid">
+        {liveLayers.includes('maritime') && (
+          <MaritimeStatus maritime={maritime} />
+        )}
         {liveLayers.includes('launches') && (
           <LaunchStatus launches={launches} />
         )}

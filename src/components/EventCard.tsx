@@ -1,3 +1,4 @@
+import { isMaritime } from '../data/maritime'
 import { isLaunch, launchTimeLabel } from '../data/launches'
 import { isOoni } from '../data/ooni'
 import { isNews } from '../data/news'
@@ -42,6 +43,8 @@ export function eventAge(
   referenceTime: number,
   demoClock: Props['demoClock'],
 ) {
+  if (isMaritime(event))
+    return `Estimated ${event.interval_start.slice(0, 10)} UTC · delayed`
   if (isLaunch(event)) return launchTimeLabel(event)
   if (isOoni(event))
     return `UTC day ${event.interval_start.slice(0, 10)} · ≥24h delayed`
@@ -97,6 +100,8 @@ export default function EventCard({
           <span className="card-magnitude">
             {quake.magnitude === null ? '–' : quake.magnitude.toFixed(1)}
           </span>
+        ) : isMaritime(event) ? (
+          <span className="card-magnitude">{event.count}+</span>
         ) : isOoni(event) ? (
           <span className="card-magnitude">
             {Intl.NumberFormat('en', {
@@ -170,6 +175,7 @@ export default function EventCard({
             !hazard &&
             !isWarning(event) &&
             !isFireSummary(event) &&
+            !isMaritime(event) &&
             !isNews(event) &&
             !isOoni(event) &&
             !isLaunch(event) && (

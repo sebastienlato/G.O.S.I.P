@@ -1,3 +1,4 @@
+import { decodeMaritime } from './src/data/maritime.ts'
 import { decodeLaunches } from './src/data/launches.ts'
 import { decodeOoni } from './src/data/ooni.ts'
 import { decodeFIRMS } from './src/data/firms.ts'
@@ -38,6 +39,18 @@ function hasLaunchSnapshot() {
     return false
   }
 }
+function hasMaritimeSnapshot() {
+  try {
+    return (
+      decodeMaritime(
+        readFileSync('public/data/maritime.json', 'utf8'),
+        Date.now(),
+      ).snapshot !== null
+    )
+  } catch {
+    return false
+  }
+}
 // Globe imagery/terrain hosts the visitor's browser may contact (D52).
 const imageryHosts = [
   'https://gibs.earthdata.nasa.gov',
@@ -49,6 +62,9 @@ const imageryHosts = [
 ].join(' ')
 export default defineConfig(({ mode }) => ({
   define: {
+    __MARITIME_AVAILABLE__: JSON.stringify(
+      process.env.GOSIP_TEST_MARITIME === '1' || hasMaritimeSnapshot(),
+    ),
     __LAUNCHES_AVAILABLE__: JSON.stringify(
       process.env.GOSIP_TEST_LAUNCHES === '1' || hasLaunchSnapshot(),
     ),

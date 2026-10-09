@@ -1,3 +1,5 @@
+import { maritimeAvailable } from '../state/explorer'
+import { maritimeColor } from '../state/encoding'
 import {
   firmsAvailable,
   ooniAvailable,
@@ -58,6 +60,12 @@ export default function MapLegend() {
           </span>
           <span>Storm</span>
         </p>
+        {maritimeAvailable && (
+          <p className="legend-row">
+            <KindIcon kind="maritime" color={maritimeColor} size={15} /> Delayed
+            port calls · regional glow
+          </p>
+        )}
         {launchesAvailable && (
           <p className="legend-row">
             <span className="legend-badge" aria-hidden="true">

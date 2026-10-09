@@ -2141,7 +2141,8 @@ dialog::backdrop {
 }
 
 /* Compact measurement totals keep their suffix together in the feed gutter. */
-.kind-ooni .card-magnitude {
+.kind-ooni .card-magnitude,
+.kind-maritime .card-magnitude {
   font-size: 15px;
   white-space: nowrap;
 }

@@ -1,5 +1,6 @@
+import { isMaritime } from './data/maritime'
 import { isLaunch } from './data/launches'
-import { useLaunches } from './state/useEarthquakes'
+import { useLaunches, useMaritime } from './state/useEarthquakes'
 import { isOoni } from './data/ooni'
 import { useOoni } from './state/useEarthquakes'
 import { isNews } from './data/news'
@@ -38,6 +39,7 @@ import {
   firmsAvailable,
   ooniAvailable,
   launchesAvailable,
+  maritimeAvailable,
 } from './state/explorer'
 import { useExplorerFilters } from './state/useExplorerFilters'
 import EventDetail from './components/EventDetail'
@@ -115,6 +117,9 @@ export default function App() {
   )
   const hazards = useHazards(source === 'usgs' && liveLayers.includes('eonet'))
   const warnings = useWarnings(source === 'usgs' && liveLayers.includes('dwd'))
+  const maritime = useMaritime(
+    source === 'usgs' && liveLayers.includes('maritime'),
+  )
   const launches = useLaunches(
     source === 'usgs' && liveLayers.includes('launches'),
   )
@@ -128,6 +133,9 @@ export default function App() {
         : []),
       ...(liveLayers.includes('eonet') ? (hazards.snapshot?.events ?? []) : []),
       ...(liveLayers.includes('dwd') ? (warnings.snapshot?.events ?? []) : []),
+      ...(liveLayers.includes('maritime')
+        ? (maritime.snapshot?.events ?? [])
+        : []),
       ...(liveLayers.includes('launches')
         ? (launches.snapshot?.events ?? [])
         : []),
@@ -144,6 +152,7 @@ export default function App() {
       news.snapshot,
       ooni.snapshot,
       launches.snapshot,
+      maritime.snapshot,
     ],
   )
   const weather = useWeather(source === 'nws')
@@ -173,7 +182,9 @@ export default function App() {
     selectedCategories.includes(key),
   ).length
   const allEvents = additional
-    ? additionalBySource[additional]
+    ? additional === 'maritime-demo' || additional === 'space-demo'
+      ? []
+      : additionalBySource[additional]
     : digital
       ? []
       : reports
@@ -259,6 +270,17 @@ export default function App() {
     setDetailId(id)
   }, [])
   useEffect(() => {
+    if (source === 'maritime-demo')
+      updateFilters({
+        source: 'usgs',
+        liveLayers: maritimeAvailable ? ['maritime'] : [],
+        hours: 168,
+        cursor: null,
+        query: '',
+        country: '',
+        region: '',
+        selectedCategories: categoryKeys,
+      })
     if (source === 'space-demo')
       updateFilters({
         source: 'usgs',
@@ -429,6 +451,7 @@ export default function App() {
         liveLayers.includes('news') ? news : null,
         liveLayers.includes('ooni') ? ooni : null,
         liveLayers.includes('launches') ? launches : null,
+        liveLayers.includes('maritime') ? maritime : null,
       ].filter((s) => s !== null)
     : []
   const retrievals = activeLive
@@ -685,6 +708,7 @@ export default function App() {
                       !isHazard(e) &&
                       !isWarning(e) &&
                       !isFireSummary(e) &&
+                      !isMaritime(e) &&
                       !isNews(e) &&
                       !isOoni(e) &&
                       !isLaunch(e),
@@ -695,6 +719,7 @@ export default function App() {
                   news: events.filter(isNews).length,
                   ooni: events.filter(isOoni).length,
                   launches: events.filter(isLaunch).length,
+                  maritime: events.filter(isMaritime).length,
                 }}
                 quakes={earthquakes}
                 hazards={hazards}
@@ -703,6 +728,7 @@ export default function App() {
                 news={news}
                 ooni={ooni}
                 launches={launches}
+                maritime={maritime}
               />
             ) : (
               <button
@@ -860,6 +886,7 @@ export default function App() {
                 news={news}
                 ooni={ooni}
                 launches={launches}
+                maritime={maritime}
               />
             )}
             {!sourceDisabled && (
@@ -894,6 +921,7 @@ export default function App() {
                 Data: USGS / ANSS · NASA EONET · DWD
                 {firmsAvailable && ' · NASA FIRMS'} · Global Voices
                 {ooniAvailable && ' · OONI'}
+                {maritimeAvailable && ' · IMF PortWatch'}
                 {launchesAvailable && ' · The Space Devs'} · Natural Earth.
                 Imagery: NASA GIBS / Cesium ion. Not an emergency service.
               </p>
@@ -987,21 +1015,23 @@ export default function App() {
           }}
           onShowOnMap={() => showOnMap(detailEvent.id)}
           stale={
-            isLaunch(detailEvent)
-              ? launches.stale
-              : isOoni(detailEvent)
-                ? ooni.stale
-                : isNews(detailEvent)
-                  ? news.stale
-                  : isFireSummary(detailEvent)
-                    ? fires.stale
-                    : isWarning(detailEvent)
-                      ? warnings.stale
-                      : isHazard(detailEvent)
-                        ? hazards.stale
-                        : source === 'nws'
-                          ? weather.stale
-                          : earthquakes.stale
+            isMaritime(detailEvent)
+              ? maritime.stale
+              : isLaunch(detailEvent)
+                ? launches.stale
+                : isOoni(detailEvent)
+                  ? ooni.stale
+                  : isNews(detailEvent)
+                    ? news.stale
+                    : isFireSummary(detailEvent)
+                      ? fires.stale
+                      : isWarning(detailEvent)
+                        ? warnings.stale
+                        : isHazard(detailEvent)
+                          ? hazards.stale
+                          : source === 'nws'
+                            ? weather.stale
+                            : earthquakes.stale
           }
           onClose={closeEvent}
         />

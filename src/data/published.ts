@@ -3,7 +3,15 @@ import { MAX_BYTES, type EarthquakeSnapshot } from './usgs'
 
 export const LIVE_STALE_MS = 45 * 60_000
 export interface SourceHealth {
-  source: 'usgs' | 'eonet' | 'dwd' | 'firms' | 'news' | 'ooni' | 'launches'
+  source:
+    | 'usgs'
+    | 'eonet'
+    | 'dwd'
+    | 'firms'
+    | 'news'
+    | 'ooni'
+    | 'launches'
+    | 'maritime'
   attempted_at: string
   fetched_at: string | null
   generated_at: string | null

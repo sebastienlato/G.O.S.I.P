@@ -1,3 +1,5 @@
+import { isMaritime } from '../data/maritime'
+import MaritimeBody from './MaritimeBody'
 import { isLaunch } from '../data/launches'
 import LaunchBody from './LaunchBody'
 import { isOoni } from '../data/ooni'
@@ -41,6 +43,7 @@ export default function EventDetail({
   const digital = isDigital(event)
   const report = isReport(event)
   const forecast = isForecast(event)
+  const maritime = isMaritime(event)
   const launch = isLaunch(event)
   const ooni = isOoni(event)
   const news = isNews(event)
@@ -55,7 +58,8 @@ export default function EventDetail({
     !fire &&
     !news &&
     !ooni &&
-    !launch
+    !launch &&
+    !maritime
   const thermal = 'kind' in event && event.kind === 'thermal'
   const dialog = useRef<HTMLDialogElement>(null)
   useEffect(() => {
@@ -131,52 +135,56 @@ export default function EventDetail({
         </p>
         <div className="simulation-note">
           <strong>
-            {launch
-              ? 'SCHEDULED LAUNCH · LL2'
-              : ooni
-                ? 'AGGREGATE MEASUREMENTS · OONI'
-                : news
-                  ? 'ATTRIBUTED REPORT · GLOBAL VOICES'
-                  : fire
-                    ? 'THERMAL DETECTIONS · FIRMS'
-                    : warning
-                      ? 'WEATHER WARNING · DWD'
-                      : hazard
-                        ? 'CURATED HAZARD · NASA EONET'
-                        : digital
-                          ? 'SIMULATED · DIGITAL MEASUREMENT'
-                          : report
-                            ? 'SIMULATED · ATTRIBUTED CLAIM'
-                            : event.is_demo
-                              ? 'SIMULATED EVENT'
-                              : forecast
-                                ? 'WEATHER FORECAST · NWS'
-                                : event.status === 'deleted'
-                                  ? 'WITHDRAWN BY PROVIDER'
-                                  : 'EARTHQUAKE OBSERVATION'}
+            {maritime
+              ? 'ESTIMATED PORT CALLS · PORTWATCH'
+              : launch
+                ? 'SCHEDULED LAUNCH · LL2'
+                : ooni
+                  ? 'AGGREGATE MEASUREMENTS · OONI'
+                  : news
+                    ? 'ATTRIBUTED REPORT · GLOBAL VOICES'
+                    : fire
+                      ? 'THERMAL DETECTIONS · FIRMS'
+                      : warning
+                        ? 'WEATHER WARNING · DWD'
+                        : hazard
+                          ? 'CURATED HAZARD · NASA EONET'
+                          : digital
+                            ? 'SIMULATED · DIGITAL MEASUREMENT'
+                            : report
+                              ? 'SIMULATED · ATTRIBUTED CLAIM'
+                              : event.is_demo
+                                ? 'SIMULATED EVENT'
+                                : forecast
+                                  ? 'WEATHER FORECAST · NWS'
+                                  : event.status === 'deleted'
+                                    ? 'WITHDRAWN BY PROVIDER'
+                                    : 'EARTHQUAKE OBSERVATION'}
           </strong>
           <span>
-            {launch
-              ? 'Public schedule, not a launch observation or predicted orbital position. Plans can change.'
-              : ooni
-                ? 'Daily web-connectivity test counts. No outage, censorship or intent inferred.'
-                : news
-                  ? 'A publisher’s claim, not a verified incident. No corroboration or impact assessment.'
-                  : fire
-                    ? 'Coarse satellite detection counts. Not confirmed fires, causes or impacts.'
-                    : warning
-                      ? 'Provider warning for a validity interval. Not an observed impact; check current official guidance.'
-                      : hazard
-                        ? 'Curated natural-event metadata for general information. Not an official warning, sensor detection or verified impact.'
-                        : digital
-                          ? 'Invented measurement scenario. Not a confirmed outage, intentional censorship or real provider observation.'
-                          : report
-                            ? 'An invented publisher’s claim, not a verified incident. No real-world event or independent corroboration is asserted.'
-                            : event.is_demo
-                              ? 'Invented for this prototype. Not a real-world report, alert, or verified observation.'
-                              : forecast
-                                ? 'Prediction for a future validity interval. Not a measurement, official alert, or confirmed impact. Check the current NWS source for warnings.'
-                                : 'Provider estimate subject to revision. Review status concerns source parameters, not verified damage, casualties or an emergency alert.'}
+            {maritime
+              ? 'Delayed regional estimates from AIS. Not vessel positions or evidence of disruption.'
+              : launch
+                ? 'Public schedule, not a launch observation or predicted orbital position. Plans can change.'
+                : ooni
+                  ? 'Daily web-connectivity test counts. No outage, censorship or intent inferred.'
+                  : news
+                    ? 'A publisher’s claim, not a verified incident. No corroboration or impact assessment.'
+                    : fire
+                      ? 'Coarse satellite detection counts. Not confirmed fires, causes or impacts.'
+                      : warning
+                        ? 'Provider warning for a validity interval. Not an observed impact; check current official guidance.'
+                        : hazard
+                          ? 'Curated natural-event metadata for general information. Not an official warning, sensor detection or verified impact.'
+                          : digital
+                            ? 'Invented measurement scenario. Not a confirmed outage, intentional censorship or real provider observation.'
+                            : report
+                              ? 'An invented publisher’s claim, not a verified incident. No real-world event or independent corroboration is asserted.'
+                              : event.is_demo
+                                ? 'Invented for this prototype. Not a real-world report, alert, or verified observation.'
+                                : forecast
+                                  ? 'Prediction for a future validity interval. Not a measurement, official alert, or confirmed impact. Check the current NWS source for warnings.'
+                                  : 'Provider estimate subject to revision. Review status concerns source parameters, not verified damage, casualties or an emergency alert.'}
           </span>
         </div>
         {playback && (
@@ -187,7 +195,9 @@ export default function EventDetail({
           </p>
         )}
         <>
-          {launch ? (
+          {maritime ? (
+            <MaritimeBody event={event} stale={stale} />
+          ) : launch ? (
             <LaunchBody event={event} stale={stale} />
           ) : ooni ? (
             <OoniBody event={event} stale={stale} />

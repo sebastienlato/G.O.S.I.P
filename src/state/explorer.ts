@@ -24,13 +24,16 @@ export const ooniAvailable =
   typeof __OONI_AVAILABLE__ !== 'undefined' && __OONI_AVAILABLE__
 export const launchesAvailable =
   typeof __LAUNCHES_AVAILABLE__ !== 'undefined' && __LAUNCHES_AVAILABLE__
+export const maritimeAvailable =
+  typeof __MARITIME_AVAILABLE__ !== 'undefined' && __MARITIME_AVAILABLE__
 export type LiveLayer =
-  'usgs' | 'eonet' | 'dwd' | 'firms' | 'news' | 'ooni' | 'launches'
+  'usgs' | 'eonet' | 'dwd' | 'firms' | 'news' | 'ooni' | 'launches' | 'maritime'
 export const liveLayerKeys: LiveLayer[] = [
   'usgs',
   'eonet',
   'dwd',
   'news',
+  ...(maritimeAvailable ? ['maritime' as const] : []),
   ...(launchesAvailable ? ['launches' as const] : []),
   ...(ooniAvailable ? ['ooni' as const] : []),
   ...(firmsAvailable ? ['firms' as const] : []),

@@ -1,3 +1,6 @@
+import { parseMaritime, publishMaritime } from '../src/data/maritime'
+import { extractMaritime } from '../ingest/maritime'
+import { maritimeFixture } from './fixtures/maritime'
 import { parseLaunches, publishLaunches } from '../src/data/launches'
 import { extractLaunches } from '../ingest/launches'
 import { launchFixture } from './fixtures/launches'
@@ -14,6 +17,19 @@ import recorded from './fixtures/usgs-recorded.json' with { type: 'json' }
 import { parseUSGS } from '../src/data/usgs'
 import { publish } from '../src/data/published'
 const now = recorded.metadata.generated + 1000
+const maritimeSnapshot = parseMaritime(
+  extractMaritime(maritimeFixture(now), now),
+  now,
+)
+const maritimePublished = publishMaritime(maritimeSnapshot, {
+  source: 'maritime',
+  status: 'ok',
+  error: null,
+  attempted_at: new Date(now).toISOString(),
+  fetched_at: maritimeSnapshot.retrieved_at,
+  generated_at: null,
+  record_count: 3,
+})
 const snapshot = parseUSGS(recorded, now)
 const published = publish(snapshot, {
   source: 'usgs',
@@ -143,6 +159,10 @@ test.beforeEach(async ({ context, page }) => {
       await route.abort()
       return
     }
+    if (url.pathname.endsWith('/data/maritime.json')) {
+      await route.fulfill({ json: maritimePublished })
+      return
+    }
     if (url.pathname.endsWith('/data/launches.json')) {
       await route.fulfill({ json: launchPublished })
       return
@@ -255,7 +275,7 @@ for (const mode of ['view=list', 'map=static']) {
       ['digital-demo', 2],
       ['space-demo', 1],
       ['aviation-demo', 4],
-      ['maritime-demo', 4],
+      ['maritime-demo', 3],
     ] as const) {
       await page.goto(`${origin}${base}?source=${source}&hours=168&${mode}`)
       await expect(page.locator('.event-card')).toHaveCount(count)
@@ -270,7 +290,7 @@ for (const mode of ['view=list', 'map=static']) {
       }
     }
     await page.reload()
-    await expect(page.locator('.event-card')).toHaveCount(4)
+    await expect(page.locator('.event-card')).toHaveCount(3)
     expect(
       resources.filter((url) => /\/cesium\/|\/assets\/engine-/.test(url)),
     ).toEqual([])
@@ -696,10 +716,14 @@ test('fire and German warnings combine with independent toggles, details, validi
       .toBe(true)
     // Desktop: every layer, the window and view controls fit in the
     // console's control panel without scrolling it.
-    if (width === 1440)
-      expect(
-        (await page.locator('.panel-controls').boundingBox())!.height,
-      ).toBeLessThan(560)
+    if (width === 1440) {
+      const controls = (await page.locator('.panel-controls').boundingBox())!
+      expect(controls.y + controls.height).toBeLessThan(1000)
+      for (const row of await page.locator('.layer-toggle').all()) {
+        const box = (await row.boundingBox())!
+        expect(box.y + box.height).toBeLessThan(controls.y + controls.height)
+      }
+    }
     await page.evaluate(() => document.fonts.ready)
     expect(
       await page.evaluate(
@@ -1039,4 +1063,78 @@ test('space sites use shared globe icons and camera selection on desktop and pho
       () => document.documentElement.scrollWidth <= innerWidth,
     ),
   ).toBe(true)
+})
+
+test('maritime delayed glow, combined filters, all-off and failure retention replace the maritime lab', async ({
+  page,
+  context,
+}) => {
+  await page.goto(
+    `${origin}${base}?source=maritime-demo&map=static&layers=civic`,
+  )
+  const toggle = page.getByRole('checkbox', {
+    name: 'Maritime port-call estimates',
+  })
+  await expect(toggle).toBeChecked()
+  await expect(page.locator('.event-card.kind-maritime')).toHaveCount(3)
+  await expect(page.locator('.maritime-heat')).toBeVisible()
+  await expect(
+    page.getByRole('button', { name: 'Maritime · simulated', exact: true }),
+  ).toHaveCount(0)
+  await page.locator('.event-card.kind-maritime').first().click()
+  const dialog = page.getByRole('dialog')
+  await expect(dialog).toContainText('ESTIMATED PORT CALLS · PORTWATCH')
+  await expect(dialog).toContainText('Unknown · daily estimates only')
+  await expect(dialog).toContainText('UN Global Platform')
+  await page.keyboard.press('Escape')
+  await page.getByRole('button', { name: '3 days', exact: true }).click()
+  await expect(page.locator('.event-card')).toHaveCount(0)
+  await page
+    .getByRole('checkbox', { name: 'OONI digital measurements' })
+    .check()
+  await expect(page.locator('.event-card.kind-ooni')).toHaveCount(2)
+  await page.getByRole('button', { name: '7 days', exact: true }).click()
+  await expect(page.locator('.event-card')).toHaveCount(5)
+  await page.getByRole('searchbox', { name: 'Search events' }).fill('North Sea')
+  await expect(page.locator('.event-card')).toHaveCount(1)
+  await page.getByRole('searchbox', { name: 'Search events' }).fill('')
+  await page
+    .getByRole('checkbox', { name: 'OONI digital measurements' })
+    .uncheck()
+  await page.reload()
+  await expect(toggle).toBeChecked()
+  await context.route('**/data/maritime.json', (route) =>
+    route.fulfill({
+      json: {
+        ...maritimePublished,
+        snapshot: null,
+        health: {
+          ...maritimePublished.health,
+          status: 'failed',
+          record_count: 0,
+          fetched_at: null,
+          error: 'Maritime request failed.',
+        },
+      },
+    }),
+  )
+  await page.clock.setFixedTime(now + 61000)
+  await page
+    .getByText('Maritime freshness & source details', { exact: true })
+    .click()
+  await page
+    .getByRole('button', { name: 'Refresh maritime data', exact: true })
+    .click()
+  await expect(
+    page.getByText('STALE · last available port estimates', { exact: true }),
+  ).toBeVisible()
+  await expect(page.locator('.event-card.kind-maritime')).toHaveCount(3)
+  await page.locator('.event-card.kind-maritime').first().click()
+  await expect(dialog).toContainText('STALE · retained estimates')
+  await page.keyboard.press('Escape')
+  await toggle.uncheck()
+  await page.reload()
+  await expect(toggle).not.toBeChecked()
+  await expect(page.locator('.event-card')).toHaveCount(0)
+  await expect(page.locator('.maritime-heat')).toHaveCount(0)
 })

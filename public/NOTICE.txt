@@ -21,3 +21,10 @@ totals of at least 1,000 measurements and omits outcome counters.
 Launch schedules: Launch Library 2 / The Space Devs. Selected metadata and
 rounded launch-site context by GOSIP; no endorsement. Provider data terms:
 https://github.com/TheSpaceDevs/Tutorials/blob/main/faqs/faq_TSD.md
+
+Maritime estimates: Sources: UN Global Platform; IMF PortWatch
+(https://portwatch.imf.org). GOSIP selects five gateways, delays by at least
+72 hours, aggregates into 10-degree regions, suppresses totals below 20 and
+rounds down to tens. Separate data terms, not Apache software licensing:
+https://www.imf.org/en/About/copyright-and-terms
+No endorsement. No vessel tracks or identifiers are republished.
