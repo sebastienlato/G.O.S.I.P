@@ -1,4 +1,13 @@
-# Project state — Phase 15 delivered + globe console (D52); Phase 16 next
+# Project state — Phase 16 blocked at scheduler prerequisite
+
+## Current preflight — 2026-10-09
+
+- Scheduler verifier fails: current HTTPS release is a push, not schedule. Actual schedule run 37917198418 (10:22:29 UTC, source c4bea4648873b56dcce36a0b7a36a491e3d7f420) has successful build/deploy/cleanup and zero artifacts, but later pushes replaced it; no newer schedule run was recorded at the preflight check. Do not weaken the verifier, reset registration, or start digital implementation until fresh scheduled HTTPS data/health is verified. Prepared owner escalation updated in BETA_READINESS.
+- Completed independent imagery prerequisite: removed Esri imagery/reference labels/CSP host after item-specific entitlement review. Keyless default is dated NASA GIBS; optional owner ion imagery/terrain/cities stays. Privacy, attribution and design docs updated; no paid service/account or source-key action. Digital candidates have preflight notes in DATA_POLICY only; no new digital layer.
+- Checks: 228 unit tests, root/Pages typecheck-build, 28 desktop/mobile repository-path checks pass. Final local site 12,365,082 bytes, below 25 MB; inspected globe screenshots. Updated HTTPS smoke for current console layout and approved imagery hosts. Deployment evidence will be recorded below after publication.
+- NEXT_PHASE_KICKOFF remains a Phase 16 continuation, not Phase 17: the explicit scheduler gate prevents phase completion.
+
+## Earlier release evidence (historical)
 
 - Added Global Voices English-edition headline/byline/publication/link metadata under CC BY 3.0. Independent Reports toggle, count, shared search/category/window filters, source freshness, attributed-claim cards and source details. Feed-only, no coordinates or claimed occurrence/update time inferred, no full articles/media/AI/corroboration. At least 24 hours delayed; choose 3/7 days. Latest feed/past 7 days, 1 MB input/40 records and 100 KB publication. Real initial ingestion: 7 eligible headlines, healthy. Legacy report-demo links redirect to real 3-day reports; web report simulation retired, native unchanged.
 - FIRMS owner correction: fixed latest `VIIRS_NOAA20_NRT/world/2`, streamed on runner, preceding 24 hours into global 2° counts, no added delay. NASA documents NRT product RT/URT variants; Collection-2 2.0/2.1 variants accepted (actual current API returned 2.1URT). 64 MB/500,000 raw-row runner limits, unchanged 200 KB/2,500-cell publication and 4 MB site cap. No raw precise positions/times/key in publications. Old regional publication rejected during schema migration instead of relabeled global.

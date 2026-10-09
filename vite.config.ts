@@ -16,7 +16,6 @@ function hasFireSnapshot() {
 }
 // Globe imagery/terrain hosts the visitor's browser may contact (D52).
 const imageryHosts = [
-  'https://server.arcgisonline.com',
   'https://gibs.earthdata.nasa.gov',
   'https://api.cesium.com',
   'https://assets.ion.cesium.com',

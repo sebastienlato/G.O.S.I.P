@@ -839,7 +839,8 @@ export default function App() {
               <p>
                 Data: USGS / ANSS · NASA EONET · DWD
                 {firmsAvailable && ' · NASA FIRMS'} · Global Voices · Natural
-                Earth. Imagery: Esri / NASA GIBS. Not an emergency service.
+                Earth. Imagery: NASA GIBS / Cesium ion. Not an emergency
+                service.
               </p>
             </footer>
           </section>

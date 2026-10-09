@@ -7,7 +7,9 @@ const url = new URL(site)
 assert.equal(url.origin, 'https://sebastienlato.github.io')
 assert.equal(url.pathname, '/G.O.S.I.P/')
 assert.match(source, /^[a-f0-9]{40}$/)
-const browser = await chromium.launch()
+const browser = await chromium.launch({ args: ['--enable-unsafe-swiftshader'] })
+const imageryHost =
+  /^(gibs\.earthdata\.nasa\.gov|([a-z0-9-]+\.)*cesium\.com|([a-z0-9-]+\.)*virtualearth\.net|tile\.googleapis\.com)$/
 await mkdir('test-results/live', { recursive: true })
 try {
   for (const [name, device] of [
@@ -16,8 +18,14 @@ try {
   ]) {
     const context = await browser.newContext(device)
     const failures = []
+    let allowImagery = false
+    const imageryRequests = []
     await context.route('**/*', async (route) => {
       const request = new URL(route.request().url())
+      if (allowImagery && imageryHost.test(request.hostname)) {
+        imageryRequests.push(request.hostname)
+        return route.continue()
+      }
       if (
         request.origin !== url.origin ||
         !request.pathname.startsWith(url.pathname)
@@ -29,7 +37,10 @@ try {
     const page = await context.newPage()
     page.on('pageerror', (error) => failures.push(error.message))
     page.on('response', (response) => {
-      if (response.status() >= 400)
+      if (
+        response.status() >= 400 &&
+        !imageryHost.test(new URL(response.url()).hostname)
+      )
         failures.push(`${response.status()} ${response.url()}`)
     })
     const release = await context.request.get(
@@ -121,6 +132,7 @@ try {
       newSources[key] = p
     }
     for (const mode of ['?view=list', '?map=static', '']) {
+      allowImagery = !mode
       await page.goto(site + mode)
       await expect(
         page.getByText('Live USGS earthquakes', { exact: true }),
@@ -142,7 +154,7 @@ try {
       if (!mode)
         await expect(
           page.getByText('Interactive map', { exact: true }),
-        ).toBeVisible({ timeout: 15000 })
+        ).toBeVisible({ timeout: 120000 })
       if (mode === '?map=static')
         await expect(page.getByTestId('static-map')).toBeVisible()
       assert(
@@ -150,11 +162,16 @@ try {
           () => document.documentElement.scrollWidth <= innerWidth,
         ),
       )
-      if (name === 'desktop')
+      if (name === 'desktop' && !mode) {
+        const controls = await page.locator('.panel-controls').boundingBox()
         assert(
-          (await page.locator('.rail').boundingBox()).height < 75,
-          'Desktop rail must stay one row with real counts',
+          controls && controls.y + controls.height < 1000,
+          'All layer controls must fit the desktop viewport',
         )
+      }
+      await expect(
+        page.getByRole('button', { name: 'Labels', exact: true }),
+      ).toHaveCount(0)
       await page.screenshot({
         path: `test-results/live/${name}-${mode.includes('list') ? 'list' : mode ? 'static' : 'map'}.png`,
         fullPage: true,
@@ -259,12 +276,16 @@ try {
     await expect(
       page.getByText('Live USGS earthquakes', { exact: true }),
     ).toBeVisible()
+    assert(
+      imageryRequests.length > 0,
+      'Interactive globe must request an approved imagery provider',
+    )
     assert.deepEqual(failures, [])
     console.log(
       `${name}: DWD ${newSources.dwd.health.record_count} warnings; FIRMS ${newSources.firms.health.record_count} cells for ${newSources.firms.snapshot.feed.interval_end}, generated unknown. New source details and toggles passed.`,
     )
     console.log(
-      `${name}: live release ${source}, ${body.health.record_count} USGS records + ${hazards.health.record_count} EONET catalog entries; EONET fetched ${hazards.health.fetched_at}; USGS generated ${body.health.generated_at}, fetched ${body.health.fetched_at}; map/list/static/details/privacy, independent layer toggles, empty/reload and same-origin-only requests passed.`,
+      `${name}: live release ${source}, ${body.health.record_count} USGS records + ${hazards.health.record_count} EONET catalog entries; EONET fetched ${hazards.health.fetched_at}; USGS generated ${body.health.generated_at}, fetched ${body.health.fetched_at}; map/list/static/details/privacy, independent layer toggles, empty/reload and same-origin data with approved globe imagery requests passed.`,
     )
     await context.close()
   }

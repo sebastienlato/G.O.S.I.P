@@ -1,19 +1,12 @@
-# G.O.S.I.P. — Phase 16: digital world
+# G.O.S.I.P. — Phase 16 continuation: scheduler gate, then digital world
 
 Act as autonomous lead developer in /Users/sebastienlato/Dev/GOSIP. Run `git pull --ff-only` first. Read AGENTS, README, ROADMAP, PROJECT_STATE, DECISIONS, docs/WORKFLOW, DESIGN, ARCHITECTURE, DATA_POLICY and BETA_READINESS. Inspect git status/log/remotes and actual HTTPS release.json/data/health. Read final Phase 15 release/scheduler evidence rather than inferring deployment or scheduling from code. One phase only; web first, iOS paused.
 
-## New since Phase 15 — the globe console (owner-approved, D52/D53)
+## Current preflight — read before implementation
 
-The owner replaced the flat map with a CesiumJS 3D satellite globe and an intelligence-console design, built by Claude and merged to main after Phase 15. Read docs/DESIGN.md before any UI work. Everything you add must appear on the globe (points as DOM markers via `encoding.ts`, dense areas as pickable primitives like FIRMS cells) and follow the console layout; never reintroduce a flat-map or landing-page layout. Owner decisions: 25 MB site cap; browser-side imagery from Esri/NASA GIBS/Cesium ion (disclosed, CSP-listed); optional URL-restricted Cesium ion token via the Actions *variable* `CESIUM_ION_TOKEN`; GOSIP stays non-commercial. `npm ci` is required (new packages: `@cesium/engine`, `cesium`, JetBrains Mono). Beta browser tests now need WebGL; the globe test has a 120 s timeout for software renderers.
+Phase 16 is not complete. Esri keyless World Imagery/reference labels and CSP access have been removed following the current item-specific terms review. Keyless globe defaults to dated NASA GIBS; owner ion imagery/terrain/cities remain. Respect latest D55 icon/heat-field design; no square-grid regression. `npm ci` is required. Candidate-only IODA/Radar/OONI preflight notes are in DATA_POLICY; no digital implementation has begun.
 
-First, before digital work: review Esri World Imagery keyless terms for public non-commercial use (DATA_POLICY "Globe imagery providers"). If not permitted, switch the keyless Satellite default to NASA GIBS (or ion when the token exists) and drop the Esri host from the CSP.
-
-## Blocking prerequisite — scheduler recovery (likely resolved)
-
-Update from the globe pass: GitHub recorded the first real `schedule` event at 2026-10-09 10:22 UTC on `publish-live.yml` (success). Run the verifier below; if it passes, close the blocker and proceed.
-
-
-Phase 15 functionality is deployed and verified, but review item 1 is not complete. At the last check there were zero schedule events, despite cron edits, enable/disable, a new workflow registration and a successful manual recovery dispatch. Do not claim independent live refresh based on a push/manual run. Start with `node scripts/verify-scheduled-ingestion.mjs`. If it still fails, keep this operational blocker open and handle the prepared owner GitHub Community escalation in BETA_READINESS; no automatic public message without owner authorization, paid upgrade or new external scheduler. Do not start Phase 16 digital implementation until a real schedule run and its fresh deployment are verified. Preserve the current fresh registration while checking for delayed activation.
+Run `node scripts/verify-scheduled-ingestion.mjs` before digital implementation. The first real schedule run 37917198418 (2026-10-09 10:22:29 UTC) succeeded in build/deploy/cleanup with zero artifacts, but at 15:04 UTC it remained the only schedule run and later pushes had replaced the public release. The verifier fails because current release.event is push. Do not weaken it or mislabel historic/push/manual evidence as a fresh scheduled release. Keep workflow registration unchanged. If still failing, use the updated owner Community diagnostic in BETA_READINESS; no automatic public message, billing or external scheduler. Only after the verifier passes may the digital-world implementation below proceed.
 
 ## Foundation
 

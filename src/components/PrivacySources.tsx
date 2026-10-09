@@ -23,11 +23,11 @@ export default function PrivacySources() {
       </p>
       <p>
         <strong>Globe imagery:</strong> the interactive globe loads satellite,
-        label, terrain and 3D-city tiles directly from Esri, NASA GIBS and
-        Cesium ion (which may serve Bing or Google content). Those services
-        receive your IP address and the map areas you view, like any online map.
-        The list view and static map make none of these requests. Display
-        preferences (imagery, filter, labels, 3D) are kept only in this browser.
+        terrain and 3D-city tiles directly from NASA GIBS and Cesium ion (which
+        may serve Bing or Google content). Those services receive your IP
+        address and the map areas you view, like any online map. The list view
+        and static map make none of these requests. Display preferences
+        (imagery, filter, 3D) are kept only in this browser.
       </p>
       <p>
         Live snapshots remain in page memory. Your browser may cache hosted
@@ -143,11 +143,11 @@ export default function PrivacySources() {
           never evidence of actual conditions.
         </li>
         <li>
-          <strong>Globe:</strong> CesiumJS (Apache-2.0). Imagery: Esri World
-          Imagery and boundaries/places reference layers; NASA GIBS VIIRS true
-          colour and Black Marble night lights; optional Cesium ion terrain,
-          imagery and Google photorealistic 3D tiles under non-commercial terms.
-          Providers' on-globe credits are shown; NVG/IR modes are visual
+          <strong>Globe:</strong> CesiumJS (Apache-2.0). Imagery: NASA GIBS
+          VIIRS true colour and Black Marble night lights; optional Cesium ion
+          terrain, imagery and Google photorealistic 3D tiles under
+          non-commercial terms. We acknowledge imagery from NASA GIBS, part of
+          ESDIS. Providers' on-globe credits are shown; NVG/IR modes are visual
           filters, not sensor data.
         </li>
         <li>

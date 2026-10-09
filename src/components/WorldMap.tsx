@@ -113,9 +113,7 @@ type Globe = {
   markers: { el: HTMLButtonElement; cart: CesiumModule.Cartesian3 }[]
   /** FIRMS cell centre "lon,lat" → record id, for picking the heat field. */
   cells: Map<string, string>
-  layers: Partial<
-    Record<'base' | 'night' | 'labels' | 'heat', CesiumModule.ImageryLayer>
-  >
+  layers: Partial<Record<'base' | 'night' | 'heat', CesiumModule.ImageryLayer>>
   tileset: CesiumModule.Cesium3DTileset | null
   stages: Record<'nvg' | 'ir', CesiumModule.PostProcessStage>
   target: CesiumModule.Cartesian3 | null
@@ -167,14 +165,16 @@ export default function WorldMap({
   const altitude = useRef<HTMLSpanElement>(null)
   const globe = useRef<Globe | null>(null)
   const [state, setState] = useState<MapState>('loading')
-  const [imagery, setImagery] = useState<Imagery>(() =>
-    stored('imagery', ['satellite', 'today', 'night'] as const, 'satellite'),
-  )
+  const [imagery, setImagery] = useState<Imagery>(() => {
+    const saved = stored(
+      'imagery',
+      ['satellite', 'today', 'night'] as const,
+      ionToken ? 'satellite' : 'today',
+    )
+    return saved === 'satellite' && !ionToken ? 'today' : saved
+  })
   const [sensor, setSensor] = useState<Sensor>(() =>
     stored('sensor', ['standard', 'nvg', 'ir'] as const, 'standard'),
-  )
-  const [labels, setLabels] = useState(
-    () => stored('labels', ['on', 'off'] as const, 'on') === 'on',
   )
   const [cities, setCities] = useState(
     () =>
@@ -321,7 +321,7 @@ export default function WorldMap({
             }
           }
           // Photorealistic 3D tiles cover the whole planet and hide every
-          // imagery layer (heat, night, labels), so they only take over near
+          // imagery layer (heat, night), so they only take over near
           // the ground; hysteresis avoids flicker at the threshold.
           const tiles = current.tileset
           if (tiles) {
@@ -405,13 +405,13 @@ export default function WorldMap({
     }
   }, [staticView])
 
-  // Imagery: one base layer, live night lights on the dark side, labels.
+  // Imagery: NASA GIBS without an ion token; no unlicensed keyless tiles.
   useEffect(() => {
     const current = globe.current
     if (state !== 'ready' || !current) return
     const { C, widget, layers } = current
     const list = widget.imageryLayers
-    for (const key of ['base', 'night', 'labels'] as const) {
+    for (const key of ['base', 'night'] as const) {
       if (layers[key]) list.remove(layers[key]!, true)
       delete layers[key]
     }
@@ -441,33 +441,20 @@ export default function WorldMap({
                   style: C.IonWorldImageryStyle.AERIAL,
                 }),
               )
-            : template(
-                'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-                'Imagery: Esri, Maxar, Earthstar Geographics and the GIS User Community',
-                19,
+            : gibs(
+                'VIIRS_NOAA20_CorrectedReflectance_TrueColor',
+                yesterday(),
+                9,
+                'jpg',
               )
     list.add(base)
     layers.base = base
-    if (labels) {
-      const ref = template(
-        'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',
-        'Labels: Esri',
-        19,
-      )
-      ref.alpha = 0.85
-      list.add(ref)
-      layers.labels = ref
-    }
-    if (layers.heat) {
-      list.raiseToTop(layers.heat)
-      if (layers.labels) list.raiseToTop(layers.labels)
-    }
+    if (layers.heat) list.raiseToTop(layers.heat)
     // Evenly lit globe: a hard day/night terminator hid data and imagery.
     widget.scene.globe.enableLighting = false
     widget.scene.requestRender()
     store('imagery', imagery)
-    store('labels', labels ? 'on' : 'off')
-  }, [imagery, labels, state])
+  }, [imagery, state])
 
   // Optional photorealistic 3D cities (Cesium ion, non-commercial quota).
   useEffect(() => {
@@ -537,7 +524,6 @@ export default function WorldMap({
       )
       heat.nightAlpha = Math.min(1, heat.alpha + 0.08)
       widget.imageryLayers.add(heat)
-      if (layers.labels) widget.imageryLayers.raiseToTop(layers.labels)
       layers.heat = heat
     }
     for (const { event, enc } of encoded) {
@@ -747,16 +733,18 @@ export default function WorldMap({
                     'NASA Black Marble night lights (2016 composite)',
                   ],
                 ] as const
-              ).map(([key, label, title]) => (
-                <button
-                  key={key}
-                  title={title}
-                  aria-pressed={imagery === key}
-                  onClick={() => setImagery(key)}
-                >
-                  {label}
-                </button>
-              ))}
+              )
+                .filter(([key]) => key !== 'satellite' || !!ionToken)
+                .map(([key, label, title]) => (
+                  <button
+                    key={key}
+                    title={title}
+                    aria-pressed={imagery === key}
+                    onClick={() => setImagery(key)}
+                  >
+                    {label}
+                  </button>
+                ))}
             </div>
             <div
               className="hud-seg"
@@ -789,11 +777,8 @@ export default function WorldMap({
                 </button>
               ))}
             </div>
-            <div className="hud-seg" role="group" aria-label="Overlays">
-              <button aria-pressed={labels} onClick={() => setLabels(!labels)}>
-                Labels
-              </button>
-              {ionToken && (
+            {ionToken && (
+              <div className="hud-seg" role="group" aria-label="Overlays">
                 <button
                   aria-pressed={cities}
                   title="Photorealistic 3D cities below 250 km (Google via Cesium ion)"
@@ -801,8 +786,8 @@ export default function WorldMap({
                 >
                   3D cities
                 </button>
-              )}
-            </div>
+              </div>
+            )}
           </div>
           <div className="hud-readout" aria-hidden="true">
             <span>

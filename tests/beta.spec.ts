@@ -83,7 +83,7 @@ const newsPublished = publishNews(newsSnapshot, {
 
 const base = '/G.O.S.I.P/'
 const imageryHost =
-  /^(server\.arcgisonline\.com|gibs\.earthdata\.nasa\.gov|([a-z0-9-]+\.)*cesium\.com|([a-z0-9-]+\.)*virtualearth\.net|tile\.googleapis\.com)$/
+  /^(gibs\.earthdata\.nasa\.gov|([a-z0-9-]+\.)*cesium\.com|([a-z0-9-]+\.)*virtualearth\.net|tile\.googleapis\.com)$/
 const origin = 'https://public.gosip.test'
 
 // Reserved public hostname, served entirely from a strict local static server.
@@ -166,6 +166,16 @@ test('repository map loads geography, worker and markers with production CSP', a
       url.includes(`${base}cesium/Assets/Textures/NaturalEarthII/`),
     ),
   ).toBe(true)
+  await expect(
+    page.getByRole('button', { name: 'NASA today', exact: true }),
+  ).toHaveAttribute('aria-pressed', 'true')
+  await expect(
+    page.getByRole('button', { name: 'Labels', exact: true }),
+  ).toHaveCount(0)
+  expect(
+    resources.some((url) => url.includes('gibs.earthdata.nasa.gov/')),
+  ).toBe(true)
+  expect(resources.some((url) => url.includes('arcgisonline.com'))).toBe(false)
   // Markers on the far side of the globe are hidden; use one in view.
   const marker = page
     .locator('.map-canvas .event-marker')
