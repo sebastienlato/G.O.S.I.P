@@ -157,7 +157,8 @@ export function ArchiveStatus({
               original retrieval stay distinct from capture. Text is the
               captured version; linked provider pages may have changed. This is
               not a complete revision archive or proof of what was known at an
-              event’s time.
+              event’s time. Globe imagery follows the current display settings;
+              it is not archived imagery.
             </p>
             <p>
               Continuity tracked since{' '}

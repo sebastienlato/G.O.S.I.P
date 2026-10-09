@@ -164,7 +164,7 @@ export function LayerToggles({
                 ? 'Off'
                 : !historyCapture?.sources[key as 'usgs' | 'eonet']?.snapshot
                   ? 'Missing capture'
-                  : `${counts[key]} · ${capturedStale(historyCapture, key as 'usgs' | 'eonet') ? 'was stale' : 'captured'}`
+                  : `${counts[key]}${capturedStale(historyCapture, key as 'usgs' | 'eonet') ? ' · stale' : ''}`
             : !on
               ? 'Off'
               : s.loading && !s.snapshot

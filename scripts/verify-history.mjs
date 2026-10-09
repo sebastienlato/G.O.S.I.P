@@ -41,6 +41,8 @@ export async function verifyHistory(page, site, name) {
   await expect(provenance).toContainText('NASA EONET')
   await expect(provenance).toContainText('Generated unknown')
   await expect(provenance).toContainText(c.release.source_commit.slice(0, 7))
+  await page.getByRole('button', { name: 'Reset map view' }).click()
+  await page.waitForTimeout(2000)
   for (const width of name === 'desktop' ? [1440] : [390, 320]) {
     await page.setViewportSize({ width, height: 1000 })
     await page
