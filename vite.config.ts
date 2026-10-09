@@ -1,4 +1,4 @@
-import { decodeFIRMS } from './src/data/firms'
+import { decodeFIRMS } from './src/data/firms.ts'
 import { readFileSync } from 'node:fs'
 import { defineConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react'

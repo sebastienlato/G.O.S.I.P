@@ -1,5 +1,5 @@
-import type { ExplorerEvent } from './events'
-import type { PublishedSnapshot, SourceHealth } from './published'
+import type { ExplorerEvent } from './events.ts'
+import type { PublishedSnapshot, SourceHealth } from './published.ts'
 export const DWD_URL =
   'https://www.dwd.de/DWD/warnungen/warnapp/json/warnings.json'
 export const DWD_MAX_BYTES = 600_000

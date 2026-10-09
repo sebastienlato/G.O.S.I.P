@@ -30,10 +30,11 @@ export default function PrivacySources() {
       <ul>
         {firmsAvailable && (
           <li>
-            <strong>NASA FIRMS / LANCE:</strong> NOAA-20 VIIRS detections
-            aggregated by GOSIP into 2° cells and a UTC day, delayed at least 24
-            hours. No precise source positions or inferred causes. We
-            acknowledge NASA LANCE, part of ESDIS; data provided as is.{' '}
+            <strong>NASA FIRMS / LANCE:</strong> North American sector NOAA-20
+            VIIRS detections aggregated by GOSIP into 2° cells and a UTC day,
+            delayed at least 24 hours. No precise source positions or inferred
+            causes. We acknowledge NASA LANCE, part of ESDIS; data provided as
+            is.{' '}
             <a
               href="https://www.earthdata.nasa.gov/data/projects/lance"
               target="_blank"

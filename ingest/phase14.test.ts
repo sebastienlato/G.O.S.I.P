@@ -67,7 +67,7 @@ it('only publishes delayed 2 degree daily counts, not precise observations or se
   const result = await ingestFIRMS(
     key,
     stub((url, options) => {
-      expect(url).toContain(`/world/1/${day}`)
+      expect(url).toContain(`/-170,15,-50,75/1/${day}`)
       expect(options?.redirect).toBe('error')
       expect(options?.headers).toHaveProperty('User-Agent')
       return fire()
@@ -81,11 +81,17 @@ it('only publishes delayed 2 degree daily counts, not precise observations or se
   })
   const s = decodeFIRMS(JSON.stringify(result), now).snapshot!
   expect(s.events[0]).toMatchObject({
-    coordinates: [21, 11],
+    coordinates: [-101, 51],
     detection_count: 2,
     occurred_at: null,
   })
-  for (const privateValue of [key, '10.1234', '20.2345', '1201', 'bright_ti4'])
+  for (const privateValue of [
+    key,
+    '50.1234',
+    '-100.2345',
+    '1201',
+    'bright_ti4',
+  ])
     expect(JSON.stringify(result)).not.toContain(privateValue)
   expect(() => parseFIRMS({ ...s.feed, day: '2026-10-08' }, now)).toThrow(
     'delay',
@@ -171,8 +177,9 @@ it('rejects executable JSONP, unsafe text, malformed geometry/time/schema and du
   f.warnings['100000001'][0].headline = '<img src=x>'
   expect(() => parseDWD(f, now)).toThrow()
   for (const csv of [
-    firmsCSV(day).replace('10.1234', '1000'),
+    firmsCSV(day).replace('50.1234', '1000'),
     firmsCSV(day).replace('1200', '2560'),
+    firmsCSV(day).replace('1200', ''),
     firmsCSV(day).replace('N20', 'N21'),
     firmsCSV(day) + firmsCSV(day).split('\n')[1] + '\n',
   ])

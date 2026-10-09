@@ -87,6 +87,7 @@ try {
         assert(Date.now() - Date.parse(p.health.generated_at) < 45 * 60_000)
       if (key === 'firms') {
         assert.equal(p.health.generated_at, null)
+        assert.equal(p.snapshot.feed.area, '-170,15,-50,75')
         assert(
           Date.parse(p.snapshot.feed.day + 'T00:00:00Z') + 86400_000 <=
             Date.now() - 86400_000,

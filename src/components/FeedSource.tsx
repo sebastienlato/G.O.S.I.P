@@ -459,8 +459,8 @@ export function LiveStatus({
             </strong>
             {fires.snapshot && (
               <p>
-                {fires.snapshot.feed.day} UTC · {fires.snapshot.events.length}{' '}
-                occupied 2° cells · retrieved{' '}
+                North American sector · {fires.snapshot.feed.day} UTC ·{' '}
+                {fires.snapshot.events.length} occupied 2° cells · retrieved{' '}
                 {formatTimestamp(fires.snapshot.retrieved_at)}. Use 3 or 7 days
                 to include delayed detections.
               </p>
@@ -476,10 +476,11 @@ export function LiveStatus({
               <summary>FIRMS freshness & source details</summary>
               <div className="disclosure-body">
                 <p>
-                  NASA FIRMS / LANCE · NOAA-20 VIIRS. GOSIP publishes one UTC
-                  day, at least 24 hours delayed, aggregated into 2° cells.
-                  Counts are detections, not confirmed fires or impacts. No
-                  individual positions, times or inferred causes.
+                  NASA FIRMS / LANCE · NOAA-20 VIIRS · North American sector
+                  (170°W–50°W, 15°N–75°N). GOSIP publishes one UTC day, at least
+                  24 hours delayed, aggregated into 2° cells. Counts are
+                  detections, not confirmed fires or impacts. No individual
+                  positions, times or inferred causes.
                 </p>
                 <p>
                   We acknowledge NASA LANCE, part of ESDIS.{' '}

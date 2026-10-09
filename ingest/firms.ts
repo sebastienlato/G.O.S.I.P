@@ -1,5 +1,6 @@
 import {
   FIRMS_PRODUCT,
+  FIRMS_AREA,
   FIRMS_MAX_BYTES,
   parseFIRMS,
   publishFIRMS,
@@ -47,9 +48,12 @@ export function aggregateFIRMS(raw: string, day: string) {
       !row[1] ||
       !Number.isFinite(latitude) ||
       !Number.isFinite(longitude) ||
-      Math.abs(latitude) > 90 ||
-      Math.abs(longitude) > 180 ||
+      latitude < 15 ||
+      latitude > 75 ||
+      longitude < -170 ||
+      longitude > -50 ||
       row[5] !== day ||
+      !/^\d{1,4}$/.test(row[6]) ||
       !/^\d{4}$/.test(clock) ||
       Number(clock.slice(0, 2)) > 23 ||
       Number(clock.slice(2)) > 59 ||
@@ -68,7 +72,7 @@ export function aggregateFIRMS(raw: string, day: string) {
         Number(row[i]) > 100000
       )
         throw Error('Invalid measure')
-    const unique = [row[0], row[1], row[5], clock].join(',')
+    const unique = [latitude, longitude, row[5], clock].join(',')
     if (seen.has(unique)) throw Error('Duplicate detection')
     seen.add(unique)
     const lon = Math.min(179, Math.floor((longitude + 180) / 2) * 2 - 179),
@@ -80,6 +84,7 @@ export function aggregateFIRMS(raw: string, day: string) {
   }
   return {
     product: FIRMS_PRODUCT,
+    area: FIRMS_AREA,
     day,
     cells: [...cells.values()].sort((a, b) => a[0] - b[0] || a[1] - b[1]),
   }
@@ -95,7 +100,7 @@ export const ingestFIRMS = (
     {
       source: 'firms',
       url: validKey
-        ? `https://firms.modaps.eosdis.nasa.gov/api/area/csv/${key}/${FIRMS_PRODUCT}/world/1/${day}`
+        ? `https://firms.modaps.eosdis.nasa.gov/api/area/csv/${key}/${FIRMS_PRODUCT}/${FIRMS_AREA}/1/${day}`
         : '',
       maxBytes: 8_000_000,
       publicationMaxBytes: FIRMS_MAX_BYTES,

@@ -1,7 +1,8 @@
-import type { ExplorerEvent } from './events'
-import type { PublishedSnapshot, SourceHealth } from './published'
-import { object, iso } from './dwd'
+import type { ExplorerEvent } from './events.ts'
+import type { PublishedSnapshot, SourceHealth } from './published.ts'
+import { object, iso } from './dwd.ts'
 export const FIRMS_MAX_BYTES = 200_000
+export const FIRMS_AREA = '-170,15,-50,75'
 export const FIRMS_PRODUCT = 'VIIRS_NOAA20_NRT'
 export interface FireSummary {
   kind: 'fire-summary'
@@ -33,12 +34,18 @@ export interface FireSnapshot {
   events: FireSummary[]
   retrieved_at: string
   generated_at: null
-  feed: { product: typeof FIRMS_PRODUCT; day: string; cells: number[][] }
+  feed: {
+    product: typeof FIRMS_PRODUCT
+    area: typeof FIRMS_AREA
+    day: string
+    cells: number[][]
+  }
 }
 export function parseFIRMS(input: unknown, now: number): FireSnapshot {
   const f = object(input)
   if (
     f.product !== FIRMS_PRODUCT ||
+    f.area !== FIRMS_AREA ||
     typeof f.day !== 'string' ||
     !/^\d{4}-\d{2}-\d{2}$/.test(f.day) ||
     !Array.isArray(f.cells) ||
@@ -56,8 +63,10 @@ export function parseFIRMS(input: unknown, now: number): FireSnapshot {
     if (
       !Number.isInteger(lon) ||
       !Number.isInteger(lat) ||
-      Math.abs(lon) > 179 ||
-      Math.abs(lat) > 89 ||
+      lon < -169 ||
+      lon > -49 ||
+      lat < 15 ||
+      lat > 75 ||
       Math.abs(lon % 2) !== 1 ||
       Math.abs(lat % 2) !== 1 ||
       !Number.isSafeInteger(count) ||
@@ -75,7 +84,7 @@ export function parseFIRMS(input: unknown, now: number): FireSnapshot {
       id,
       title: `${count} thermal detections`,
       summary:
-        'NASA FIRMS NOAA-20 VIIRS detections aggregated by GOSIP into a 2° cell and UTC day. Not confirmed fires.',
+        'NASA FIRMS NOAA-20 VIIRS detections in the North American sector, aggregated by GOSIP into a 2° cell and UTC day. Not confirmed fires.',
       category: 'environment',
       coordinates: [lon, lat],
       region: `2° cell centred ${lat}°, ${lon}°`,
@@ -94,14 +103,19 @@ export function parseFIRMS(input: unknown, now: number): FireSnapshot {
       is_demo: false,
       freshness: 'retrieved',
       coverage_note:
-        'At least 24 hours delayed. Cell centres are display anchors, not detection positions or fire boundaries. Thermal anomalies can have multiple causes; counts are satellite detections, not distinct fires, impacts or corroboration. One sensor and one UTC day; cloud, overpass and processing gaps limit coverage. Generation/publication/update times and individual positions are not published.',
+        'North American sector: 170°W–50°W, 15°N–75°N; not complete continental coverage. At least 24 hours delayed. Cell centres are display anchors, not detection positions or fire boundaries. Thermal anomalies can have multiple causes; counts are satellite detections, not distinct fires, impacts or corroboration. One sensor and one UTC day; cloud, overpass and processing gaps limit coverage. Generation/publication/update times and individual positions are not published.',
     }
   })
   return {
     events,
     retrieved_at: new Date(now).toISOString(),
     generated_at: null,
-    feed: { product: FIRMS_PRODUCT, day: f.day, cells: f.cells },
+    feed: {
+      product: FIRMS_PRODUCT,
+      area: FIRMS_AREA,
+      day: f.day,
+      cells: f.cells,
+    },
   }
 }
 export function publishFIRMS(
