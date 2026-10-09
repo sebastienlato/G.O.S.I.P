@@ -2,6 +2,8 @@
 
 Act as autonomous lead developer in /Users/sebastienlato/Dev/GOSIP. Run `git pull --ff-only` first. Read AGENTS, README, ROADMAP, PROJECT_STATE, DECISIONS, docs/WORKFLOW, DESIGN, ARCHITECTURE, DATA_POLICY and BETA_READINESS. Inspect status/log/remotes and actual HTTPS release.json/data/health; use the final Phase 17 evidence in PROJECT_STATE/BETA_READINESS. One phase only; web first, iOS paused.
 
+Verified Phase 17 release: source `fb7ea172702b28f54e7fac530536bdf8ab72980f`, push run 37968469470, built 2026-10-09 17:45:35 UTC; seven healthy HTTPS mirrors, LL2 3 selected schedules, 12.51 MB, zero run artifacts. Actual desktop/mobile globe smoke and 1440/390/320 visual inspection passed; 244 unit / 34 repository-path browser checks passed. Final evidence docs commit is newer than deployed code. No owner action remains.
+
 ## Foundation
 
 - Preserve the D52/D55 satellite globe console, shared line icons, layer panel/feed/details, real clock and independent source health. NASA GIBS keyless imagery; optional owner ion imagery/terrain/cities. No Esri, landing-page or flat-map redesign, square heat grid, data-provider browser request or unapproved imagery host.
