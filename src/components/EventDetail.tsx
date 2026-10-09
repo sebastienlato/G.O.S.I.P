@@ -66,7 +66,9 @@ export default function EventDetail({
     >
       <div className="detail-content">
         <div className="flex items-center justify-between">
-          <span className="eyebrow">Record {event.id}</span>
+          <span className="eyebrow">
+            {news ? 'Global Voices · attributed report' : `Record ${event.id}`}
+          </span>
           <button
             autoFocus
             className="icon-button"
@@ -105,11 +107,13 @@ export default function EventDetail({
         </h2>
         <p className="detail-region">
           <MapPin size={15} />
-          {hazard
-            ? event.coordinates
-              ? 'Approximate catalog geometry'
-              : 'No point location'
-            : event.region}
+          {news
+            ? 'Feed only · location not supplied'
+            : hazard
+              ? event.coordinates
+                ? 'Approximate catalog geometry'
+                : 'No point location'
+              : event.region}
           {event.country ? ` · ${event.country}` : ''}
         </p>
         <div className="simulation-note">

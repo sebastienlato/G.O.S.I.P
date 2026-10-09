@@ -62,7 +62,14 @@ const EventFeed = forwardRef<HTMLInputElement, Props>(function EventFeed(
         <h2 id="feed-title">
           <span className="feed-count">{events.length}</span>{' '}
           <span aria-live="polite" role="status">
-            {countNoun} {events.length === 1 ? 'event' : 'events'}
+            {countNoun}{' '}
+            {demoClock === null
+              ? events.length === 1
+                ? 'record'
+                : 'records'
+              : events.length === 1
+                ? 'event'
+                : 'events'}
           </span>
         </h2>
         <p className="feed-summary">
