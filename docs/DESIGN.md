@@ -22,7 +22,7 @@ The web explorer reads like an instrument: the map comes first, colour carries d
 | `--chalk` / `--mist` / `--faint` | `#e7eeeb` / `#9db1b7` / `#6f8890` | Text levels |
 | `--ok` / `--warn` / `--lab` | `#7fd1ae` / `#e9b44c` / `#b9a7f2` | Healthy, stale, simulation |
 
-Data colours (`encoding.ts`): magnitude below 4 `#e9b44c`, 4–4.9 `#f08a3e`, 5–5.9 `#e8553a`, 6+ `#d42d55`; volcanoes `#f07cae` (triangle); storms `#62c6e8` (eye ring).
+Data colours (`encoding.ts`): magnitude below 4 `#e9b44c`, 4–4.9 `#f08a3e`, 5–5.9 `#e8553a`, 6+ `#d42d55`; volcanoes `#f07cae` (triangle); storms `#62c6e8` (eye ring); delayed FIRMS cells `#c1a1f4` (diamond); DWD warnings `#a5d6a7` (square, feed-only).
 
 ## Type
 
@@ -48,3 +48,5 @@ Data colours (`encoding.ts`): magnitude below 4 `#e9b44c`, 4–4.9 `#f08a3e`, 5�
 ## Components
 
 `App.tsx` owns state and composition. `EventFeed` / `EventCard` render the feed, `WorldMap` + `MapLegend` the map, `FeedSource.tsx` exports `LayerToggles`, `LiveStatus` and `SimulationLab`, `AboutDialog` the about/privacy dialog.
+
+Phase 14: category buttons live in a disclosure to keep the desktop rail on one row. Phones use a two-column toggle grid and wrapped time/view controls. Thermal cards lead with the detection count, not a fire count; warning cards show original-language title, validity and DWD level.

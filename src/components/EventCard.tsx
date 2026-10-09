@@ -1,3 +1,5 @@
+import { isFireSummary } from '../data/firms'
+import { isWarning } from '../data/dwd'
 import { isHazard, hazardKinds } from '../data/eonet'
 import {
   additionalLayers,
@@ -36,6 +38,9 @@ export function eventAge(
   referenceTime: number,
   demoClock: Props['demoClock'],
 ) {
+  if (isFireSummary(event)) return `Detected ${event.day} UTC · delayed ≥24h`
+  if (isWarning(event))
+    return `Valid ${formatTimestamp(event.valid_from)} → ${event.valid_until ? formatTimestamp(event.valid_until) : 'end not supplied'}`
   if (isForecast(event))
     return `Valid from ${formatTimestamp(event.occurred_at)}`
   if (isDigital(event) && Date.parse(event.interval_end) > referenceTime)
@@ -83,13 +88,21 @@ export default function EventCard({
           <span className="card-magnitude">
             {quake.magnitude === null ? '–' : quake.magnitude.toFixed(1)}
           </span>
+        ) : isFireSummary(event) ? (
+          <span className="card-magnitude">{event.detection_count}</span>
         ) : (
           <span className={`glyph glyph-${enc.kind}`} />
         )}
       </span>
       <span className="card-body">
         <h3
-          lang={isReport(event) ? event.source_language : undefined}
+          lang={
+            isWarning(event)
+              ? 'de'
+              : isReport(event)
+                ? event.source_language
+                : undefined
+          }
           dir="auto"
         >
           {quake ? quake.region : event.title}
@@ -115,7 +128,15 @@ export default function EventCard({
               NASA EONET
             </span>
           )}
-          {!quake && !hazard && (
+          {isWarning(event) && (
+            <span>
+              DWD · Level {event.level} · {event.region} · Germany · feed only
+            </span>
+          )}
+          {isFireSummary(event) && (
+            <span>NASA FIRMS · 2° cell · {event.region}</span>
+          )}
+          {!quake && !hazard && !isWarning(event) && !isFireSummary(event) && (
             <span>
               {label}
               {event.region ? ` · ${event.region}` : ''}

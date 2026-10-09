@@ -1,25 +1,52 @@
 import { localSourceAccess } from '../state/sourceAccess'
 import { additionalLayers, type AdditionalSource } from '../data/additional'
-import type { useHazards, useEarthquakes } from '../state/useEarthquakes'
-import type { LiveLayer, Source } from '../state/explorer'
+import type {
+  useHazards,
+  useEarthquakes,
+  useWarnings,
+  useFire,
+} from '../state/useEarthquakes'
+import {
+  liveLayerKeys,
+  firmsAvailable,
+  type LiveLayer,
+  type Source,
+} from '../state/explorer'
 import { formatTimestamp } from '../data/events'
-import { hazardColors, magnitudeSteps } from '../state/encoding'
+import {
+  hazardColors,
+  magnitudeSteps,
+  warningColor,
+  fireColor,
+} from '../state/encoding'
 
 type Quakes = ReturnType<typeof useEarthquakes>
+type Fires = ReturnType<typeof useFire>
+type Warnings = ReturnType<typeof useWarnings>
 type Hazards = ReturnType<typeof useHazards>
 
 const layerMeta: Record<
   LiveLayer,
   { label: string; name: string; provider: string }
 > = {
+  firms: {
+    label: 'Thermal cells',
+    name: 'FIRMS thermal cells (delayed detections)',
+    provider: 'NASA FIRMS',
+  },
+  dwd: {
+    label: 'Warnings · DE',
+    name: 'DWD weather warnings · Warnings · DE (Germany)',
+    provider: 'DWD',
+  },
   usgs: {
     label: 'Earthquakes',
     name: 'USGS earthquakes',
     provider: 'USGS',
   },
   eonet: {
-    label: 'Storms and volcanoes',
-    name: 'EONET global hazards (storms and volcanoes)',
+    label: 'Storms / volcanoes',
+    name: 'EONET global hazards · Storms / volcanoes',
     provider: 'NASA EONET',
   },
 }
@@ -31,18 +58,22 @@ export function LayerToggles({
   counts,
   quakes,
   hazards,
+  warnings,
+  fires,
 }: {
   liveLayers: LiveLayer[]
   onToggle: (layer: LiveLayer) => void
   counts: Record<LiveLayer, number>
   quakes: Quakes
   hazards: Hazards
+  warnings: Warnings
+  fires: Fires
 }) {
-  const state = { usgs: quakes, eonet: hazards }
+  const state = { usgs: quakes, eonet: hazards, dwd: warnings, firms: fires }
   return (
     <fieldset className="layer-toggles">
       <legend className="sr-only">Live layers</legend>
-      {(['usgs', 'eonet'] as const).map((key) => {
+      {liveLayerKeys.map((key) => {
         const on = liveLayers.includes(key)
         const s = state[key]
         const status = !on
@@ -70,6 +101,12 @@ export function LayerToggles({
                 magnitudeSteps.map((step) => (
                   <i key={step.label} style={{ background: step.color }} />
                 ))
+              ) : key === 'dwd' || key === 'firms' ? (
+                <i
+                  style={{
+                    background: key === 'dwd' ? warningColor : fireColor,
+                  }}
+                />
               ) : (
                 <>
                   <i style={{ background: hazardColors.severeStorms }} />
@@ -96,7 +133,9 @@ export function SimulationLab({
 }) {
   const simulations: [Source, string][] = [
     ['demo', 'Other examples · simulated'],
-    ['fire-demo', 'Fire examples · simulated'],
+    ...(!firmsAvailable
+      ? [['fire-demo', 'Fire examples · simulated'] as [Source, string]]
+      : []),
     ['reports-demo', 'Global reports · simulated'],
     ['digital-demo', 'Digital world · simulated'],
     ...Object.entries(additionalLayers).map(
@@ -143,10 +182,14 @@ export function LiveStatus({
   liveLayers,
   quakes,
   hazards,
+  warnings,
+  fires,
 }: {
   liveLayers: LiveLayer[]
   quakes: Quakes
   hazards: Hazards
+  warnings: Warnings
+  fires: Fires
 }) {
   const { snapshot, health, loading, error, stale, waitSeconds, offline } =
     quakes
@@ -154,8 +197,8 @@ export function LiveStatus({
     <section className="live-status" aria-label="Data source">
       <h2 className="section-title">Sources and freshness</h2>
       <p className="section-lede">
-        Coming next: floods, fire detections, weather warnings, news, digital,
-        space and movement.
+        Coming next: floods, {!firmsAvailable && 'fire detections, '}broader
+        weather coverage, news, digital, space and movement.
       </p>
       <div className="status-grid">
         {liveLayers.includes('usgs') && (
@@ -303,6 +346,174 @@ export function LiveStatus({
                   </button>
                   {hazards.offline && <span>Offline · refresh paused</span>}
                 </div>
+              </div>
+            </details>
+          </div>
+        )}
+        {liveLayers.includes('dwd') && (
+          <div className="source-status" aria-label="DWD status">
+            <strong
+              aria-live="polite"
+              className={
+                !warnings.snapshot || warnings.stale
+                  ? 'status-warn'
+                  : 'status-ok'
+              }
+            >
+              {warnings.loading
+                ? 'Loading warnings…'
+                : !warnings.snapshot
+                  ? 'DWD unavailable · no warnings loaded'
+                  : warnings.stale
+                    ? 'STALE · last available DWD warnings'
+                    : 'Live DWD weather warnings'}
+            </strong>
+            {warnings.snapshot && (
+              <p>
+                Retrieved {formatTimestamp(warnings.snapshot.retrieved_at)} ·{' '}
+                {warnings.snapshot.events.length} district warnings.
+              </p>
+            )}
+            {warnings.error && <p className="source-error">{warnings.error}</p>}
+            {warnings.snapshot?.events.length === 0 && (
+              <p>
+                Valid empty warning response. This does not mean there are no
+                hazards.
+              </p>
+            )}
+            <details className="disclosure">
+              <summary>DWD freshness & source details</summary>
+              <div className="disclosure-body">
+                <p>
+                  Germany · active and upcoming district warnings, original
+                  German. Feed only: no coordinates supplied. The selected
+                  window looks forward for warnings. Preliminary information is
+                  excluded.
+                </p>
+                <p>
+                  Copyright Deutscher Wetterdienst ·{' '}
+                  <a
+                    href="https://creativecommons.org/licenses/by/4.0/"
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    CC BY 4.0
+                  </a>
+                  . Reformatted and filtered by GOSIP. No endorsement.{' '}
+                  <a
+                    href="https://www.dwd.de/warnungen"
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    Current DWD warnings ↗
+                  </a>
+                </p>
+                <p>
+                  Ingestion and page checks every 15 minutes; stale after 45
+                  minutes from generation/retrieval or failure. This is not an
+                  emergency service. Warning validity is distinct from
+                  occurrence; individual issue/update times are not supplied.
+                </p>
+                {warnings.snapshot && (
+                  <p>
+                    Feed generated{' '}
+                    {formatTimestamp(warnings.snapshot.generated_at)}.
+                  </p>
+                )}
+                {warnings.health && (
+                  <p>
+                    Last pipeline attempt{' '}
+                    {formatTimestamp(warnings.health.attempted_at)} · Status:{' '}
+                    {warnings.health.status}.
+                  </p>
+                )}
+                <button
+                  onClick={() => void warnings.refresh()}
+                  disabled={
+                    warnings.loading ||
+                    warnings.offline ||
+                    warnings.waitSeconds > 0
+                  }
+                >
+                  Refresh DWD data
+                </button>
+              </div>
+            </details>
+          </div>
+        )}
+        {liveLayers.includes('firms') && (
+          <div className="source-status" aria-label="FIRMS status">
+            <strong
+              aria-live="polite"
+              className={
+                !fires.snapshot || fires.stale ? 'status-warn' : 'status-ok'
+              }
+            >
+              {fires.loading
+                ? 'Loading thermal summaries…'
+                : !fires.snapshot
+                  ? 'FIRMS unavailable · no detections loaded'
+                  : fires.stale
+                    ? 'STALE · last available FIRMS summary'
+                    : 'Live FIRMS · delayed daily summary'}
+            </strong>
+            {fires.snapshot && (
+              <p>
+                {fires.snapshot.feed.day} UTC · {fires.snapshot.events.length}{' '}
+                occupied 2° cells · retrieved{' '}
+                {formatTimestamp(fires.snapshot.retrieved_at)}. Use 3 or 7 days
+                to include delayed detections.
+              </p>
+            )}
+            {fires.error && <p className="source-error">{fires.error}</p>}
+            {fires.snapshot?.events.length === 0 && (
+              <p>
+                Valid empty detection response. Missing detections do not
+                establish absence of fire.
+              </p>
+            )}
+            <details className="disclosure">
+              <summary>FIRMS freshness & source details</summary>
+              <div className="disclosure-body">
+                <p>
+                  NASA FIRMS / LANCE · NOAA-20 VIIRS. GOSIP publishes one UTC
+                  day, at least 24 hours delayed, aggregated into 2° cells.
+                  Counts are detections, not confirmed fires or impacts. No
+                  individual positions, times or inferred causes.
+                </p>
+                <p>
+                  We acknowledge NASA LANCE, part of ESDIS.{' '}
+                  <a
+                    href="https://www.earthdata.nasa.gov/data/projects/lance"
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    NASA acknowledgment & disclaimer ↗
+                  </a>
+                  . Data provided as is; no emergency use or endorsement.
+                </p>
+                <p>
+                  Scheduled checks every 15 minutes; retrieval stale after 45
+                  minutes or failure. The intentional observation delay is
+                  separate from retrieval freshness. Feed generation,
+                  publication and update times are unknown; coverage is
+                  incomplete.
+                </p>
+                {fires.health && (
+                  <p>
+                    Last pipeline attempt{' '}
+                    {formatTimestamp(fires.health.attempted_at)} · Status:{' '}
+                    {fires.health.status}.
+                  </p>
+                )}
+                <button
+                  onClick={() => void fires.refresh()}
+                  disabled={
+                    fires.loading || fires.offline || fires.waitSeconds > 0
+                  }
+                >
+                  Refresh FIRMS data
+                </button>
               </div>
             </details>
           </div>

@@ -1532,7 +1532,7 @@ dialog::backdrop {
 }
 @media (max-width: 960px) {
   .rail {
-    position: static;
+    position: relative;
   }
   .stage {
     display: block;
@@ -1718,5 +1718,110 @@ dialog::backdrop {
     animation-duration: 0s !important;
     transition: none !important;
     scroll-behavior: auto !important;
+  }
+}
+
+/* Warning glyph: distinct square; DWD records remain feed-only. */
+.glyph-warning {
+  width: 12px;
+  height: 12px;
+  border: 2px solid var(--mark);
+  border-radius: 2px;
+}
+.glyph-dwd i {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+}
+.glyph-fire {
+  width: 12px;
+  height: 12px;
+  background: var(--mark);
+  transform: rotate(45deg);
+  border-radius: 0;
+}
+.glyph-firms i {
+  width: 9px;
+  height: 9px;
+  border-radius: 0;
+  transform: rotate(45deg);
+}
+.event-marker.kind-fire > span {
+  border-radius: 0;
+  clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+  box-shadow: none;
+}
+.event-marker.kind-fire.selected > span {
+  outline: 0;
+  filter: drop-shadow(0 0 3px var(--focus));
+}
+.category-menu {
+  position: relative;
+  flex-shrink: 0;
+}
+.category-menu > summary {
+  padding: 10px;
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.category-menu[open] .category-filters {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 40;
+  background: var(--deep);
+  box-shadow: 0 8px 20px #0005;
+  display: flex;
+  flex-direction: column;
+}
+@media (min-width: 1100px) {
+  .rail {
+    gap: 10px;
+  }
+  .layer-toggles {
+    gap: 6px;
+    flex-wrap: nowrap;
+  }
+  .layer-toggle {
+    gap: 6px;
+    padding: 6px 8px;
+    font-size: 13px;
+  }
+  .rail-group button {
+    padding: 4px 8px;
+  }
+}
+@media (max-width: 640px) {
+  .layer-toggles {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .layer-toggle {
+    flex: none;
+    min-width: 0;
+    gap: 6px;
+  }
+  .layer-name {
+    overflow-wrap: anywhere;
+  }
+  .layer-count {
+    margin-left: auto;
+  }
+}
+@media (max-width: 640px) {
+  .rail-scroll {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: visible;
+    flex-wrap: wrap;
+  }
+  .rail-group[aria-label='Time window'] {
+    order: 3;
+  }
+  .rail-group[aria-label='Explorer view'] {
+    margin-left: auto;
   }
 }

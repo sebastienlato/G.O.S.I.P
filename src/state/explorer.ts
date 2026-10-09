@@ -18,8 +18,15 @@ export type Source =
   | 'fire-demo'
   | 'reports-demo'
   | 'digital-demo'
-export const liveLayerKeys = ['usgs', 'eonet'] as const
-export type LiveLayer = (typeof liveLayerKeys)[number]
+export const firmsAvailable =
+  typeof __FIRMS_AVAILABLE__ !== 'undefined' && __FIRMS_AVAILABLE__
+export type LiveLayer = 'usgs' | 'eonet' | 'dwd' | 'firms'
+export const liveLayerKeys: LiveLayer[] = [
+  'usgs',
+  'eonet',
+  'dwd',
+  ...(firmsAvailable ? ['firms' as const] : []),
+]
 export interface ExplorerFilters {
   liveLayers: LiveLayer[]
   source: Source

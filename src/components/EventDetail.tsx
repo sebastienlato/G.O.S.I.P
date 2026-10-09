@@ -1,3 +1,7 @@
+import { isFireSummary } from '../data/firms'
+import FireBody from './FireBody'
+import { isWarning } from '../data/dwd'
+import WarningBody from './WarningBody'
 import { isHazard } from '../data/eonet'
 import HazardBody from './HazardBody'
 import { isAdditional, additionalLayers } from '../data/additional'
@@ -31,8 +35,10 @@ export default function EventDetail({
   const digital = isDigital(event)
   const report = isReport(event)
   const forecast = isForecast(event)
+  const fire = isFireSummary(event)
+  const warning = isWarning(event)
   const hazard = isHazard(event)
-  const quake = !event.is_demo && !forecast && !hazard
+  const quake = !event.is_demo && !forecast && !hazard && !warning && !fire
   const thermal = 'kind' in event && event.kind === 'thermal'
   const dialog = useRef<HTMLDialogElement>(null)
   useEffect(() => {
@@ -80,7 +86,7 @@ export default function EventDetail({
         </div>
         <h2
           id="detail-title"
-          lang={report ? event.source_language : undefined}
+          lang={warning ? 'de' : report ? event.source_language : undefined}
           dir="auto"
         >
           {event.title}
@@ -96,32 +102,40 @@ export default function EventDetail({
         </p>
         <div className="simulation-note">
           <strong>
-            {hazard
-              ? 'CURATED HAZARD · NASA EONET'
-              : digital
-                ? 'SIMULATED · DIGITAL MEASUREMENT'
-                : report
-                  ? 'SIMULATED · ATTRIBUTED CLAIM'
-                  : event.is_demo
-                    ? 'SIMULATED EVENT'
-                    : forecast
-                      ? 'WEATHER FORECAST · NWS'
-                      : event.status === 'deleted'
-                        ? 'WITHDRAWN BY PROVIDER'
-                        : 'EARTHQUAKE OBSERVATION'}
+            {fire
+              ? 'THERMAL DETECTIONS · FIRMS'
+              : warning
+                ? 'WEATHER WARNING · DWD'
+                : hazard
+                  ? 'CURATED HAZARD · NASA EONET'
+                  : digital
+                    ? 'SIMULATED · DIGITAL MEASUREMENT'
+                    : report
+                      ? 'SIMULATED · ATTRIBUTED CLAIM'
+                      : event.is_demo
+                        ? 'SIMULATED EVENT'
+                        : forecast
+                          ? 'WEATHER FORECAST · NWS'
+                          : event.status === 'deleted'
+                            ? 'WITHDRAWN BY PROVIDER'
+                            : 'EARTHQUAKE OBSERVATION'}
           </strong>
           <span>
-            {hazard
-              ? 'Curated natural-event metadata for general information. Not an official warning, sensor detection or verified impact.'
-              : digital
-                ? 'Invented measurement scenario. Not a confirmed outage, intentional censorship or real provider observation.'
-                : report
-                  ? 'An invented publisher’s claim, not a verified incident. No real-world event or independent corroboration is asserted.'
-                  : event.is_demo
-                    ? 'Invented for this prototype. Not a real-world report, alert, or verified observation.'
-                    : forecast
-                      ? 'Prediction for a future validity interval. Not a measurement, official alert, or confirmed impact. Check the current NWS source for warnings.'
-                      : 'Provider estimate subject to revision. Review status concerns source parameters, not verified damage, casualties or an emergency alert.'}
+            {fire
+              ? 'Delayed, coarse satellite detection counts. Not confirmed fires, causes or impacts.'
+              : warning
+                ? 'Provider warning for a validity interval. Not an observed impact; check current official guidance.'
+                : hazard
+                  ? 'Curated natural-event metadata for general information. Not an official warning, sensor detection or verified impact.'
+                  : digital
+                    ? 'Invented measurement scenario. Not a confirmed outage, intentional censorship or real provider observation.'
+                    : report
+                      ? 'An invented publisher’s claim, not a verified incident. No real-world event or independent corroboration is asserted.'
+                      : event.is_demo
+                        ? 'Invented for this prototype. Not a real-world report, alert, or verified observation.'
+                        : forecast
+                          ? 'Prediction for a future validity interval. Not a measurement, official alert, or confirmed impact. Check the current NWS source for warnings.'
+                          : 'Provider estimate subject to revision. Review status concerns source parameters, not verified damage, casualties or an emergency alert.'}
           </span>
         </div>
         {playback && (
@@ -132,7 +146,11 @@ export default function EventDetail({
           </p>
         )}
         <>
-          {hazard ? (
+          {fire ? (
+            <FireBody event={event} stale={stale} />
+          ) : warning ? (
+            <WarningBody event={event} stale={stale} />
+          ) : hazard ? (
             <HazardBody event={event} stale={stale} />
           ) : additional ? (
             <AdditionalBody event={event} />
@@ -311,11 +329,13 @@ export default function EventDetail({
         ) : (
           <p className="report-label">
             This{' '}
-            {additional
-              ? 'activity example'
-              : digital
-                ? 'measurement scenario'
-                : 'report'}{' '}
+            {warning
+              ? 'warning'
+              : additional
+                ? 'activity example'
+                : digital
+                  ? 'measurement scenario'
+                  : 'report'}{' '}
             is not mapped. Explore it in the feed.
           </p>
         )}

@@ -1,3 +1,4 @@
+import { firmsAvailable } from '../state/explorer'
 import { assetPath } from '../state/assetPath'
 import { localSourceAccess } from '../state/sourceAccess'
 
@@ -16,7 +17,7 @@ export default function PrivacySources() {
       <p>
         {localSourceAccess
           ? 'On this loopback host, selecting the development NWS source can contact that provider directly, revealing your IP address and browser connection information. No credentials are sent.'
-          : 'Live layers are read from snapshots on this host. Your browser does not contact USGS or EONET. Public NWS is not connected yet.'}{' '}
+          : 'Live layers are read from snapshots on this host. Your browser does not contact data providers. Public NWS is not connected yet.'}{' '}
         Opening an external source link leaves GOSIP and contacts that site.
       </p>
       <p>
@@ -27,6 +28,41 @@ export default function PrivacySources() {
       </p>
       <h3>Sources & licenses</h3>
       <ul>
+        {firmsAvailable && (
+          <li>
+            <strong>NASA FIRMS / LANCE:</strong> NOAA-20 VIIRS detections
+            aggregated by GOSIP into 2° cells and a UTC day, delayed at least 24
+            hours. No precise source positions or inferred causes. We
+            acknowledge NASA LANCE, part of ESDIS; data provided as is.{' '}
+            <a
+              href="https://www.earthdata.nasa.gov/data/projects/lance"
+              target="_blank"
+              rel="noreferrer"
+            >
+              NASA acknowledgment & disclaimer ↗
+            </a>
+          </li>
+        )}
+        <li>
+          <strong>Deutscher Wetterdienst (DWD):</strong> Copyright Deutscher
+          Wetterdienst ·{' '}
+          <a
+            href="https://creativecommons.org/licenses/by/4.0/"
+            target="_blank"
+            rel="noreferrer"
+          >
+            CC BY 4.0
+          </a>
+          . District warnings for Germany, original German, reformatted and
+          filtered by GOSIP; no endorsement.{' '}
+          <a
+            href="https://www.dwd.de/copyright"
+            target="_blank"
+            rel="noreferrer"
+          >
+            DWD terms ↗
+          </a>
+        </li>
         <li>
           <strong>U.S. Geological Survey / ANSS:</strong> M2.5+ week source
           parameters only, with credit and event links. USGS-produced data is in
@@ -69,10 +105,11 @@ export default function PrivacySources() {
           </a>
         </li>
         <li>
-          <strong>Coming:</strong> fire, weather, reports, digital, space,
-          aviation and maritime. <strong>Simulation lab:</strong> original GOSIP
-          fixtures. No live fire, report, digital, space, aviation or maritime
-          data is connected. Examples are never evidence of actual conditions.
+          <strong>Coming:</strong> {!firmsAvailable && 'fire, '}broader weather,
+          reports, digital, space, aviation and maritime.{' '}
+          <strong>Simulation lab:</strong> original GOSIP fixtures. No live
+          report, digital, space, aviation or maritime data is connected.
+          Examples are never evidence of actual conditions.
         </li>
         <li>
           <strong>Map:</strong> Natural Earth 4.1.0 public-domain geography via

@@ -1,3 +1,7 @@
+import { dwdFixture, firmsCSV } from './fixtures/phase14'
+import { parseDWD, publishDWD } from '../src/data/dwd'
+import { parseFIRMS, publishFIRMS } from '../src/data/firms'
+import { aggregateFIRMS, fireDay } from '../ingest/firms'
 import { eonetFixture } from './fixtures/eonet'
 import { parseEONET, publishEONET } from '../src/data/eonet'
 import { expect, test } from '@playwright/test'
@@ -27,6 +31,34 @@ const hazardPublished = publishEONET(hazardSnapshot, {
   record_count: hazardSnapshot.events.length,
 })
 
+const warningSnapshot = parseDWD(dwdFixture(now), now)
+const warningPublished = publishDWD(warningSnapshot, {
+  source: 'dwd',
+  status: 'ok',
+  error: null,
+  attempted_at: new Date(now).toISOString(),
+  fetched_at: warningSnapshot.retrieved_at,
+  generated_at: warningSnapshot.generated_at,
+  record_count: 1,
+})
+const emptyWarnings = publishDWD(
+  parseDWD({ ...dwdFixture(now), warnings: {} }, now),
+  { ...warningPublished.health, record_count: 0 },
+)
+const fireSnapshot = parseFIRMS(
+  aggregateFIRMS(firmsCSV(fireDay(now)), fireDay(now)),
+  now,
+)
+const firePublished = publishFIRMS(fireSnapshot, {
+  source: 'firms',
+  status: 'ok',
+  error: null,
+  attempted_at: new Date(now).toISOString(),
+  fetched_at: fireSnapshot.retrieved_at,
+  generated_at: null,
+  record_count: 1,
+})
+
 const base = '/G.O.S.I.P/'
 const origin = 'https://public.gosip.test'
 
@@ -43,6 +75,14 @@ test.beforeEach(async ({ context, page }) => {
     if (url.origin !== origin || !url.pathname.startsWith(base)) {
       failures.push(url.href)
       await route.abort()
+      return
+    }
+    if (url.pathname.endsWith('/data/dwd.json')) {
+      await route.fulfill({ json: emptyWarnings })
+      return
+    }
+    if (url.pathname.endsWith('/data/firms.json')) {
+      await route.fulfill({ json: firePublished })
       return
     }
     if (url.pathname.endsWith('/data/eonet.json')) {
@@ -105,7 +145,6 @@ for (const mode of ['view=list', 'map=static']) {
       await page.setViewportSize({ width: 320, height: 740 })
     for (const [source, count] of [
       ['demo', 15],
-      ['fire-demo', 4],
       ['reports-demo', 6],
       ['digital-demo', 6],
       ['space-demo', 4],
@@ -129,6 +168,7 @@ for (const mode of ['view=list', 'map=static']) {
     expect(
       resources.filter((url) => /maplibre|world\.geojson/.test(url)),
     ).toEqual([])
+    await page.evaluate(() => document.fonts.ready)
     expect(
       await page.evaluate(
         () => document.documentElement.scrollWidth <= innerWidth,
@@ -366,7 +406,7 @@ test('independent live layers combine map/feed, clear selection and survive shar
   await context.grantPermissions(['clipboard-read', 'clipboard-write'], {
     origin,
   })
-  await page.goto(`${origin}${base}?map=static`)
+  await page.goto(`${origin}${base}?map=static&live=usgs,eonet`)
   await expect(page.locator('.event-card')).toHaveCount(4)
   await expect(page.locator('.static-marker')).toHaveCount(3)
   const quakes = page.getByRole('checkbox', { name: /USGS earthquakes/ })
@@ -402,7 +442,9 @@ test('independent live layers combine map/feed, clear selection and survive shar
   await expect(page.locator('.event-card')).toHaveCount(2)
   await quakes.check()
   await expect(page.locator('.event-card')).toHaveCount(4)
+  await page.locator('.category-menu > summary').click()
   await page.getByRole('button', { name: 'Environment', exact: true }).click()
+  await page.locator('.category-menu > summary').click()
   await expect(page.locator('.event-card')).toHaveCount(3)
   await page
     .getByText('Simulation lab · invented examples', { exact: true })
@@ -479,4 +521,125 @@ test('EONET failure is independent, browser failure retains memory and valid emp
     page.getByText('Valid empty catalog response.', { exact: false }),
   ).toBeVisible()
   await expect(page.locator('.event-card')).toHaveCount(2)
+})
+
+test('fire and German warnings combine with independent toggles, details, validity and safe map semantics', async ({
+  page,
+  context,
+}, info) => {
+  await context.route('**/data/dwd.json', (r) =>
+    r.fulfill({ json: warningPublished }),
+  )
+  await page.goto(`${origin}${base}?map=static&hours=72`)
+  await expect(
+    page.getByRole('checkbox', { name: /FIRMS thermal/ }),
+  ).toBeChecked()
+  await expect(
+    page.getByRole('checkbox', { name: /DWD weather/ }),
+  ).toBeChecked()
+  await expect(page.locator('.event-card.kind-warning')).toHaveCount(1)
+  await expect(page.locator('.event-card.kind-fire')).toHaveCount(1)
+  await expect(page.locator('.static-marker')).toHaveCount(4)
+  await page.locator('.event-card.kind-warning').click()
+  await expect(page.getByRole('dialog')).toContainText('Not supplied')
+  await expect(page.getByRole('dialog')).toContainText('CC BY 4.0')
+  await expect(
+    page.getByRole('dialog').getByRole('button', { name: 'Show on map' }),
+  ).toHaveCount(0)
+  await page.keyboard.press('Escape')
+  await page.locator('.event-card.kind-fire').click()
+  await expect(page.getByRole('dialog')).toContainText('2° × 2° cell')
+  await expect(page.getByRole('dialog')).toContainText('not distinct fires')
+  await page.keyboard.press('Escape')
+  const warnings = page.getByRole('checkbox', { name: /DWD weather/ })
+  await warnings.uncheck()
+  await expect(page.locator('.event-card.kind-warning')).toHaveCount(0)
+  await page.reload()
+  await expect(warnings).not.toBeChecked()
+  await warnings.check()
+  for (const width of info.project.name === 'mobile' ? [390, 320] : [1440]) {
+    await page.setViewportSize({ width, height: 1000 })
+    await page.evaluate(() => document.fonts.ready)
+    await expect
+      .poll(() =>
+        page
+          .locator('.layer-toggles')
+          .evaluate((e) => e.scrollWidth <= e.clientWidth),
+      )
+      .toBe(true)
+    if (width === 1440)
+      expect((await page.locator('.rail').boundingBox())!.height).toBeLessThan(
+        75,
+      )
+    await page.evaluate(() => document.fonts.ready)
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+    ).toBe(true)
+    await page
+      .getByRole('link', { name: 'GOSIP home' })
+      .scrollIntoViewIfNeeded()
+    await page.screenshot({
+      path: `test-results/phase-14-${width}.png`,
+      fullPage: true,
+    })
+  }
+  await page.getByRole('button', { name: '24 hours', exact: true }).click()
+  await expect(page.locator('.event-card.kind-fire')).toHaveCount(0)
+  await page.clock.setFixedTime(now + 2 * 3600000)
+  await expect(page.locator('.event-card.kind-warning')).toHaveCount(0)
+  await page.goto(`${origin}${base}?source=fire-demo`)
+  await expect(page.locator('.event-card.kind-fire')).toHaveCount(1)
+  await expect(page.locator('.demo-banner')).toHaveCount(0)
+  expect(new URL(page.url()).searchParams.get('live')).toBe('firms')
+})
+
+test('warning and fire failures retain original data and cannot hide healthy sources', async ({
+  page,
+  context,
+}) => {
+  await context.route('**/data/dwd.json', (r) =>
+    r.fulfill({ json: warningPublished }),
+  )
+  await page.goto(`${origin}${base}?view=list&hours=72`)
+  await expect(page.locator('.event-card.kind-warning')).toHaveCount(1)
+  await expect(page.locator('.event-card.kind-fire')).toHaveCount(1)
+  await context.route('**/data/dwd.json', (r) =>
+    r.fulfill({
+      json: {
+        version: 1,
+        snapshot: null,
+        health: {
+          ...warningPublished.health,
+          status: 'failed',
+          record_count: 0,
+          fetched_at: null,
+          generated_at: null,
+          error: 'DWD failed.',
+        },
+      },
+    }),
+  )
+  await context.route('**/data/firms.json', (r) => r.fulfill({ json: {} }))
+  await page.clock.setFixedTime(now + 61000)
+  await page
+    .getByText('DWD freshness & source details', { exact: true })
+    .click()
+  await page.getByRole('button', { name: 'Refresh DWD data' }).click()
+  await page
+    .getByText('FIRMS freshness & source details', { exact: true })
+    .click()
+  await page.getByRole('button', { name: 'Refresh FIRMS data' }).click()
+  await expect(
+    page.getByText('STALE · last available DWD warnings', { exact: true }),
+  ).toBeVisible()
+  await expect(
+    page.getByText('STALE · last available FIRMS summary', { exact: true }),
+  ).toBeVisible()
+  await expect(page.locator('.event-card.kind-warning')).toHaveCount(1)
+  await expect(page.locator('.event-card.kind-fire')).toHaveCount(1)
+  await expect(
+    page.getByText('Live USGS earthquakes', { exact: true }),
+  ).toBeVisible()
 })

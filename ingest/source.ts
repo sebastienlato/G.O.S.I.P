@@ -11,7 +11,9 @@ export interface SnapshotBase {
 export interface IngestionAdapter<T extends SnapshotBase> {
   source: SourceHealth['source']
   url: string
+  publicationMaxBytes?: number
   maxBytes: number
+  decodeResponse?: (raw: string) => unknown
   parse: (raw: unknown, now: number) => T
   validate: (snapshot: T, now: number) => void
   publish: (snapshot: T | null, health: SourceHealth) => PublishedSnapshot
@@ -42,13 +44,16 @@ export async function ingestSource<T extends SnapshotBase>(
   let snapshot: T | null = null
   let error: string | null = null
   try {
-    snapshot = adapter.parse(JSON.parse(await get(adapter.url)), now)
+    snapshot = adapter.parse(
+      (adapter.decodeResponse ?? JSON.parse)(await get(adapter.url)),
+      now,
+    )
     adapter.validate(snapshot, now)
     if (
       new TextEncoder().encode(
         JSON.stringify(adapter.publish(snapshot, {} as SourceHealth)),
       ).byteLength >
-      adapter.maxBytes - 1000
+      (adapter.publicationMaxBytes ?? adapter.maxBytes) - 1000
     )
       throw Error('Publication too large')
   } catch {

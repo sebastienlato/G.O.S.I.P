@@ -31,6 +31,8 @@ jobs:
       - run: npm ci
       - run: npm test
       - run: npm run ingest
+        env:
+          FIRMS_MAP_KEY: ${{ secrets.FIRMS_MAP_KEY }}
       - run: npm run build:pages
       - name: Stamp source revision
         run: node -e 'require("fs").writeFileSync("dist/release.json", JSON.stringify({source_commit:process.env.GITHUB_SHA}))'

@@ -7,7 +7,14 @@ const server = await createServer({
 try {
   const { ingestUSGS } = await server.ssrLoadModule('/ingest/usgs.ts')
   const { ingestEONET } = await server.ssrLoadModule('/ingest/eonet.ts')
-  const results = await Promise.all([ingestUSGS(), ingestEONET()])
+  const { ingestDWD } = await server.ssrLoadModule('/ingest/dwd.ts')
+  const { ingestFIRMS } = await server.ssrLoadModule('/ingest/firms.ts')
+  const results = await Promise.all([
+    ingestUSGS(),
+    ingestEONET(),
+    ingestDWD(),
+    ingestFIRMS(process.env.FIRMS_MAP_KEY),
+  ])
   await mkdir('public/data', { recursive: true })
   for (const result of results) {
     await writeFile(

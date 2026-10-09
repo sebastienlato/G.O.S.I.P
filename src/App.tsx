@@ -1,3 +1,5 @@
+import { isFireSummary } from './data/firms'
+import { isWarning } from './data/dwd'
 import { isHazard } from './data/eonet'
 import { localSourceAccess, PUBLIC_SOURCE_NOTE } from './state/sourceAccess'
 import {
@@ -24,7 +26,7 @@ import { fireExamples } from './data/fire'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Info, Link, List, Map, Search, ShieldCheck } from 'lucide-react'
 import WorldMap from './components/WorldMap'
-import { categoryKeys } from './state/explorer'
+import { categoryKeys, liveLayerKeys, firmsAvailable } from './state/explorer'
 import { useExplorerFilters } from './state/useExplorerFilters'
 import EventDetail from './components/EventDetail'
 import EventFeed from './components/EventFeed'
@@ -34,7 +36,12 @@ import {
   LiveStatus,
   SimulationLab,
 } from './components/FeedSource'
-import { useEarthquakes, useHazards } from './state/useEarthquakes'
+import {
+  useEarthquakes,
+  useHazards,
+  useWarnings,
+  useFire,
+} from './state/useEarthquakes'
 import {
   categories,
   hasCoordinates,
@@ -90,14 +97,24 @@ export default function App() {
     source === 'usgs' && liveLayers.includes('usgs'),
   )
   const hazards = useHazards(source === 'usgs' && liveLayers.includes('eonet'))
+  const warnings = useWarnings(source === 'usgs' && liveLayers.includes('dwd'))
+  const fires = useFire(source === 'usgs' && liveLayers.includes('firms'))
   const liveEvents = useMemo(
     () => [
       ...(liveLayers.includes('usgs')
         ? (earthquakes.snapshot?.events ?? [])
         : []),
       ...(liveLayers.includes('eonet') ? (hazards.snapshot?.events ?? []) : []),
+      ...(liveLayers.includes('dwd') ? (warnings.snapshot?.events ?? []) : []),
+      ...(liveLayers.includes('firms') ? (fires.snapshot?.events ?? []) : []),
     ],
-    [liveLayers, earthquakes.snapshot, hazards.snapshot],
+    [
+      liveLayers,
+      earthquakes.snapshot,
+      hazards.snapshot,
+      warnings.snapshot,
+      fires.snapshot,
+    ],
   )
   const weather = useWeather(source === 'nws')
   const additional = isAdditionalSource(source) ? source : null
@@ -134,7 +151,9 @@ export default function App() {
         : source === 'demo'
           ? demoEvents
           : source === 'fire-demo'
-            ? fireExamples
+            ? firmsAvailable
+              ? []
+              : fireExamples
             : source === 'nws'
               ? (weather.snapshot?.events ?? noEvents)
               : liveEvents
@@ -209,6 +228,15 @@ export default function App() {
     setFocusRequest(null)
     setDetailId(id)
   }, [])
+  useEffect(() => {
+    if (firmsAvailable && source === 'fire-demo')
+      updateFilters({
+        source: 'usgs',
+        liveLayers: ['firms'],
+        hours: 72,
+        cursor: null,
+      })
+  }, [source, updateFilters])
   const closeEvent = useCallback(() => setDetailId(null), [])
   useEffect(() => {
     if (selectedId && !events.some((event) => event.id === selectedId)) {
@@ -244,14 +272,14 @@ export default function App() {
       region: '',
       selectedCategories: categoryKeys,
       hours: 24,
-      liveLayers: ['usgs', 'eonet'],
+      liveLayers: [...liveLayerKeys],
       language: 'all',
       reportStatus: 'all',
       digitalFamily: 'all',
       digitalResult: 'all',
     })
   const isFiltered =
-    (live && liveLayers.length !== 2) ||
+    (live && liveLayers.length !== liveLayerKeys.length) ||
     cursor !== null ||
     country !== '' ||
     region !== '' ||
@@ -321,6 +349,8 @@ export default function App() {
     ? [
         liveLayers.includes('usgs') ? earthquakes : null,
         liveLayers.includes('eonet') ? hazards : null,
+        liveLayers.includes('dwd') ? warnings : null,
+        liveLayers.includes('firms') ? fires : null,
       ].filter((s) => s !== null)
     : []
   const retrievals = activeLive
@@ -356,10 +386,10 @@ export default function App() {
           : 'before cursor'
     : source === 'nws'
       ? 'ahead · overlapping periods'
-      : 'before now'
+      : 'back · warnings ahead'
   const summary = [
     `${windowLabel} ${windowSuffix}`,
-    live && `${liveLayers.length} of 2 live layers`,
+    live && `${liveLayers.length} of ${liveLayerKeys.length} live layers`,
     `${activeCategoryCount} of ${availableCategories.length} categories`,
     country &&
       `Country: ${country === '~unknown' ? 'Not supplied / withheld' : country}`,
@@ -409,9 +439,9 @@ export default function App() {
         </p>
       )}
       <div className="empty-actions">
-        {live && liveLayers.length < 2 && (
+        {live && liveLayers.length < liveLayerKeys.length && (
           <button
-            onClick={() => updateFilters({ liveLayers: ['usgs', 'eonet'] })}
+            onClick={() => updateFilters({ liveLayers: [...liveLayerKeys] })}
           >
             Turn on all live layers
           </button>
@@ -484,7 +514,7 @@ export default function App() {
           <span className="brand-line">
             {isDemo
               ? 'Simulation lab'
-              : 'Live earthquakes, storms and volcanoes'}
+              : 'Live hazards, weather and thermal detections'}
           </span>
         </a>
         <div
@@ -525,11 +555,21 @@ export default function App() {
                 })
               }
               counts={{
-                usgs: events.filter((e) => !e.is_demo && !isHazard(e)).length,
+                usgs: events.filter(
+                  (e) =>
+                    !e.is_demo &&
+                    !isHazard(e) &&
+                    !isWarning(e) &&
+                    !isFireSummary(e),
+                ).length,
                 eonet: events.filter(isHazard).length,
+                dwd: events.filter(isWarning).length,
+                firms: events.filter(isFireSummary).length,
               }}
               quakes={earthquakes}
               hazards={hazards}
+              warnings={warnings}
+              fires={fires}
             />
           ) : (
             <button
@@ -540,43 +580,49 @@ export default function App() {
             </button>
           )}
           <div className="rail-scroll">
-            <div
-              className="rail-group category-filters"
-              aria-label="Categories"
-            >
-              <button
-                className={`category-pill ${activeCategoryCount === availableCategories.length ? 'active' : ''}`}
-                aria-pressed={
-                  activeCategoryCount === availableCategories.length
-                }
-                onClick={() =>
-                  updateFilters({ selectedCategories: categoryKeys })
-                }
+            <details className="category-menu">
+              <summary>Categories · {activeCategoryCount}</summary>
+              <div
+                className="rail-group category-filters"
+                aria-label="Categories"
               >
-                All events
-              </button>
-              {availableCategories.map((key) => (
                 <button
-                  key={key}
-                  className={`category-pill ${selectedCategories.includes(key) ? 'active' : ''}`}
-                  aria-pressed={selectedCategories.includes(key)}
-                  onClick={() => toggleCategory(key)}
+                  className={`category-pill ${activeCategoryCount === availableCategories.length ? 'active' : ''}`}
+                  aria-pressed={
+                    activeCategoryCount === availableCategories.length
+                  }
+                  onClick={() =>
+                    updateFilters({ selectedCategories: categoryKeys })
+                  }
                 >
-                  {additional
-                    ? additionalLayers[additional].label
-                    : categories[key].label}
+                  All events
                 </button>
-              ))}
-            </div>
+                {availableCategories.map((key) => (
+                  <button
+                    key={key}
+                    className={`category-pill ${selectedCategories.includes(key) ? 'active' : ''}`}
+                    aria-pressed={selectedCategories.includes(key)}
+                    onClick={() => toggleCategory(key)}
+                  >
+                    {additional
+                      ? additionalLayers[additional].label
+                      : categories[key].label}
+                  </button>
+                ))}
+              </div>
+            </details>
             <div className="rail-group segmented" aria-label="Time window">
               {timeOptions.map((option) => (
                 <button
                   key={option.value}
+                  aria-label={option.label}
                   className={hours === option.value ? 'active' : ''}
                   aria-pressed={hours === option.value}
                   onClick={() => updateFilters({ hours: option.value })}
                 >
-                  {option.label}
+                  {option.value < 72
+                    ? `${option.value} hours`
+                    : `${option.value / 24} days`}
                 </button>
               ))}
             </div>
@@ -744,7 +790,7 @@ export default function App() {
                 ? 'Local fixtures. No live connection.'
                 : source === 'nws'
                   ? 'NWS predictions, not observations or alerts.'
-                  : 'USGS / ANSS and NASA EONET are separate sources. GOSIP does not claim one confirms the other.'
+                  : 'Sources remain independent. Detection counts are not confirmed fires; warnings are not observed impacts.'
             }
           />
         </div>
@@ -754,6 +800,8 @@ export default function App() {
               liveLayers={liveLayers}
               quakes={earthquakes}
               hazards={hazards}
+              warnings={warnings}
+              fires={fires}
             />
           )}
           {!sourceDisabled && (
@@ -786,8 +834,9 @@ export default function App() {
             are approximate and coverage is incomplete.
           </p>
           <p>
-            Data: USGS / ANSS · NASA EONET · Natural Earth. Not an emergency
-            service.
+            Data: USGS / ANSS · NASA EONET · DWD
+            {firmsAvailable && ' · NASA FIRMS'} · Natural Earth. Not an
+            emergency service.
           </p>
         </footer>
       </main>
@@ -815,11 +864,15 @@ export default function App() {
           }}
           onShowOnMap={() => showOnMap(detailEvent.id)}
           stale={
-            isHazard(detailEvent)
-              ? hazards.stale
-              : source === 'nws'
-                ? weather.stale
-                : earthquakes.stale
+            isFireSummary(detailEvent)
+              ? fires.stale
+              : isWarning(detailEvent)
+                ? warnings.stale
+                : isHazard(detailEvent)
+                  ? hazards.stale
+                  : source === 'nws'
+                    ? weather.stale
+                    : earthquakes.stale
           }
           onClose={closeEvent}
         />

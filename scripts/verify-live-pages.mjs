@@ -66,6 +66,42 @@ try {
       sourceHealth.find((h) => h.source === 'eonet'),
       hazards.health,
     )
+    const newSources = {}
+    for (const key of ['dwd', 'firms']) {
+      const response = await context.request.get(
+        new URL(`data/${key}.json`, site).href,
+      )
+      assert.equal(response.status(), 200)
+      const p = await response.json()
+      assert.equal(
+        p.health.status,
+        'ok',
+        `${key} must be healthy for this verification`,
+      )
+      assert(Date.now() - Date.parse(p.health.fetched_at) < 45 * 60_000)
+      assert.deepEqual(
+        sourceHealth.find((h) => h.source === key),
+        p.health,
+      )
+      if (key === 'dwd')
+        assert(Date.now() - Date.parse(p.health.generated_at) < 45 * 60_000)
+      if (key === 'firms') {
+        assert.equal(p.health.generated_at, null)
+        assert(
+          Date.parse(p.snapshot.feed.day + 'T00:00:00Z') + 86400_000 <=
+            Date.now() - 86400_000,
+        )
+        assert(
+          p.snapshot.feed.cells.every(
+            (c) =>
+              c.length === 3 &&
+              Math.abs(c[0] % 2) === 1 &&
+              Math.abs(c[1] % 2) === 1,
+          ),
+        )
+      }
+      newSources[key] = p
+    }
     for (const mode of ['?view=list', '?map=static', '']) {
       await page.goto(site + mode)
       await expect(
@@ -73,6 +109,12 @@ try {
       ).toBeVisible()
       await expect(
         page.getByText('Live EONET global hazards', { exact: true }),
+      ).toBeVisible()
+      await expect(
+        page.getByText('Live DWD weather warnings', { exact: true }),
+      ).toBeVisible()
+      await expect(
+        page.getByText('Live FIRMS · delayed daily summary', { exact: true }),
       ).toBeVisible()
       await expect(page.locator('.event-card').first()).toBeVisible()
       await expect(page.locator('.demo-banner')).toHaveCount(0)
@@ -94,7 +136,8 @@ try {
     }
     await page
       .locator('.event-card')
-      .filter({ hasText: 'OBSERVATION · USGS' })
+      .filter({ has: page.locator('.card-magnitude') })
+      .filter({ hasText: 'USGS' })
       .first()
       .click()
     await expect(page.getByRole('dialog')).toContainText(
@@ -108,11 +151,14 @@ try {
     })
     await quakes.uncheck()
     await expect(
-      page.locator('.event-card').filter({ hasText: 'OBSERVATION · USGS' }),
+      page
+        .locator('.event-card')
+        .filter({ has: page.locator('.card-magnitude') })
+        .filter({ hasText: 'USGS' }),
     ).toHaveCount(0)
     await page
       .locator('.event-card')
-      .filter({ hasText: 'CURATED HAZARD · EONET' })
+      .filter({ hasText: 'NASA EONET' })
       .first()
       .click()
     await expect(page.getByRole('dialog')).toContainText('Latest geometry date')
@@ -124,10 +170,35 @@ try {
     await expect(quakes).not.toBeChecked()
     await expect(hazardToggle).toBeChecked()
     await hazardToggle.uncheck()
+    await page.getByRole('checkbox', { name: /DWD weather/ }).uncheck()
+    await page.getByRole('checkbox', { name: /FIRMS thermal/ }).uncheck()
     await expect(page.locator('.event-card')).toHaveCount(0)
     await expect(
       page.getByText('All live layers are off', { exact: true }),
     ).toBeVisible()
+    await page.getByRole('checkbox', { name: /DWD weather/ }).check()
+    if (newSources.dwd.health.record_count) {
+      await page.locator('.event-card.kind-warning').first().click()
+      await expect(page.getByRole('dialog')).toContainText('CC BY 4.0')
+      await expect(
+        page.getByRole('dialog').getByRole('button', { name: 'Show on map' }),
+      ).toHaveCount(0)
+      await page.keyboard.press('Escape')
+    }
+    await page.getByRole('checkbox', { name: /FIRMS thermal/ }).check()
+    if (newSources.firms.health.record_count) {
+      await page.locator('.event-card.kind-fire').first().click()
+      await expect(page.getByRole('dialog')).toContainText('not distinct fires')
+      await expect(page.getByRole('dialog')).toContainText('2° × 2° cell')
+      await page.keyboard.press('Escape')
+    }
+    await page
+      .getByRole('link', { name: 'GOSIP home' })
+      .scrollIntoViewIfNeeded()
+    await page.screenshot({
+      path: `test-results/live/${name}-phase14.png`,
+      fullPage: true,
+    })
     await quakes.check()
     await hazardToggle.check()
     await page
@@ -142,6 +213,9 @@ try {
       page.getByText('Live USGS earthquakes', { exact: true }),
     ).toBeVisible()
     assert.deepEqual(failures, [])
+    console.log(
+      `${name}: DWD ${newSources.dwd.health.record_count} warnings; FIRMS ${newSources.firms.health.record_count} cells for ${newSources.firms.snapshot.feed.day}, generated unknown. New source details and toggles passed.`,
+    )
     console.log(
       `${name}: live release ${source}, ${body.health.record_count} USGS records + ${hazards.health.record_count} EONET catalog entries; EONET fetched ${hazards.health.fetched_at}; USGS generated ${body.health.generated_at}, fetched ${body.health.fetched_at}; map/list/static/details/privacy, independent layer toggles, empty/reload and same-origin-only requests passed.`,
     )

@@ -34,11 +34,11 @@ const AboutDialog = forwardRef<HTMLDialogElement, { privacyOnly: boolean }>(
             <>
               <h2 id="about-title">What GOSIP shows</h2>
               <p>
-                GOSIP maps USGS earthquakes and NASA EONET storms and volcanoes
-                from public snapshots refreshed every 15 minutes. Each layer
-                keeps its own source, times and freshness. The separate
-                simulation lab holds invented examples and never mixes them with
-                live data.
+                GOSIP combines earthquakes, curated hazards, German weather
+                warnings and available delayed thermal summaries from public
+                snapshots refreshed every 15 minutes. Each layer keeps its own
+                source, times and freshness. The separate simulation lab holds
+                invented examples and never mixes them with live data.
               </p>
               <h3>Read it with care</h3>
               <p>

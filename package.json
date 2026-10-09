@@ -18,7 +18,7 @@
     "format:check": "prettier --check src tests scripts *.ts *.json index.html",
     "data:notices": "node scripts/build-dependency-notices.mjs && node scripts/copy-project-license.mjs",
     "build:pages": "npm run data:notices && tsc --noEmit && vite build --mode pages && node scripts/check-pages-release.mjs",
-    "test:beta": "npm run build:pages && BETA_TEST=1 playwright test",
+    "test:beta": "GOSIP_TEST_FIRMS=1 npm run build:pages && BETA_TEST=1 playwright test",
     "release:pages": "node scripts/publish-pages.mjs",
     "ingest": "node ingest/run.mjs"
   },

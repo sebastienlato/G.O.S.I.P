@@ -1,4 +1,11 @@
-import { hazardColors, magnitudeSize, magnitudeSteps } from '../state/encoding'
+import { firmsAvailable } from '../state/explorer'
+import {
+  fireColor,
+  warningColor,
+  hazardColors,
+  magnitudeSize,
+  magnitudeSteps,
+} from '../state/encoding'
 
 const samples = [3, 4.5, 5.5, 6.5]
 
@@ -51,6 +58,24 @@ export default function MapLegend() {
           />
           <span>Storm</span>
         </p>
+        <p className="legend-row">
+          <span
+            className="glyph glyph-warning"
+            style={{ '--mark': warningColor } as React.CSSProperties}
+            aria-hidden="true"
+          />
+          <span>DWD warnings · feed only</span>
+        </p>
+        {firmsAvailable && (
+          <p className="legend-row">
+            <span
+              className="glyph glyph-fire"
+              style={{ '--mark': fireColor } as React.CSSProperties}
+              aria-hidden="true"
+            />
+            <span>Thermal · 2° cell · delayed ≥24h</span>
+          </p>
+        )}
       </div>
     </details>
   )

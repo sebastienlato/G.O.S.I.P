@@ -1,3 +1,5 @@
+import { decodeFIRMS, FIRMS_MAX_BYTES } from '../data/firms'
+import { decodeDWD, DWD_MAX_BYTES } from '../data/dwd'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   decodePublished,
@@ -17,7 +19,7 @@ interface Snapshot {
 }
 export function usePublished<T extends Snapshot>(
   enabled: boolean,
-  source: 'usgs' | 'eonet',
+  source: SourceHealth['source'],
   decode: (
     raw: string,
     now: number,
@@ -109,4 +111,12 @@ export function useEarthquakes(enabled: boolean) {
 }
 export function useHazards(enabled: boolean) {
   return usePublished(enabled, 'eonet', decodeEONET, EONET_MAX_BYTES)
+}
+
+export function useWarnings(enabled: boolean) {
+  return usePublished(enabled, 'dwd', decodeDWD, DWD_MAX_BYTES)
+}
+
+export function useFire(enabled: boolean) {
+  return usePublished(enabled, 'firms', decodeFIRMS, FIRMS_MAX_BYTES)
 }

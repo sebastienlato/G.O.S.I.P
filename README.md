@@ -1,6 +1,6 @@
 # G.O.S.I.P. — Global Open Source Intelligence Platform
 
-A free public event explorer. **Live USGS earthquakes and NASA EONET hazards**, a world map, searchable feed, source details and freshness status. No account, payment, analytics or remote map tiles. Estimates can change; this is not an emergency service.
+A free public event explorer. **Live earthquakes, hazards, German warnings and delayed thermal detections**, a world map, searchable feed, source details and freshness status. No account, payment, analytics or remote map tiles. Estimates can change; this is not an emergency service.
 
 **[Open GOSIP](https://sebastienlato.github.io/G.O.S.I.P/)** · [Lightweight list](https://sebastienlato.github.io/G.O.S.I.P/?view=list)
 
@@ -18,11 +18,11 @@ Ingestion writes ignored `public/data/` snapshots. Without a snapshot, the explo
 
 ## Sources
 
-Independent **USGS / ANSS earthquakes** and **NASA EONET storms/volcanoes** toggles share the map/feed. Both are on by default. USGS observations use occurrence time; EONET curated metadata uses the latest geometry date, with approximate locations/times and no official-alert or corroboration claim. EONET requests the past 30 days; visible windows remain 6 hours–7 days. It may contain no recent volcano entries. Unknown values stay unknown.
+Independent **USGS / ANSS earthquakes** and **NASA EONET storms/volcanoes** toggles share the map/feed. DWD German weather warnings and available FIRMS thermal summaries join them; available layers are on by default. USGS observations use occurrence time; EONET curated metadata uses the latest geometry date, with approximate locations/times and no official-alert or corroboration claim. EONET requests the past 30 days; visible windows remain 6 hours–7 days. It may contain no recent volcano entries. Unknown values stay unknown.
 
 GitHub Actions fetches bounded snapshots approximately every 15 minutes. Visitors read same-origin JSON. Each layer shows its own retrieval, count and failure/stale state; retained data keeps original times. Stale after 45 minutes or failure. USGS supplies feed generation; EONET does not, so recent retrieval cannot prove recent curation.
 
-Other live layers are coming. An explicitly separate **Simulation lab** remains; replaced seismic, coastal-weather and volcano examples are hidden from web. Native iOS is paused. [Roadmap](ROADMAP.md) · [Data rights and limits](docs/DATA_POLICY.md) · [Deployment and $0 safeguards](docs/BETA_READINESS.md)
+DWD warnings retain original German text and validity intervals; they are feed-only because the source supplies no coordinates. FIRMS NOAA-20 VIIRS publishes one UTC day at least 24 hours delayed in 2° cells, never precise detections or confirmed fire counts. Choose 3 or 7 days to include these delayed summaries. Other live layers are coming. An explicitly separate **Simulation lab** remains; replaced seismic, coastal-weather, volcano and replaced fire examples are hidden from web. Native iOS is paused. [Roadmap](ROADMAP.md) · [Data rights and limits](docs/DATA_POLICY.md) · [Deployment and $0 safeguards](docs/BETA_READINESS.md)
 
 ## Checks & deployment
 

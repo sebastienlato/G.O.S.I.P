@@ -1,8 +1,24 @@
+import { readFileSync } from 'node:fs'
 import { defineConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 
+function hasFireSnapshot() {
+  try {
+    return (
+      JSON.parse(readFileSync('public/data/firms.json', 'utf8')).snapshot !==
+      null
+    )
+  } catch {
+    return false
+  }
+}
 export default defineConfig(({ mode }) => ({
+  define: {
+    __FIRMS_AVAILABLE__: JSON.stringify(
+      process.env.GOSIP_TEST_FIRMS === '1' || hasFireSnapshot(),
+    ),
+  },
   base: mode === 'pages' ? '/G.O.S.I.P/' : '/',
   plugins: [
     react(),
