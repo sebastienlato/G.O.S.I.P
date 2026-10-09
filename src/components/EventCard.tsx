@@ -39,7 +39,7 @@ export function eventAge(
   referenceTime: number,
   demoClock: Props['demoClock'],
 ) {
-  if (isFireSummary(event)) return `Detected ${event.day} UTC · preceding 24h`
+  if (isFireSummary(event)) return `24h window to ${formatTimestamp(event.interval_end)}`
   if (isWarning(event))
     return `Valid ${formatTimestamp(event.valid_from)} → ${event.valid_until ? formatTimestamp(event.valid_until) : 'end not supplied'}`
   if (isForecast(event))

@@ -29,10 +29,6 @@ export default function FireBody({
       </a>
       <dl className="timestamps">
         <div>
-          <dt>Detection day (UTC)</dt>
-          <dd>{e.day}</dd>
-        </div>
-        <div>
           <dt>Observation window (exclusive end)</dt>
           <dd>
             {formatTimestamp(e.interval_start)} →{' '}
@@ -59,7 +55,7 @@ export default function FireBody({
           <dt>Freshness</dt>
           <dd>
             {stale
-              ? 'STALE · retained daily summary'
+              ? 'STALE · retained thermal summary'
               : 'Recent retrieval · NRT observations'}
           </dd>
         </div>

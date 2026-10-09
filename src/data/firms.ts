@@ -13,7 +13,6 @@ export interface FireSummary {
   coordinates: [number, number]
   region: string
   country: ''
-  day: string
   interval_start: string
   interval_end: string
   occurred_at: null
@@ -89,7 +88,6 @@ export function parseFIRMS(input: unknown, now: number): FireSnapshot {
       coordinates: [lon, lat],
       region: `2° cell centred ${lat}°, ${lon}°`,
       country: '',
-      day: end.slice(0, 10),
       interval_start: start,
       interval_end: end,
       occurred_at: null,

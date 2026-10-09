@@ -462,7 +462,7 @@ export const locationMeaning = (event: ExplorerEvent) =>
   isNews(event)
     ? 'Feed only · no location inferred'
     : isFireSummary(event)
-      ? '2° cell centre · daily summary, not a detection position'
+      ? '2° cell centre · 24h summary, not a detection position'
       : isWarning(event)
         ? 'District warning · feed only, no coordinates supplied'
         : isHazard(event)
