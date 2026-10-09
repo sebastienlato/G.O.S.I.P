@@ -3,8 +3,9 @@ on:
   push:
     branches: [main]
     paths-ignore: ['native/**', 'docs/**', '*.md', 'prompts/**']
+  # Re-register the schedule after zero schedule events; retain a 15-minute cadence.
   schedule:
-    - cron: '7,22,37,52 * * * *'
+    - cron: '11,26,41,56 * * * *'
   workflow_dispatch:
 permissions:
   contents: read
