@@ -38,7 +38,7 @@ const layerMeta: Record<
     provider: 'Global Voices',
   },
   firms: {
-    label: 'Thermal cells',
+    label: 'Thermal',
     name: 'FIRMS thermal cells (NRT detections)',
     provider: 'NASA FIRMS',
   },
@@ -53,7 +53,7 @@ const layerMeta: Record<
     provider: 'USGS',
   },
   eonet: {
-    label: 'Storms / volcanoes',
+    label: 'Hazards',
     name: 'EONET global hazards · Storms / volcanoes',
     provider: 'NASA EONET',
   },

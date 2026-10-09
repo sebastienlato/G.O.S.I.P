@@ -150,6 +150,11 @@ try {
           () => document.documentElement.scrollWidth <= innerWidth,
         ),
       )
+      if (name === 'desktop')
+        assert(
+          (await page.locator('.rail').boundingBox()).height < 75,
+          'Desktop rail must stay one row with real counts',
+        )
       await page.screenshot({
         path: `test-results/live/${name}-${mode.includes('list') ? 'list' : mode ? 'static' : 'map'}.png`,
         fullPage: true,

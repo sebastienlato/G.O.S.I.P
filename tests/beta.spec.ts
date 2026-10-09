@@ -713,7 +713,7 @@ test('global thermal feed is paged while all cells remain searchable and mapped'
   await expect(page.locator('.event-card')).toHaveCount(20)
   await page
     .getByRole('button', {
-      name: /FIRMS thermal detections: 1 thermal detections/,
+      name: /FIRMS thermal detections: 1 thermal detection/,
     })
     .first()
     .focus()

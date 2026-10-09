@@ -81,7 +81,7 @@ export function parseFIRMS(input: unknown, now: number): FireSnapshot {
     return {
       kind: 'fire-summary',
       id,
-      title: `${count} thermal detections`,
+      title: `${count} thermal ${count === 1 ? 'detection' : 'detections'}`,
       summary:
         'NASA FIRMS NOAA-20 VIIRS detections worldwide, aggregated by GOSIP into a 2° cell over the preceding 24 hours. Not confirmed fires.',
       category: 'environment',
