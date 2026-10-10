@@ -2267,20 +2267,147 @@ dialog::backdrop {
   display: none;
 }
 
-/* Phase 21 functional hooks; owner-coordinated Claude pass pending. */
+/* Phase 21 design pass (Claude) -------------------------------------------- */
+
+/* Masthead: clock left, publication and data ages stacked beside it. */
+.clock-text {
+  grid-template-columns: auto auto;
+  grid-template-areas:
+    'label pub'
+    'time fresh';
+  column-gap: 14px;
+}
+.clock-label {
+  grid-area: label;
+}
+.clock-text strong {
+  grid-area: time;
+}
 .publication-status {
-  display: block;
-  font-size: 11px;
+  grid-area: pub;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  color: var(--steel);
+  white-space: nowrap;
+}
+.publication-status[data-state='warn'] {
   color: var(--caution);
 }
-.cadence-summary {
-  font-size: 11px;
-  color: var(--steel);
-  line-height: 1.4;
-  margin: 0 0 6px;
+.publication-status[data-state='waiting'] {
+  color: var(--dim);
 }
-.publication-disclosure {
-  margin-bottom: 6px;
+.clock-fresh {
+  grid-area: fresh;
+  font-size: 10.5px;
+  white-space: nowrap;
+}
+
+/* Domain groups: a quiet labelled rule, then compact two-line rows. */
+.layer-toggles {
+  gap: 0;
+}
+.layer-domain {
+  display: grid;
+  gap: 3px;
+  grid-column: 1 / -1;
+}
+.domain-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 9px 0 2px;
+  font: 500 9.5px var(--mono);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+.layer-domain:first-of-type .domain-label {
+  margin-top: 2px;
+}
+.domain-label::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, var(--edge), transparent);
+}
+.layer-toggle {
+  min-height: 38px;
+  padding: 4px 10px;
+}
+.layer-name {
+  display: grid;
+  gap: 1px;
+  font-size: 13.5px;
+  line-height: 1.2;
+}
+.layer-scope {
+  font: 400 10px/1.25 var(--sans);
+  color: var(--steel);
+  letter-spacing: 0;
+  text-wrap: pretty;
+}
+.layer-toggle:not(.on) .layer-scope {
+  color: var(--dim);
+}
+.layer-count {
+  display: grid;
+  justify-items: end;
+  gap: 1px;
+  line-height: 1.15;
+  white-space: nowrap;
+}
+.layer-age {
+  font: 400 9.5px var(--mono);
+  color: var(--dim);
+  letter-spacing: 0;
+}
+.layer-toggle.warn .layer-age {
+  color: color-mix(in srgb, var(--caution) 70%, var(--dim));
+}
+
+/* Rail disclosures share the Categories look instead of body-text toggles. */
+.rail-disclosure {
+  margin-top: 8px;
+}
+.rail-disclosure > summary {
+  cursor: pointer;
+  width: fit-content;
+  font: 500 10.5px var(--mono);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--steel);
+}
+.rail-disclosure > summary:hover {
+  color: var(--ice);
+}
+.rail-disclosure > summary::marker {
+  color: var(--dim);
+}
+.rail-disclosure p {
+  margin: 6px 0 0;
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--steel);
+}
+.rail-disclosure .disclosure-body {
+  margin: 0;
+  padding: 0;
+}
+.cadence-block {
+  margin-top: 10px;
+  padding: 8px 10px 9px;
+  border: 1px solid var(--edge);
+  border-radius: 3px;
+  background: rgba(0, 0, 0, 0.22);
+}
+.cadence-summary {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--steel);
+}
+.cadence-block .rail-disclosure {
+  margin-top: 6px;
 }
 .source-cadence {
   border-bottom: 1px solid var(--edge);
@@ -2290,27 +2417,17 @@ dialog::backdrop {
 .source-cadence p {
   overflow-wrap: anywhere;
 }
-.layer-name .layer-age {
-  display: block;
-  color: var(--steel);
-  font-size: 9px;
-  font-weight: normal;
-  letter-spacing: 0;
-  line-height: 1.3;
+/* Country-context badges are background context: smaller and calmer than
+   events, so quakes, storms and launches stay the first read. */
+.event-marker.kind-ooni > span {
+  background: rgba(3, 9, 13, 0.62);
+  box-shadow: inset 0 0 0 1px
+    color-mix(in srgb, var(--marker-color) 55%, transparent);
 }
-
-.layer-domain {
-  display: grid;
-  gap: 3px;
-  grid-column: 1 / -1;
+.event-marker.kind-ooni:not(.selected):not(:hover):not(:focus-visible) > span {
+  opacity: 0.8;
 }
-.domain-label {
-  font: 9px var(--mono);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--steel);
-}
-@media (max-width: 700px) {
+@media (max-width: 960px) {
   .layer-domain {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -2322,4 +2439,45 @@ dialog::backdrop {
   .layer-domain {
     grid-template-columns: minmax(0, 1fr);
   }
+  /* Phones: wordmark and actions on top, a slim status strip beneath, so
+     long states ("Publication overdue · 16 min ago") never hit the buttons. */
+  .masthead {
+    height: auto;
+    flex-wrap: wrap;
+    row-gap: 0;
+    padding-top: 7px;
+  }
+  .masthead-actions {
+    margin-left: auto;
+  }
+  .clock {
+    order: 3;
+    flex: 1 0 100%;
+    margin: 7px -12px 0;
+    padding: 5px 12px;
+    border-top: 1px solid var(--edge);
+    background: rgba(0, 0, 0, 0.3);
+  }
+  .clock-text {
+    display: flex;
+    flex: 1;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 1px 12px;
+    min-width: 0;
+  }
+  .publication-status,
+  .clock-fresh {
+    font-size: 10px;
+    line-height: 1.4;
+  }
+}
+/* Panels stay readable when the camera is over cloud, ice or desert. */
+@media (min-width: 961px) {
+  .panel {
+    background: var(--glass-strong);
+  }
+}
+.feed-summary {
+  color: var(--steel);
 }

@@ -1,4 +1,11 @@
-# Project state — Phase 21 delivered; owner setup/design pass pending
+# Project state — Phase 21 delivered and design pass done (D74); owner Worker setup pending
+
+## Phase 21 Claude design pass — 2026-10-10 (D74)
+
+- **Initial Phase 21 design pass committed here.** Reviewed deployed `c22129d` and a local Pages build at 1440×1000, 390 and 320: default Auto view, selection/details, History, all-off, explicit 24 h, list/static; local data was stale and had no release stamp, which exercised stale and "Publication check failed".
+- Changed (presentation only): two-line layer rows with scope left and count/retrieval age right; domain captions; cadence sentence and Publication evidence moved below the layers into one quiet block; rail disclosures share the Categories style; masthead shows clock beside publication/data ages and colours publication amber only when overdue/stale/failed (it was amber when healthy); phone status strip under the wordmark; OONI badges smaller and quieter so events lead on the globe; stronger panel backing over bright imagery; shorter Auto feed summary.
+- Unchanged: toggle accessible names, Auto/explicit/reset/back/subset/all-off behaviour, ranking, publication/source state meanings and wording asserted by tests, sources, CSP, workflow, trigger code.
+- Checks: 278 unit, root/Pages typecheck-build, 50 repository-path desktop/mobile checks pass with no test changes. No full accessibility or Safari/Firefox claim. Work should verify semantics per AGENTS. Next design pass follows feature phases 22–23.
 
 ## Phase 21 — 2026-10-10
 

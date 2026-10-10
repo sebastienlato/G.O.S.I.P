@@ -80,7 +80,7 @@ export function encode(
     return {
       kind: 'ooni',
       color: ooniColor,
-      size: 26,
+      size: 20,
       freshness: 1,
       recent: false,
     }

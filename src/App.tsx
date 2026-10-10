@@ -380,7 +380,9 @@ export default function App() {
         ? 'before capture'
         : 'back · warnings & launches ahead'
   const summary = [
-    `${windowLabel} ${windowSuffix}`,
+    hours === 'auto' && !historical
+      ? 'Auto windows · look-back per layer, schedules ahead'
+      : `${windowLabel} ${windowSuffix}`,
     live &&
       (historical
         ? `${liveLayers.filter((l) => archiveSources.includes(l as 'usgs' | 'eonet')).length} of 2 archived layers`
@@ -518,6 +520,13 @@ export default function App() {
             </strong>
             <span
               className="publication-status"
+              data-state={
+                publicationState === 'Published'
+                  ? 'ok'
+                  : publicationState === 'Publication waiting'
+                    ? 'waiting'
+                    : 'warn'
+              }
               title={
                 publication.release
                   ? `Last published build ${formatTimestamp(publication.release.built_at)} · ${publication.release.event} · run ${publication.release.run_id}`
@@ -598,41 +607,6 @@ export default function App() {
             <h2 className="panel-title">
               {historical ? 'Archived layers' : 'Live layers'}
             </h2>
-            <p className="cadence-summary">
-              15 min publication target · GitHub best effort.
-              <br />
-              External trigger not configured.
-            </p>
-            <details className="disclosure publication-disclosure">
-              <summary>Publication evidence</summary>
-              <div className="disclosure-body">
-                <p>
-                  Last published build:{' '}
-                  {publication.release
-                    ? formatTimestamp(publication.release.built_at)
-                    : 'unknown'}
-                  . This is the build stamp served by this site, not a provider
-                  update or an exact deployment-completion time.
-                </p>
-                <p>
-                  Overdue after the 15 min target; stale after 45 min. Jobs and
-                  deployment can be delayed or missed. No next-publication
-                  promise.
-                </p>
-                {publication.release && (
-                  <p>
-                    Trigger: {publication.release.event}.{' '}
-                    <a
-                      target="_blank"
-                      rel="noreferrer"
-                      href={`https://github.com/sebastienlato/G.O.S.I.P/actions/runs/${publication.release.run_id}`}
-                    >
-                      Publication run ↗
-                    </a>
-                  </p>
-                )}
-              </div>
-            </details>
             <LayerToggles
               historyCapture={historical ? (capture ?? null) : undefined}
               liveLayers={liveLayers}
@@ -673,6 +647,42 @@ export default function App() {
               launches={launches}
               maritime={maritime}
             />
+            <div className="cadence-block">
+              <p className="cadence-summary">
+                15 min publication target · GitHub best effort. External trigger
+                not configured.
+              </p>
+              <details className="rail-disclosure publication-disclosure">
+                <summary>Publication evidence</summary>
+                <div className="disclosure-body">
+                  <p>
+                    Last published build:{' '}
+                    {publication.release
+                      ? formatTimestamp(publication.release.built_at)
+                      : 'unknown'}
+                    . This is the build stamp served by this site, not a
+                    provider update or an exact deployment-completion time.
+                  </p>
+                  <p>
+                    Overdue after the 15 min target; stale after 45 min. Jobs
+                    and deployment can be delayed or missed. No next-publication
+                    promise.
+                  </p>
+                  {publication.release && (
+                    <p>
+                      Trigger: {publication.release.event}.{' '}
+                      <a
+                        target="_blank"
+                        rel="noreferrer"
+                        href={`https://github.com/sebastienlato/G.O.S.I.P/actions/runs/${publication.release.run_id}`}
+                      >
+                        Publication run ↗
+                      </a>
+                    </p>
+                  )}
+                </div>
+              </details>
+            </div>
             {live && (
               <>
                 <h2 className="panel-title">Time</h2>
@@ -722,7 +732,7 @@ export default function App() {
               ))}
             </div>
             {hours === 'auto' && !historical && (
-              <details className="window-details">
+              <details className="rail-disclosure window-details">
                 <summary>Layer windows</summary>
                 <p>
                   Quakes, thermal and warnings: 24 h. Reports: 7 d. Digital: 3

@@ -247,15 +247,21 @@ export function LayerToggles({
                   </span>
                   <span className="layer-name">
                     {layerMeta[key].label}
-                    <small className="layer-age">
-                      {historical
-                        ? 'Captured version'
-                        : on && s.snapshot
-                          ? `Retrieved ${ageLabel(s.snapshot.retrieved_at, s.now)}`
-                          : cadence[key].scope}
+                    <small className="layer-scope">
+                      {historical ? 'Captured version' : cadence[key].scope}
                     </small>
                   </span>
-                  <span className="layer-count">{status}</span>
+                  <span className="layer-count">
+                    {status}
+                    {!historical && on && s.snapshot && (
+                      <small
+                        className="layer-age"
+                        title={`Retrieved ${ageLabel(s.snapshot.retrieved_at, s.now)}`}
+                      >
+                        {ageLabel(s.snapshot.retrieved_at, s.now)}
+                      </small>
+                    )}
+                  </span>
                 </label>
               )
             })}

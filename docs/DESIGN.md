@@ -69,6 +69,14 @@ Data colours (`encoding.ts`): magnitude <4 `#e9b44c`, 4–4.9 `#f08a3e`, 5–5.9
 - The legend lists only kinds drawn in the current view. Map mode, static switch and POS/ALT readout form the bottom-right stack on desktop; credits sit on glass.
 - Phones: one-line masthead status ("Live · 4 min ago", "Stale · 1 h ago"), all window choices on one row at 320, home altitude 15,500 km.
 
+## Phase 21 design pass (D74)
+
+- **Layer rows:** domain label is a dim mono caption with a fading rule. Each row is two lines: name over scope (always the scope, per layer-quality check 2) on the left; count over retrieval age on the right. Never repeat "Retrieved…" as the row's only description.
+- **Cadence:** the publication target sentence and "Publication evidence" sit in one quiet bordered block *below* the layer list; layers are the first thing in the panel. Rail disclosures (`.rail-disclosure`) use the Categories mono-caps summary, not body text.
+- **Masthead:** clock (label over time) on the left, publication age over data age on the right. Publication text is steel when on target and `--caution` only when overdue, stale or failed. Phones get a full-width status strip under the wordmark so long states never collide with the buttons.
+- **Context marks are quieter than events:** OONI country badges are 20px, thinner ring, 80% opacity until hovered/selected. Apply the same to any future context-only layer (population, annual statistics).
+- **Panels** use `--glass-strong` on desktop so text holds over bright imagery; `--dim` is for captions only, never sentences.
+
 ## Adding a live layer (Phases 16+)
 
 1. Add kind, colour and glyph in `encoding.ts` (distinct hue *and* shape; avoid the magnitude ramp and status colours).
