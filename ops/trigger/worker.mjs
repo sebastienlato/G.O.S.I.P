@@ -27,7 +27,7 @@ export async function runTrigger(env, fetcher = fetch, now = Date.now()) {
     const reader = response.body.getReader()
     let raw = '',
       bytes = 0
-    const decoder = new TextDecoder('utf-8', { fatal: true })
+    const decoder = new TextDecoder('utf-8', { fatal: true, ignoreBOM: false })
     try {
       while (true) {
         const part = await reader.read()
