@@ -8,7 +8,12 @@ import {
   type DigitalResult,
 } from '../data/digital'
 import { reportLanguages, type ReportLanguage } from '../data/reports'
-import { categories, type Category, type WindowHours } from '../data/events'
+import {
+  categories,
+  type Category,
+  type WindowChoice,
+  type WindowHours,
+} from '../data/events'
 
 export const categoryKeys = Object.keys(categories) as Category[]
 export type Source =
@@ -56,7 +61,7 @@ export interface ExplorerFilters {
   reportStatus: 'all' | 'corrected'
   query: string
   selectedCategories: Category[]
-  hours: WindowHours
+  hours: WindowChoice
   view: 'map' | 'list'
   mapMode: 'interactive' | 'static'
 }
@@ -215,7 +220,17 @@ export function serializeFilters(filters: ExplorerFilters): string {
 /** Retired web URLs never enter a fixture or direct-provider mode. */
 export function parsePublicFilters(search: string): ExplorerFilters {
   const filters = parseFilters(search)
-  if (filters.source === 'usgs') return filters
+  if (filters.source === 'usgs') {
+    const params = new URLSearchParams(search.length <= 4096 ? search : '')
+    const values = params.getAll('hours')
+    return {
+      ...filters,
+      hours:
+        values.length === 1 && ['6', '24', '72', '168'].includes(values[0])
+          ? filters.hours
+          : 'auto',
+    }
+  }
   const redirects: Partial<Record<Source, [LiveLayer[], WindowHours, string]>> =
     {
       'fire-demo': [
@@ -255,4 +270,19 @@ export function parsePublicFilters(search: string): ExplorerFilters {
     hours,
     coming,
   }
+}
+
+/** Public links preserve an explicit 24h choice; absent hours means per-layer defaults.
+ * The legacy serializer remains unchanged for frozen native/fixture compatibility. */
+export function serializePublicFilters(filters: ExplorerFilters): string {
+  const params = new URLSearchParams(
+    serializeFilters({
+      ...filters,
+      hours: filters.hours === 'auto' ? 24 : filters.hours,
+    }),
+  )
+  if (filters.hours === 'auto') params.delete('hours')
+  else params.set('hours', String(filters.hours))
+  const query = params.toString()
+  return query ? `?${query}` : ''
 }

@@ -47,14 +47,15 @@ import {
   formatTimestamp,
   filterEvents,
   type Category,
-  type WindowHours,
+  type WindowChoice,
 } from './data/events'
 
-const timeOptions: { value: WindowHours; label: string }[] = [
-  { value: 6, label: '6 hours' },
-  { value: 24, label: '24 hours' },
-  { value: 72, label: '3 days' },
-  { value: 168, label: '7 days' },
+const timeOptions: { value: WindowChoice; label: string; short: string }[] = [
+  { value: 'auto', label: 'Auto · per-layer defaults', short: 'Auto' },
+  { value: 6, label: '6 hours', short: '6 h' },
+  { value: 24, label: '24 hours', short: '24 h' },
+  { value: 72, label: '3 days', short: '3 d' },
+  { value: 168, label: '7 days', short: '7 d' },
 ]
 const minutesAgo = (iso: string, now: number) => {
   const m = Math.max(0, Math.round((now - Date.parse(iso)) / 60_000))
@@ -187,11 +188,12 @@ export default function App() {
         allEvents,
         query,
         selectedCategories,
-        hours,
+        historical && hours === 'auto' ? 24 : hours,
         referenceTime,
       ).filter((event) => matchesPlace(event, country, region)),
     [
       allEvents,
+      historical,
       country,
       region,
       query,
@@ -256,7 +258,7 @@ export default function App() {
       country: '',
       region: '',
       selectedCategories: categoryKeys,
-      hours: 24,
+      hours: 'auto',
       liveLayers: [...defaultLiveLayers],
     })
   const isFiltered =
@@ -269,7 +271,7 @@ export default function App() {
     region !== '' ||
     query.trim() !== '' ||
     selectedCategories.length !== categoryKeys.length ||
-    hours !== 24
+    hours !== 'auto'
   function toggleCategory(category: Category) {
     updateFilters({
       selectedCategories: selectedCategories.includes(category)
@@ -354,9 +356,14 @@ export default function App() {
             : 'Waiting…'
 
   const windowLabel = timeOptions.find((o) => o.value === hours)?.label
-  const windowSuffix = historical
-    ? 'before capture'
-    : 'back · warnings & launches ahead'
+  const windowSuffix =
+    hours === 'auto'
+      ? historical
+        ? '· 24 hours before capture'
+        : '· source-specific lookback / schedules ahead'
+      : historical
+        ? 'before capture'
+        : 'back · warnings & launches ahead'
   const summary = [
     `${windowLabel} ${windowSuffix}`,
     live &&
@@ -648,10 +655,21 @@ export default function App() {
                   aria-pressed={hours === option.value}
                   onClick={() => updateFilters({ hours: option.value })}
                 >
-                  {option.label}
+                  {option.short}
                 </button>
               ))}
             </div>
+            {hours === 'auto' && !historical && (
+              <details className="window-details">
+                <summary>Layer windows</summary>
+                <p>
+                  Quakes, thermal and warnings: 24 h. Reports: 7 d. Digital: 3
+                  d. Maritime: 14 d. Hazards and space: 30 d. Warnings and
+                  launches look ahead. Real-clock limits still apply to stale
+                  data; an empty source stays empty.
+                </p>
+              </details>
+            )}
             <h2 className="panel-title">View</h2>
             <div className="rail-group segmented" aria-label="Explorer view">
               <button

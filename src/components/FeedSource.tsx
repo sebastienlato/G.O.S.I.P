@@ -246,8 +246,8 @@ export function LiveStatus({
       <p className="section-lede">
         Coming next: floods, {!firmsAvailable && 'fire detections, '}broader
         weather coverage, more news sources, {!ooniAvailable && 'digital, '}
-        {!launchesAvailable && 'launch schedules, '}satellite orbits and
-        aviation{!maritimeAvailable && ', maritime'}.
+        {!launchesAvailable && 'launch schedules, '}space weather and aviation
+        {!maritimeAvailable && ', maritime'}.
       </p>
       <div className="status-grid">
         {liveLayers.includes('maritime') && (
@@ -276,8 +276,8 @@ export function LiveStatus({
             {news.snapshot && (
               <p>
                 Retrieved {formatTimestamp(news.snapshot.retrieved_at)} ·{' '}
-                {news.snapshot.events.length} headlines. Choose 3 or 7 days for
-                reports delayed 24 hours.
+                {news.snapshot.events.length} headlines · at least 24 h delayed.
+                Auto shows the past 7 days.
               </p>
             )}
             {news.error && <p className="source-error">{news.error}</p>}

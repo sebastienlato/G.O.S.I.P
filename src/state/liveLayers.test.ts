@@ -52,3 +52,54 @@ it('combines windows and search using distinct source dates without inferred mer
   expect(eventBadge(hazards[0])).toBe('CURATED HAZARD · EONET')
   expect(new Set(combined.map((e) => e.id)).size).toBe(5)
 })
+
+import { parseNews } from '../data/news'
+import { parseOoni, ooniWindow } from '../data/ooni'
+import { parseMaritime } from '../data/maritime'
+import { extractMaritime } from '../../ingest/maritime'
+import { maritimeFixture } from '../../tests/fixtures/maritime'
+import { parseLaunches } from '../data/launches'
+import { extractLaunches } from '../../ingest/launches'
+import { launchFixture } from '../../tests/fixtures/launches'
+it('auto includes delayed products and schedules without re-dating or reviving expired records', () => {
+  const now = recorded.metadata.generated + 1000
+  const news = parseNews(
+    [
+      {
+        title: 'Example report',
+        author: 'Test writer',
+        url: 'https://globalvoices.org/2026/10/01/test/',
+        published_at: new Date(now - 30 * 3600000).toISOString(),
+      },
+    ],
+    now,
+  ).events
+  const digital = parseOoni(
+    {
+      ...ooniWindow(now),
+      test_name: 'web_connectivity',
+      reported_countries: 1,
+      rows: [{ country_code: 'CA', measurement_count: 1500 }],
+    },
+    now,
+  ).events
+  const maritime = parseMaritime(
+    extractMaritime(maritimeFixture(now), now),
+    now,
+  ).events
+  const launches = parseLaunches(
+    extractLaunches(launchFixture(now)),
+    now,
+  ).events
+  const delayed = [...news, ...digital, ...maritime, ...launches]
+  const original = structuredClone(delayed)
+  expect(filterEvents(delayed, '', categoryKeys, 24, now)).toHaveLength(0)
+  expect(filterEvents(delayed, '', categoryKeys, 'auto', now)).toHaveLength(
+    delayed.length,
+  )
+  expect(
+    filterEvents(delayed, '', categoryKeys, 'auto', now + 31 * 86400000),
+  ).toHaveLength(0)
+  expect(filterEvents([], '', categoryKeys, 'auto', now)).toEqual([])
+  expect(delayed).toEqual(original)
+})

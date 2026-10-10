@@ -1,6 +1,6 @@
 # G.O.S.I.P. — Global Open Source Intelligence Platform
 
-A free public-data console on a 3D satellite globe, with independent layers, a searchable feed and source freshness. No account, payment or analytics. Coverage is incomplete; this is not an emergency service. **Launch preparation is deployed and the final Claude visual polish pass is recorded (D64); sign-off still needs current verification.**
+A free public-data console on a 3D satellite globe, with independent layers, a searchable feed and source freshness. No account, payment or analytics. Coverage is incomplete; this is not an emergency service. **Phase 20 is signed off; Roadmap 3.0 plans the next increments.**
 
 **[Open GOSIP](https://sebastienlato.github.io/G.O.S.I.P/)** · [Lightweight list](https://sebastienlato.github.io/G.O.S.I.P/?view=list) · [Static map](https://sebastienlato.github.io/G.O.S.I.P/?map=static)
 
@@ -15,7 +15,7 @@ A free public-data console on a 3D satellite globe, with independent layers, a s
 - **Launch Library 2 / The Space Devs:** selected upcoming launch schedules with supplied time precision and rounded sites. Plans may change; no spacecraft tracking or launch observations.
 - **IMF PortWatch:** five selected gateways combined into three coarse regions, delayed ≥72 hours and rounded down to tens. Estimates are not vessel positions, trade volume or evidence of disruption.
 
-Choose **3 or 7 days** for delayed reports and digital counts; **7 days** for schedules and maritime estimates. Missing records do not mean no activity. Aviation and other unavailable sources stay coming. There are no public simulations or fixture playback routes; old links open real layers or an explicit coming state. Native iOS is paused.
+**Auto** uses source-specific real-clock windows: quakes/thermal/warnings 24 hours, reports 7 days, digital 3 days, maritime 14 days, hazards and launch schedules 30 days. Warnings and schedules look ahead. Explicit 6/24-hour and 3/7-day choices still apply to every layer; Auto in History means 24 hours before capture. Missing records do not mean no activity. Aviation and other unavailable sources stay coming. There are no public simulations or fixture playback routes; old links open real layers or an explicit coming state. Native iOS is paused.
 
 ## Freshness and history
 

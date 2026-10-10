@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   parsePublicFilters,
-  serializeFilters,
+  serializePublicFilters,
   type ExplorerFilters,
 } from './explorer'
 
@@ -18,7 +18,7 @@ export function useExplorerFilters() {
     window.history.replaceState(
       null,
       '',
-      `${window.location.pathname}${serializeFilters(current.current)}${window.location.hash}`,
+      `${window.location.pathname}${serializePublicFilters(current.current)}${window.location.hash}`,
     )
     window.addEventListener('popstate', restore)
     return () => window.removeEventListener('popstate', restore)
@@ -36,8 +36,8 @@ export function useExplorerFilters() {
         next.language = 'all'
         next.reportStatus = 'all'
       }
-      const validated = parsePublicFilters(serializeFilters(next))
-      const search = serializeFilters(validated)
+      const validated = parsePublicFilters(serializePublicFilters(next))
+      const search = serializePublicFilters(validated)
       if (search !== window.location.search) {
         window.history[replace ? 'replaceState' : 'pushState'](
           null,

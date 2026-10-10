@@ -255,7 +255,9 @@ test('repository map loads geography, worker and markers with production CSP', a
   })
   // Point records are accessible DOM markers; thermal cells are drawn on
   // the globe surface and reached through the feed.
-  const points = page.locator('.event-card[data-mapped="true"]:not(.kind-fire)')
+  const points = page.locator(
+    '.event-card[data-mapped="true"]:not(.kind-fire):not(.kind-maritime)',
+  )
   await expect(points.first()).toBeVisible()
   await expect
     .poll(async () =>
@@ -264,7 +266,7 @@ test('repository map loads geography, worker and markers with production CSP', a
         await points.count(),
       ].join('/'),
     )
-    .toBe('3/3')
+    .toBe('6/6')
   expect(
     resources.some((url) =>
       url.includes(`${base}cesium/Assets/Textures/NaturalEarthII/`),
@@ -282,7 +284,7 @@ test('repository map loads geography, worker and markers with production CSP', a
   expect(resources.some((url) => url.includes('arcgisonline.com'))).toBe(false)
   // Markers on the far side of the globe are hidden; use one in view.
   const marker = page
-    .locator('.map-canvas .event-marker')
+    .locator('.map-canvas .event-marker.kind-storm')
     .filter({ visible: true })
     .first()
   const markerId = await marker.getAttribute('data-event-id')
@@ -512,7 +514,7 @@ for (const mode of ['view=list', 'map=static']) {
     await expect(
       page.getByRole('checkbox', { name: /DWD weather/ }),
     ).not.toBeChecked()
-    await expect(page.locator('.event-card')).toHaveCount(5)
+    await expect(page.locator('.event-card')).toHaveCount(13)
     await expect(page.locator('.clock')).toContainText('Live view clock')
     await expect(
       page.getByText('Live USGS earthquakes', { exact: true }),
@@ -529,7 +531,7 @@ for (const mode of ['view=list', 'map=static']) {
     )
     await page.keyboard.press('Escape')
     await page.reload()
-    await expect(page.locator('.event-card')).toHaveCount(5)
+    await expect(page.locator('.event-card')).toHaveCount(13)
     await page.clock.setFixedTime(now + 46 * 60_000)
     await expect(
       page.getByText('STALE · last available observations', { exact: true }),
@@ -552,7 +554,7 @@ test('pipeline failure retains observations with stale status and missing snapsh
       },
     }),
   )
-  await page.goto(`${origin}${base}?view=list`)
+  await page.goto(`${origin}${base}?view=list&hours=24`)
   await expect(page.locator('.event-card')).toHaveCount(5)
   await expect(
     page.getByText('STALE · last available observations', { exact: true }),
@@ -583,7 +585,7 @@ test('independent live layers combine map/feed, clear selection and survive shar
   await context.grantPermissions(['clipboard-read', 'clipboard-write'], {
     origin,
   })
-  await page.goto(`${origin}${base}?map=static&live=usgs,eonet`)
+  await page.goto(`${origin}${base}?map=static&live=usgs,eonet&hours=24`)
   await expect(page.locator('.event-card')).toHaveCount(4)
   await expect(page.locator('.static-marker')).toHaveCount(3)
   const quakes = page.getByRole('checkbox', { name: /USGS earthquakes/ })
@@ -647,7 +649,7 @@ test('EONET failure is independent, browser failure retains memory and valid emp
       },
     }),
   )
-  await page.goto(`${origin}${base}?view=list`)
+  await page.goto(`${origin}${base}?view=list&hours=24`)
   await expect(
     page.getByText('Live USGS earthquakes', { exact: true }),
   ).toBeVisible()
@@ -1346,4 +1348,52 @@ test('retired aviation stays coming after reload and keyboard opens real records
     path: `test-results/phase20-${info.project.name}-keyboard.png`,
     scale: 'css',
   })
+})
+
+test('auto windows expose delayed layers, preserve explicit 24h links and reset honestly', async ({
+  page,
+}, info) => {
+  await page.goto(`${origin}${base}?map=static`)
+  const auto = page.getByRole('button', {
+    name: 'Auto · per-layer defaults',
+    exact: true,
+  })
+  await expect(auto).toHaveAttribute('aria-pressed', 'true')
+  for (const kind of ['news', 'ooni', 'maritime', 'launch'])
+    await expect(page.locator(`.event-card.kind-${kind}`).first()).toBeVisible()
+  await page.getByText('Layer windows', { exact: true }).click()
+  await expect(page.locator('.window-details')).toContainText('Maritime: 14 d')
+  await page.getByText('Layer windows', { exact: true }).click()
+  if (info.project.name === 'mobile')
+    await page.setViewportSize({ width: 320, height: 740 })
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true)
+  await page.screenshot({
+    path: `test-results/auto-${info.project.name}.png`,
+    fullPage: true,
+  })
+  await page.getByRole('button', { name: '24 hours', exact: true }).click()
+  await expect(page).toHaveURL(/hours=24/)
+  await page.reload()
+  await expect(
+    page.getByRole('button', { name: '24 hours', exact: true }),
+  ).toHaveAttribute('aria-pressed', 'true')
+  await expect(
+    page.locator(
+      '.event-card.kind-news, .event-card.kind-ooni, .event-card.kind-maritime, .event-card.kind-launch',
+    ),
+  ).toHaveCount(0)
+  await auto.click()
+  await page.reload()
+  await expect(page.locator('.event-card.kind-news')).toHaveCount(1)
+  await page.getByRole('button', { name: '24 hours', exact: true }).click()
+  await page.goBack()
+  await expect(auto).toHaveAttribute('aria-pressed', 'true')
+  await page.getByRole('button', { name: '24 hours', exact: true }).click()
+  await page.getByRole('button', { name: 'Reset', exact: true }).click()
+  await expect(auto).toHaveAttribute('aria-pressed', 'true')
+  await expect(page.locator('.event-card.kind-news')).toHaveCount(1)
 })

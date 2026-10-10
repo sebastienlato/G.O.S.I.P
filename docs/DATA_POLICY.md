@@ -5,6 +5,143 @@ For each real feed before public integration, briefly record: official provider,
 Normalized event: id, category, title, summary, coordinates/region optional, source_name/source_url optional, occurred_at/published_at optional, collected_at, status, freshness, is_demo, coverage_note optional. Preserve provider identifiers and corrections. Distinguish sensor observations from verified incidents and media reports from confirmed events. Never imply complete worldwide coverage. Treat third-party content as untrusted. Protect privacy and avoid unnecessary tactical precision for sensitive conflict data.
 
 
+## Roadmap 3.0 candidate review — 2026-10-10
+
+Planning decisions, not newly enabled feeds. “Ready” means a narrow integration can proceed to bounded endpoint/schema validation; it is not a guarantee of availability or complete coverage. Each review below is ≤10 lines. Every adapter must preserve attribution/licence, source dates, unknowns, failure retention, same-origin publications and safety; identified `GOSIP (+https://github.com/sebastienlato/G.O.S.I.P)` requests, no immediate retries, no paid fallback. Numeric **GOSIP budgets** below are proposed limits, not provider quotas. Recheck at implementation.
+
+### Draft 21 — external trigger
+- **Cloudflare Workers Free — needs owner action; preferred candidate.** [Pricing](https://developers.cloudflare.com/workers/platform/pricing/), [limits](https://developers.cloudflare.com/workers/platform/limits/) and [Cron Triggers](https://developers.cloudflare.com/workers/configuration/cron-triggers/): 100,000 requests/day, 10 ms CPU/free scheduled invocation; one 15-minute trigger is 96/day. Free account only, no card/paid plan/domain/storage.
+- A tiny scheduled handler would check the public release, then call the existing fixed GitHub workflow; no provider data or visitor traffic, no new data host, no redistribution/attribution product. Remains best effort, with actual publication age visible.
+- GitHub [dispatch](https://docs.github.com/en/rest/actions/workflows#create-a-workflow-dispatch-event) requires a repository-scoped fine-grained PAT with Actions write; identify the application. Token belongs in a [Worker encrypted secret](https://developers.cloudflare.com/workers/configuration/secrets/), not browser/git/chat. An Actions secret alone cannot authorize the external caller. This operational-secret placement needs explicit owner approval; ingestion keys remain exclusively in Actions.
+- **cron-job.org — blocked for credentialed dispatch in this plan; next: Workers Free or existing GitHub scheduling.** [FAQ](https://cron-job.org/en/faq/) offers free POST/custom headers, ≤60 executions/hour, 30-second/64 KB response limits and no punctuality guarantee, but explicitly says TLS certificates are not checked. Do not entrust an Actions-write token without an established certificate-verification safeguard. No account/contact made.
+
+### Draft 22 — GDACS
+- **Blocked for the proposed combined feed; next: NWS alerts + existing EONET.** [GDACS terms](https://www.gdacs.org/About/termofuse.aspx) explain automated, uncertain impact models and link the [Commission reuse policy](https://commission.europa.eu/legal-notice_en), but this review cannot establish ownership/reuse for every upstream cyclone/impact field in the combined product. General EU CC BY 4.0 does not clear third-party inputs.
+- Proposed scope, if cleared: original GDACS notification ID/type/level/time/link only, credit GDACS/EC-JRC/UN OCHA and underlying source; licence/change notice, no narratives, exposure/casualty counts, population maps or implied official warning. No cross-source corroboration.
+- Public feed discovery needs no key/account; numeric quota and mandatory client identifier not established. GOSIP would use one identified bounded feed/hour, ≤250 KB published, with delay/last-good disclosure. No provider contact or ingestion now; country/approximate hazard geometry only.
+
+### Draft 22 — NWS alerts
+- **Ready, US scope only.** [API](https://www.weather.gov/documentation/services-web-api) explicitly permits free reuse; [NWS terms](https://www.weather.gov/disclaimer) cover unmarked NOAA content, third-party exceptions and no false endorsement/official alteration. Credit NOAA/NWS, link each alert and terms; preserve alert text, severity, validity, cancellation/update references.
+- No key/account currently; application-identifying User-Agent is mandatory (project URL suffices). Provider rate limit is unpublished; GOSIP plan ≤1 bounded active-alert query/15 min, cache-aware, no rapid retry, ≤500 KB publication. Overflow must be explicit partial/unavailable, not silent truncation.
+- Use supplied polygons/areas with vertex/byte bounds; missing geometry stays feed-only. Warnings are forecasts/authority messages, never verified impacts, casualties or response-team positions. Never label coverage global.
+
+### Draft 22 — MeteoAlarm
+- **Needs owner action; next while pending: NWS + DWD.** [EDR portal](https://api.meteoalarm.org/edr/v1?f=html) identifies CC BY 4.0 data; credit MeteoAlarm/EUMETNET and issuing members, licence and changes; preserve original CAP text and issuing authority.
+- Contrary to the draft, [protected endpoints require a token](https://api.meteoalarm.org/edr/v1/authentication); [FAQ](https://api.meteoalarm.org/edr/v1/faq) asks redistributors to register/contact the provider. REST data has a 10-minute delay and bounding boxes, not exact hazard footprints.
+- Numeric quota/free redistributor entitlement must be confirmed during the owner's access request. Propose ≤one query/member/hour, ≤40 members, ≤500 KB total publication; token in Actions secret, truthful GOSIP identity, no paid entitlement. No request made here.
+- European participating-country warnings only; no forecast-as-observation, invented geometry, tactical positions or merged verification. Token approval does not authorize arbitrary downstream member media.
+
+### Draft 22 — NHC cyclone products
+- **Ready for direct NOAA products, not blanket GDACS transit rights.** [NHC GIS directory](https://www.nhc.noaa.gov/gis/) supplies advisory track/cone products under [NWS terms](https://www.weather.gov/disclaimer). Credit NOAA/NHC, advisory/time/link, terms and geometry simplification; no logos or third-party media.
+- No key/account; numeric quota/mandatory identifier not published here. Identified, cache-aware server checks ≤hourly, fixed basin/storm/vertex/150 KB publication caps; bound compressed AND expanded input. No browser-host addition.
+- Atlantic/eastern/central Pacific coverage only. Cone is track uncertainty, not impact extent; distinguish past analysis and predicted track/time, never reconstruct an absent forecast. Independent of GDACS, no responder/person tracks.
+
+### Draft 22 — JTWC via GDACS
+- **Blocked; next: direct NHC with basin gaps named.** [JTWC site](https://www.metoc.navy.mil/jtwc/jtwc.html) could not be retrieved for current product-specific reuse/access/identification/quota verification. Do not infer redistribution through GDACS or generic US-government status.
+- Key/account requirements and direct-product terms unresolved; credit JTWC and originating advisory would be required but is not a grant. No access request/contact. Future scope only bounded meteorological forecasts, no military operational information; no promised global cyclone coverage.
+
+### Draft 23 — NOAA SWPC
+- **Ready for estimated Kp, GOES X-ray measurements and an OVATION forecast grid.** [Data access](https://www.spaceweather.gov/content/data-access), [Kp](https://www.spaceweather.gov/products/planetary-k-index), [GOES](https://www.spaceweather.gov/products/goes-x-ray-flux), [aurora](https://www.spaceweather.gov/products/aurora-30-minute-forecast) and [NWS terms](https://www.weather.gov/disclaimer) support the narrow NOAA products; credit NOAA/SWPC and named model/instrument contributors, source/product links and transformations. No copied third-party imagery/software.
+- No account/key; numeric quota and mandatory identifier not established. GOSIP identified checks ≤3 product requests/15 min, ≤150 KB compact publication; honor product dates/format changes and stop on failures. No faster browser calls.
+- Kp is an estimate, X-ray flux is not an inferred terrestrial incident, OVATION is a short-term forecast with sometimes zero lead time—not observed aurora or guaranteed visibility. Never retain expired forecast as current; no precise person/orbital positions. Staleness must follow product validity, not merely retrieval.
+
+### Draft 23 — CelesTrak
+- **Blocked; next: SWPC + existing LL2.** [Usage policy](https://celestrak.org/usage-policy.php) allows needed downloads once/update (GP/SupGP ≥2 hours apart; directory ≥1 hour), mandates stop/investigate any non-200 response; [modern GP formats](https://celestrak.org/NORAD/documentation/gp-data-formats.php) avoid six-digit-ID TLE limitations.
+- Public access needs no demonstrated key, but narrow upstream redistribution/archiving rights and required identification remain unresolved. Credit CelesTrak/upstream producer is necessary, not sufficient; no account/contact/data request made.
+- ISS is crewed; exclude precise crew positions and military/sensitive objects. No orbit feature committed by this roadmap; any future safe non-sensitive prediction needs rights, age/error bounds and explicit owner scope review. No stale-element propagation.
+
+### Draft 24 — IMF PortWatch expansion
+- **Ready for more reviewed port statistics; chokepoint item validation is required before activation.** [IMF statistical-data terms](https://www.imf.org/en/About/copyright-and-terms.) permit extraction/adaptation/redistribution with attribution/terms/changes; [PortWatch](https://portwatch.imf.org/) supplies aggregate port/chokepoint products. Verify the exact chokepoint item's owner and terms, independently of the already-reviewed Daily Ports item.
+- Credit “Sources: UN Global Platform; IMF PortWatch (portwatch.imf.org)”; retain source-day/version, methodology/link and transformations. No raw AIS, trade-volume inference or copied map media.
+- Public ArcGIS queries need no key/account, 1,000-row service bound for current ports; no unlimited request quota. Identified ≤2 bounded queries/day for ≤20 gateways/chokepoints ×31 dates; ≤80 KB total maritime publication (50 KB increment). Reject transfer-limit/partial-day results; use existing ports if chokepoint access fails.
+- Preserve ≥72h delay, coarse regions, minimum-count suppression and tens rounding. Exclude any chokepoint breakdown that exposes sensitive movement; aggregates are estimates, not disruption/cause evidence. Trends are versioned estimates and only compare equivalent coverage.
+
+### Draft 25 — IODA
+- **Blocked; next: Radar with owner token, otherwise OONI context.** [Resource hub](https://ioda.inetintel.cc.gatech.edu/resources) and [API reference](https://api.ioda.inetintel.cc.gatech.edu/v2/) do not establish product-specific redistribution permission, required credit/identity, numeric quota or account policy in this review. Public charts/code licences do not license data.
+- No account/contact/raw signal request made. Future country/day delayed signals only, source/method attribution, no ASN/IP/probe positions, outage cause/actor/affected-person inference. OONI measurement totals are never relabelled outages.
+
+### Draft 25 — Cloudflare Radar
+- **Needs owner action; next: existing OONI quality improvements.** [Radar](https://developers.cloudflare.com/radar/) is free on all plans and data is CC BY-NC 4.0; credit Cloudflare Radar, source/licence and transformations. Non-commercial use is already current policy (D52); a future commercial change requires replacement/relicensing.
+- [Free account/token](https://developers.cloudflare.com/radar/get-started/first-request/): Account → Radar → Read only, Actions ingestion secret. No domain/payment needed. [Shared ceilings](https://developers.cloudflare.com/fundamentals/api/reference/limits/): 1,200 calls/5 min/user-account token and 200/s/IP, subject to endpoint limits. Plan ≤2 country-level requests/hour, ≤100 KB publication; no retries on rate-limit failure.
+- Publish delayed ≥24h country aggregates/provider outage reports, never IP/ASN/target data. Preserve intervals, normalization, confidence/coverage and source edit/retrieval times; Cloudflare visibility is not the whole Internet. Claims remain provider-attributed; no causal or corroboration labels.
+
+### Draft 26 — ReliefWeb
+- **Needs owner action AND publisher allowlist; next: Global Voices.** [API docs](https://apidoc.reliefweb.int/) allow free API use but original providers retain rights; API access does not clear report text. Limit to metadata from publishers with explicit reuse rights, attribution/original URL/licence, no article bodies/images.
+- [Approved appname](https://apidoc.reliefweb.int/parameters) is mandatory since November 2025; owner applies using organization/purpose/random suffix, no borrowed name. 1,000 calls/day, ≤1,000 entries/call; plan ≤2 queries/hour, ≤500 retained metadata rows/400 KB increment, not a promise of hundreds/day.
+- Supplied country/topic tags only, ≥24h delay and country context; reports remain claims, no casualty/cause/corroboration inference. No key/account/contact request made here. Source publication, ReliefWeb entry/update and retrieval are distinct.
+
+### Draft 26 — UN News
+- **Blocked for syndication in this plan; next: licensed Global Voices and allowlisted ReliefWeb.** Current [UN terms](https://www.un.org/en/about-us/terms-of-use) / [UN News](https://news.un.org/en/about-un-news) were inaccessible (403/tool failure). No current feed-specific public republication/archival grant, attribution wording, quota or identification requirement verified. General UN rights material varies by product; RSS availability is insufficient.
+- Public web/feed may be keyless but no entitlement assumed; no account/contact. If later cleared, headlines/bylines/link-outs only, supplied country, ≥24h delay, attributed claims, no full text/media or tactical locations. No daily-volume commitment.
+
+### Draft 26 — other licensed feeds (concrete fallback: Global Voices)
+- **Ready within existing scope.** [GV republishing](https://globalvoices.org/about/global-voices-attribution-policy/) / [feeds](https://globalvoices.org/feeds/) provide CC BY 3.0 original content; preserve publisher/author/original URL/licence/changes, exclude third-party media. Existing English feed remains the no-account/key fallback.
+- No published numeric quota; identified ≤hourly request per explicitly selected feed, ≤40 entries/feed, within reports' total budget. Additional language/feed endpoints require individual validation; no promise of hundreds/day or universal geography. ≥24h delay, no inferred locations/translation/verification; archive metadata only where rights allow.
+
+### Draft 27 — ADSB.lol
+- **Needs owner action; deferred behind FAA status.** [Data API](https://www.adsb.lol/docs/open-data/api/) is ODbL 1.0; attribute ADSB.lol/contributors, licence/change notice and satisfy derivative database sharing separately from Apache code. [OpenAPI](https://api.adsb.lol/api/openapi.json) asks production users to contact the operator; current dynamic quota/access entitlement must be agreed, not inferred from anonymous requests.
+- No fixed safe worldwide snapshot budget established; no account/key/contact or flight-data request made. Ask only if the owner chooses density; require documented $0 production access, identification, cadence and server-side aggregate supply if available. Next: FAA status.
+- Raw movement harvesting is not this phase. Any accepted later source must supply or permit delayed ≥24h, coarse, count-suppressed aggregates with no callsigns/IDs/routes/military tracks; sparse 15-minute samples cannot honestly be sold as flight totals or continuous traffic density.
+
+### Draft 27 — FAA NAS status
+- **Ready for FAA-authored US airport status facts.** [ATCSCC FAQ](https://www.fly.faa.gov/fly/FAQ/faq) explicitly offers XML status for website developers; [NAS XML guide](https://nasstatus.faa.gov/static/media/NASStatusUserGuide.cccc6d48.pdf) documents the product. Credit FAA/ATCSCC, source link/time, mark reformatting; no copyright claimed in US federal-authored factual status, no third-party media.
+- Public XML needs no key/account; numeric quota/mandatory app identifier not established. Identified ≤1 request/15 min, ≤50 KB publication with safe bounded XML and no external entities. Verify actual HTTPS feed/schema before enabling; next if unavailable: wider PortWatch context, aviation stays coming.
+- Airport status is not flight tracking or universal airline delay coverage. Fixed airport context, no aircraft/person/tactical positions; supplied reasons remain FAA claims, no inferred conflict/security explanation. Valid empty status differs from failed retrieval.
+
+### Draft 27 — OpenSky
+- **Blocked without a written operational licence; next: FAA.** [Terms §3(vi)](https://opensky-network.org/about/terms-of-use) require written licensing for live products even when nonprofit, plus redistribution restrictions, citation and de-identification obligations. Registration does not grant this.
+- Access credits depend on account/licence; no quota or $0 operational entitlement established for GOSIP. No account/contact/key requested. Do not pursue alongside ADSB.lol unless the owner explicitly chooses a separate agreement; no fee accepted. Same no-flight/precise-person/tactical-tracking boundary.
+
+### Draft 28 — WHO Disease Outbreak News
+- **Blocked for automated republication; next: UNHCR country statistics, with WHO link-out only.** [DON](https://www.who.int/emergencies/disease-outbreak-news), [website terms](https://www.who.int/about/policies/terms-of-use) and [publishing policy](https://www.who.int/about/policies/publishing/copyright) distinguish website excerpts from explicitly CC-licensed publications; a DON feed-specific redistribution/archival licence and supported bounded feed were not established. Do not apply CC BY-NC-SA 3.0 IGO to everything on who.int.
+- No key/account/numeric quota/client identity verified for an approved machine feed; no permission request made. WHO credit, exact source URL/licence would be needed. [Ordinary link-outs](https://www.who.int/about/policies/publishing/copyright/linking) allowed, no logo/endorsement.
+- Future metadata only, country-level/≥24h delayed attributed health notices, no patient locations or new epidemiological conclusions. No copied case narratives or invented “live” outbreak rate.
+
+### Draft 28 — UNHCR
+- **Ready for country/year population context, not live displacement.** [Dataset terms](https://www.unhcr.org/what-we-do/data-and-publications/data-and-statistics/terms-use-datasets) and [current portal terms](https://refugeedata.unhcr.org/en/terms-and-conditions-of-use/) give CC BY 4.0 except noted exceptions; credit “UNHCR Refugee Population Statistics Database”, source/licence and transformations; no endorsement or logos.
+- [API documentation](https://refugeedata.unhcr.org/en/documentation/technical-reference/api/) provides official population series; legacy [API docs](https://api.unhcr.org/docs/refugee-statistics.html) remain a migration reference. No key/account demonstrated for public series; numeric quotas may be imposed. Identified bounded ≤weekly query, ≤250 country/year totals/50 KB; fail closed if access changes.
+- Country-only totals, supplied reporting year and revisions; no camps, routes, demographics or origin/destination microdata. No re-identification/cross-linking vulnerable populations. Headline is reported population at date, never a daily incident count/trend. Unknown/absent countries remain unknown.
+
+### Draft 28 — OpenAQ
+- **Needs owner action + upstream licence selection; moved to its own later phase.** [Terms](https://docs.openaq.org/about/terms) require a truthful free account/API key, OpenAQ credit AND compliance with each original provider; forbid substantial duplication of the hosted platform. [Licence metadata](https://docs.openaq.org/resources/licenses) must permit redistribution/modification for the selected product; software openness is insufficient.
+- [Limits](https://docs.openaq.org/using-the-api/rate-limits): free 60/min and 2,000/hour; do not select custom paid capacity. Plan ≤20 requests/hour for a fixed declared station subset, ≤150 KB publication; key in Actions, identify GOSIP, never page the whole world automatically. No account/key requested here.
+- Broad regional daily pollutant summaries only, preserve units/station count/missing intervals/source QA; no manufactured global coverage, AQI conversion or health advice, precise person/private-sensor locations. If rights/access fail, retain UNHCR context and keep air quality coming.
+
+## Roadmap 3.0 budget — planning envelope, not a cap change
+
+Decimal bytes throughout. Pre-increment local D64 build: **12,575,068 bytes**, including **548,588 data bytes** and 124,721-byte partial history; shell/assets **12,026,480**. HTTPS history at sign-off is 254,728 bytes/two captures. Actual small payloads must not be confused with worst-case caps: current eight source caps total **3,630,000 bytes**, plus 20,000 reserved for health/release metadata; existing history cap is **7,100,000**. Shell + current maxima + history = **22,776,480**, leaving only **2,223,520** at today's shell size.
+
+| New/expanded product | Planned maximum published bytes | Basis (compact JSON incl. credit/health) |
+| --- | ---: | --- |
+| GDACS, if cleared | 250,000 | ≤250 notifications ×~900 bytes + envelope |
+| NWS alerts | 500,000 | ≤500 compact alerts with bounded geometry; explicit overflow |
+| MeteoAlarm | 500,000 | bounded European CAP metadata/bboxes; original detail link-outs |
+| NHC | 150,000 | ≤10 advisories; capped/simplified track/cone vertices |
+| SWPC | 150,000 | downsampled forecast grid + short Kp/flux series |
+| PortWatch increment | 50,000 | ≤20 places ×31 daily samples; total maritime ≤80 KB |
+| Radar | 100,000 | country-level intervals/signals; no network-level series |
+| Reports increment | 400,000 | ≤500 selected metadata records; no bodies/media |
+| FAA | 50,000 | ≤100 status records + envelope |
+| UNHCR | 50,000 | ≤250 country totals/year + envelope |
+| OpenAQ | 150,000 | declared sampled regions/parameters, daily summaries |
+| **New total reserve** | **2,450,000** | excludes blocked alternatives that replace, rather than add to, these products |
+
+Blocked candidates' hypothetical sizes: CelesTrak ≤20 KB for a tiny safe object set (not approved), ADSB.lol ≤100 KB for coarse daily cells, WHO/UN News each ≤100 KB metadata. These have **no additional allocation**; if cleared they must replace another reserve or re-budget before shipping. Trigger metadata ≤5 KB sits in the health allowance. Country boundaries/code/charts must fit the shell reserve, not be counted as free.
+
+**Draft 30–32 do not fit as unrestricted per-record history.** At existing current caps alone, 30 daily copies are 108.9 MB; including the 2.45 MB expansion gives **182.4 MB** before shell. Even 7 copies of the expanded 6.08 MB current set are 42.56 MB. Repeated week catalogs also double-count records; copies are not daily activity.
+
+**They can fit at $0 as bounded summaries, subject to an explicit archive-budget decision:** shell/code ≤13 MB; existing current/health ≤3.65 MB; new current ≤2.45 MB; existing immutable raw capture archive allocated ≤4 MB; all-source summaries ≤1.35 MB; brief/feed/search indexes ≤0.30 MB = **24.75 MB**, leaving 0.25 MB. This is tight and must be remeasured at every phase. No budget reduction is implemented now.
+
+The proposed 4 MB raw-capture allocation changes D62's byte bound, not its seven-day time rule: preserve existing captures until natural expiry, never rewrite/truncate them; delay migration while archive >4 MB; reject a new oversized capture with an explicit gap rather than discard retained valid captures. If the owner declines that change, keep 7.1 MB and reduce other scope by ≥3.1 MB (or defer summary history); do not silently exceed 25 MB.
+
+Summary sizing: **20 products ×250 supplied country/coarse-region buckets ×30 days ×8 bytes =1,200,000**, plus 150,000 bytes for dictionaries, timestamps, quality/completeness masks and licence references. Eight-byte tuples are an engineering target to prove with serialization tests; verbose repeated per-row keys do not fit. Split source files; no grids/track geometries/headlines in this archive. Unknown days are gaps, not zero; count distinct IDs in source-time periods, never repeated rolling snapshots. Keep source definitions/versions/denominators, non-additive stock/latest values (UNHCR), forecast values and observed quantities separate. Start collecting compact daily summaries as each new layer ships; no invented backfill. Phases 31–32 require enough real comparable days, not twelve layer toggles. Seven-day comparison only after 7 complete prior days; 30-day baselines require 30 complete **prior** days plus current (derive current separately). Suppress comparisons under coverage/schema changes; daily brief lists actual period per delayed source.
+
+[GitHub billing](https://docs.github.com/en/billing/concepts/product-billing/github-actions) keeps standard public Linux/Pages compute free; the private-plan 2,000 minutes is not this repository's ceiling. At 96 runs/day ×30 days ×~1–3 summed job-minutes, expect ~2,880–8,640 runner-minutes/month, $0 while eligibility remains. At 25 MB/run and 5 minutes artifact residence, average storage ~8.33 MB; 24-hour cleanup failure would accumulate ~2.4 GB without the existing 100 MB pre-upload guard. Keep cleanup, one-day expiry, no cache, owner no-payment-method/$0 stop-usage guard; account-wide 500 MB pooled storage cannot be assumed available. No paid runners.
+
+[Pages](https://docs.github.com/en/pages/getting-started-with-github-pages/github-pages-limits) has 100 GB/month soft bandwidth and finite availability. Restoring 5.35 MB history on 2,880 runs costs ~15.4 GB/month before current snapshots (~17.5 GB at full caps) and visitors. Roughly 67 GB left is only ~2,600 uncached full 25 MB loads; browsing can request repeatedly. Load summaries/history lazily, reduce carry-forward cadence to daily for daily history, reuse unchanged slow-source snapshots and accept interruption. External triggers must replace/deduplicate scheduled work, not double it. Provider quotas remain separate.
+
+Options if measurements exceed the envelope: narrower scope/downsampling/shorter summary retention **$0**, with explicit coverage changes; owner-approved higher internal cap on existing Pages **$0 direct hosting** within GitHub limits but more bandwidth, not authorized here; a second free static host **$0 within its quota**, but requires separate terms and architecture approval and cannot serve browser data under the current same-origin rule. Paid Workers starts at **US$5/month** ([pricing](https://developers.cloudflare.com/workers/platform/pricing/)); extra Actions artifact storage **US$0.25/GiB-month** and chargeable Linux baseline **US$0.006/min** ([billing](https://docs.github.com/en/billing/concepts/product-billing/github-actions)). Neither solves the internal cap or licenses; none activated. OpenAQ/OpenSky higher entitlement is quote/agreement-dependent, not a known $0 substitute. Retain interruption as the default over any paid option.
+
 ## Phase 20 — public retirement boundary
 
 All web fixture payloads/playback/report documents are retired; test/native compatibility resources remain outside the public build. Legacy links never substitute invented coverage. NWS direct browser access is removed, not expanded. No new integration, rights, quota, storage service or paid fallback. Existing per-source limits, attribution, safety delays, seven-day partial archive semantics and 25 MB hosting cap remain in force; earlier simulation/local-source sections below are historical.

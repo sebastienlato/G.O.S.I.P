@@ -24,8 +24,8 @@ export default function LaunchStatus({
       {s.snapshot && (
         <p>
           {s.snapshot.events.length} selected schedules · retrieved{' '}
-          {formatTimestamp(s.snapshot.retrieved_at)}. Window looks forward; try
-          7 days.
+          {formatTimestamp(s.snapshot.retrieved_at)}. Auto looks forward 30
+          days; schedules may change.
         </p>
       )}
       {s.error && <p className="source-error">{s.error}</p>}

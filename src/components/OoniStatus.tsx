@@ -24,7 +24,8 @@ export default function OoniStatus({
         <p>
           {ooni.snapshot.events.length} countries / territories · measurement
           day {ooni.snapshot.feed.interval_start.slice(0, 10)} UTC · retrieved{' '}
-          {formatTimestamp(ooni.snapshot.retrieved_at)}. Use 3 or 7 days.
+          {formatTimestamp(ooni.snapshot.retrieved_at)}. Auto includes the past
+          3 days.
         </p>
       )}
       {ooni.error && <p className="source-error">{ooni.error}</p>}

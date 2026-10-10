@@ -28,8 +28,8 @@ export default function MaritimeStatus({
         <p>
           {s.snapshot.feed.interval_start.slice(0, 10)} UTC ·{' '}
           {s.snapshot.events.length} regions · retrieved{' '}
-          {formatTimestamp(s.snapshot.retrieved_at)}. Choose 7 days; older
-          source days may fall outside the window.
+          {formatTimestamp(s.snapshot.retrieved_at)}. Auto includes the past 14
+          days; older source days still age out.
         </p>
       )}
       {s.error && <p className="source-error">{s.error}</p>}

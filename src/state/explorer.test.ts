@@ -5,6 +5,7 @@ import {
   parseFilters,
   parsePublicFilters,
   serializeFilters,
+  serializePublicFilters,
 } from './explorer'
 
 describe('shareable explorer filters', () => {
@@ -72,8 +73,8 @@ describe('public launch link migration', () => {
       expect(state.country).toBe('')
       expect(state.selectedCategories).toEqual(categoryKeys)
       expect(state.view).toBe('list')
-      expect(serializeFilters(state)).not.toMatch(/source=|at=|fictional/)
-      expect(parsePublicFilters(serializeFilters(state))).toEqual(state)
+      expect(serializePublicFilters(state)).not.toMatch(/source=|at=|fictional/)
+      expect(parsePublicFilters(serializePublicFilters(state))).toEqual(state)
     }
   })
   it('keeps unavailable coverage explicit across reload, without enabling unrelated layers', () => {
@@ -92,4 +93,18 @@ describe('public launch link migration', () => {
       history: 'latest',
     })
   })
+})
+
+it('public windows default by layer and preserve explicit choices across links', () => {
+  expect(parsePublicFilters('').hours).toBe('auto')
+  for (const query of ['?hours=auto', '?hours=evil', '?hours=24&hours=72'])
+    expect(parsePublicFilters(query).hours).toBe('auto')
+  for (const hours of ['auto', 6, 24, 72, 168] as const) {
+    const filters = { ...parsePublicFilters('?live=&history=latest'), hours }
+    expect(parsePublicFilters(serializePublicFilters(filters))).toEqual(filters)
+  }
+  expect(serializePublicFilters({ ...parsePublicFilters(''), hours: 24 })).toBe(
+    '?hours=24',
+  )
+  expect(parseFilters('').hours).toBe(24) // frozen native contract
 })

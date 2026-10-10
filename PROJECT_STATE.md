@@ -1,4 +1,17 @@
-# Project state — Phase 20 launch preparation; final Claude pass pending
+# Project state — Phase 20 complete; Roadmap 3.0 planning
+
+## Roadmap 3.0 planning increment — 2026-10-10
+
+- Owner-authorised one-off planning exception complete in implementation: roadmap now has 18 phases (21–38), country exploration earlier, narrowed rights-cleared source paths and explicit fallbacks, compact summary history instead of raw all-source copies. DATA_POLICY records all draft 21–28 candidates and byte/Actions/bandwidth estimates. Draft superseded. AGENTS unchanged; proposed rules and the five decisions/setup steps are in docs/AGENTS_3_PROPOSAL.md and docs/ROADMAP_3_OWNER_ACTIONS.md. No source/account/key/appname/contact/trigger/cap change made.
+- Real increment: Auto per-layer windows (24h quakes/thermal/warnings; 7d reports; 3d digital; 14d maritime; 30d hazards/launch schedules), explicit common-window override/reset/share/reload/back, original dates and stale retention. Auto History remains 24h before capture; native parser/serializer numeric defaults unchanged. Compact labels and plain Layer windows disclosure preserve the console; Claude styling remains a future pass.
+- npm ci (zero audit vulnerabilities), 268 unit tests, root/Pages typecheck-build and 46 repository-path desktop/mobile checks pass. Local Pages candidate 12,549,757 bytes with restored real published snapshots. Initial test failures were obsolete 24h counts and an overlapped test marker; assertions now exercise Auto and exact 24h separately, selecting the exposed marker for pointer interaction. No forced click or weakened failure check. Existing Cesium lazy-chunk warning remains; no full accessibility/Safari/Firefox/native claim.
+- Budget finding: unrestricted planned 30-day raw snapshots ~182.4 MB before app assets; bounded proposed 24.75 MB envelope needs owner archive-allocation approval and measured compact encoding. $0 compute eligibility is not unlimited artifact storage/bandwidth or reliable schedule. Phase 21 kickoff written; do not start it in this chat. Deployment evidence follows after publication.
+
+## Phase 20 sign-off — 2026-10-10
+
+D64 commit `898e3cbfd017e21a372af164f3ab3baa5e8e02ae` verified; all subsequent changes through `68158e2` are documentation only. Initial HTTPS scheduled release `357f38a` / run 38035156017 was over five hours old: strict freshness check **failed**, correctly. One existing-workflow recovery dispatch [38055370796](https://github.com/sebastienlato/G.O.S.I.P/actions/runs/38055370796) deployed `68158e2aae8a15e15565b1868d00f10223de02d9`, built 13:21:23.349 UTC; build/deploy/cleanup passed, zero run and repository artifacts. Legacy Phase 10 artifact had already disappeared before this chat; no artifact was deleted by this chat outside normal current-run cleanup.
+
+All eight HTTPS health mirrors agree and are fresh/ok at 13:21:17 UTC: USGS 362, EONET 16, DWD 181, FIRMS 1,449, news 9, OONI 97, LL2 3, PortWatch 3. Strict actual HTTPS desktop/mobile verifier passed, including globe/list/static, details, licences, toggles/all-off/reload, retired links and History. Desktop/phone visuals inspected. History has two genuine captures, 254,728 bytes; original October 9 capture hash remains `36fb06dff1edf821098a8c3d267d6d2d1b7e3022d43796b0f15b24718f711d88`. Phase 20 complete. Recovery is manual evidence, **not** proof of reliable cadence; Phase 21 must address that known limitation.
 
 ## Final Claude visual polish pass — 2026-10-09 (D64)
 

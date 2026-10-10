@@ -28,6 +28,16 @@ export const categories = {
 } as const
 export type Category = keyof typeof categories
 export type WindowHours = 6 | 24 | 72 | 168
+export type WindowChoice = WindowHours | 'auto'
+
+// Fixed real-clock windows reflect each published product, never its last-good age.
+export function defaultWindowHours(event: ExplorerEvent): number {
+  if (isMaritime(event)) return 14 * 24
+  if (isLaunch(event) || isHazard(event)) return 30 * 24
+  if (isNews(event)) return 7 * 24
+  if (isOoni(event)) return 72
+  return 24
+}
 export const DEMO_NOW = '2026-10-08T16:00:00.000Z'
 export const DEMO_TIME = Date.parse(DEMO_NOW)
 
@@ -177,27 +187,30 @@ export function filterEvents(
   events: readonly ExplorerEvent[],
   query: string,
   selected: readonly Category[],
-  hours: WindowHours,
+  hours: WindowChoice,
   referenceTime = DEMO_TIME,
 ): ExplorerEvent[] {
   const q = query.trim().toLocaleLowerCase()
-  const cutoff = referenceTime - hours * 3_600_000
   return events
-    .filter(
-      (e) =>
+    .filter((e) => {
+      const windowHours = hours === 'auto' ? defaultWindowHours(e) : hours
+      const cutoff = referenceTime - windowHours * 3_600_000
+      return (
         selected.includes(e.category) &&
         (isLaunch(e)
-          ? launchMatches(e, referenceTime, hours)
+          ? launchMatches(e, referenceTime, windowHours)
           : isFireSummary(e) || isOoni(e) || isMaritime(e)
             ? Date.parse(e.interval_end) > cutoff &&
               Date.parse(e.interval_start) < referenceTime
             : isWarning(e)
               ? (e.valid_until === null ||
                   Date.parse(e.valid_until) > referenceTime) &&
-                Date.parse(e.valid_from) < referenceTime + hours * 3_600_000
+                Date.parse(e.valid_from) <
+                  referenceTime + windowHours * 3_600_000
               : isForecast(e)
                 ? Date.parse(e.valid_until) > referenceTime &&
-                  Date.parse(e.occurred_at) < referenceTime + hours * 3_600_000
+                  Date.parse(e.occurred_at) <
+                    referenceTime + windowHours * 3_600_000
                 : isDigital(e)
                   ? Date.parse(e.interval_end) > cutoff &&
                     Date.parse(e.occurred_at) < referenceTime
@@ -205,8 +218,9 @@ export function filterEvents(
                     Date.parse(eventTime(e)) <= referenceTime) &&
         `${e.title} ${e.source_name} ${isNews(e) ? e.author : ''} ${e.summary} ${e.region} ${e.country} ${categories[e.category].label} ${isAdditional(e) ? `${e.family} ${additionalBases[e.basis]} ${e.unit}` : ''} ${isDigital(e) ? `${e.source_name} ${e.method} ${digitalFamilies[e.family]} ${digitalResults[e.result]} ${e.network_asn === null ? '' : `AS${e.network_asn}`}` : ''} ${isReport(e) ? `${e.source_name} ${e.source_language} ${e.translation?.title ?? ''} ${e.translation?.summary ?? ''}` : ''}`
           .toLocaleLowerCase()
-          .includes(q),
-    )
+          .includes(q)
+      )
+    })
     .sort((a, b) =>
       // Aggregated thermal cells share one window end and would bury every
       // individual record: list them last, busiest cell first.

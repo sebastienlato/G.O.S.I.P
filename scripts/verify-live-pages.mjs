@@ -175,6 +175,12 @@ try {
       await expect(
         page.getByText('Live FIRMS · global thermal summary', { exact: true }),
       ).toBeVisible()
+      await expect(
+        page.getByRole('button', {
+          name: 'Auto · per-layer defaults',
+          exact: true,
+        }),
+      ).toHaveAttribute('aria-pressed', 'true')
       await expect(page.locator('.event-card').first()).toBeVisible()
       await expect(page.locator('.demo-banner')).toHaveCount(0)
       if (!mode) {
