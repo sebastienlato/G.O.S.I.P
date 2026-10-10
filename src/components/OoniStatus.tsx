@@ -1,3 +1,4 @@
+import { SourceCadence } from './CadenceStatus'
 import type { useOoni } from '../state/useEarthquakes'
 import { formatTimestamp } from '../data/events'
 import { OoniCredit } from './OoniBody'
@@ -8,6 +9,7 @@ export default function OoniStatus({
 }) {
   return (
     <div className="source-status" aria-label="OONI status">
+      <SourceCadence source="ooni" state={ooni} />
       <strong
         aria-live="polite"
         className={!ooni.snapshot || ooni.stale ? 'status-warn' : 'status-ok'}
@@ -15,7 +17,9 @@ export default function OoniStatus({
         {ooni.loading
           ? 'Loading digital measurements…'
           : !ooni.snapshot
-            ? 'OONI unavailable · no measurements loaded'
+            ? ooni.health || ooni.error
+              ? 'OONI unavailable · no measurements loaded'
+              : 'Waiting'
             : ooni.stale
               ? 'STALE · last available OONI measurements'
               : 'Live OONI · delayed daily measurements'}
@@ -55,10 +59,10 @@ export default function OoniStatus({
             </p>
           )}
           <p>
-            One bounded provider request per scheduled 15-minute run; page
-            checks every 15 minutes. Retrieval stale after 45 minutes or
-            failure. Measurement day, retrieval and pipeline attempt are
-            distinct; provider publication, update and generation are unknown.
+            One bounded provider request per 6-hour target; page checks every 15
+            minutes. Retrieval stale after 6 h 30 min or failure. Measurement
+            day, retrieval and pipeline attempt are distinct; provider
+            publication, update and generation are unknown.
           </p>
           {ooni.health && (
             <p>

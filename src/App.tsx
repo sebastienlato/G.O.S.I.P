@@ -1,3 +1,5 @@
+import { usePublication } from './state/usePublication'
+import { ageLabel, PIPELINE_TARGET_MS } from './data/cadence'
 import { useArchive } from './state/useArchive'
 import {
   archiveSources,
@@ -309,6 +311,19 @@ export default function App() {
     }
   }
 
+  const publication = usePublication()
+  const publicationAge = publication.release
+    ? Date.now() - Date.parse(publication.release.built_at)
+    : null
+  const publicationState = publication.failed
+    ? 'Publication check failed'
+    : publicationAge === null
+      ? 'Publication waiting'
+      : publicationAge > 45 * 60_000
+        ? 'Publication stale'
+        : publicationAge > PIPELINE_TARGET_MS
+          ? 'Publication overdue'
+          : 'Published'
   // Masthead clock and freshness.
   const clockLabel = historical ? 'History capture' : 'Live view clock'
   const activeLive =
@@ -501,6 +516,18 @@ export default function App() {
                 formatTimestamp(referenceTime)
               )}
             </strong>
+            <span
+              className="publication-status"
+              title={
+                publication.release
+                  ? `Last published build ${formatTimestamp(publication.release.built_at)} · ${publication.release.event} · run ${publication.release.run_id}`
+                  : 'No publication evidence loaded'
+              }
+            >
+              {publicationState}
+              {publication.release &&
+                ` · ${ageLabel(publication.release.built_at, Date.now())}`}
+            </span>
             {freshness && (
               <span className="clock-fresh">
                 <span className="fresh-full">{freshness}</span>
@@ -571,6 +598,41 @@ export default function App() {
             <h2 className="panel-title">
               {historical ? 'Archived layers' : 'Live layers'}
             </h2>
+            <p className="cadence-summary">
+              15 min publication target · GitHub best effort.
+              <br />
+              External trigger not configured.
+            </p>
+            <details className="disclosure publication-disclosure">
+              <summary>Publication evidence</summary>
+              <div className="disclosure-body">
+                <p>
+                  Last published build:{' '}
+                  {publication.release
+                    ? formatTimestamp(publication.release.built_at)
+                    : 'unknown'}
+                  . This is the build stamp served by this site, not a provider
+                  update or an exact deployment-completion time.
+                </p>
+                <p>
+                  Overdue after the 15 min target; stale after 45 min. Jobs and
+                  deployment can be delayed or missed. No next-publication
+                  promise.
+                </p>
+                {publication.release && (
+                  <p>
+                    Trigger: {publication.release.event}.{' '}
+                    <a
+                      target="_blank"
+                      rel="noreferrer"
+                      href={`https://github.com/sebastienlato/G.O.S.I.P/actions/runs/${publication.release.run_id}`}
+                    >
+                      Publication run ↗
+                    </a>
+                  </p>
+                )}
+              </div>
+            </details>
             <LayerToggles
               historyCapture={historical ? (capture ?? null) : undefined}
               liveLayers={liveLayers}
@@ -782,8 +844,8 @@ export default function App() {
             countNoun={historical ? 'archived' : 'live'}
             orderLabel={
               historical
-                ? 'Most recent first.'
-                : `${liveLayers.includes('launches') ? 'Launches soonest, then newest' : 'Newest'} first${
+                ? 'Magnitude within earthquakes; otherwise newest first.'
+                : `${liveLayers.includes('launches') ? 'Launches soonest; ' : ''}Magnitude / warning level within kind; otherwise newest${
                     liveLayers.includes('firms') && firmsAvailable
                       ? '; thermal cells last, busiest first'
                       : ''

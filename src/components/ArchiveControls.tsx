@@ -87,7 +87,9 @@ export function ArchiveStatus({
           {archive.status === 'degraded'
             ? archive.error === 'continuity-unavailable'
               ? 'Earlier history unavailable; collection starts with these captures.'
-              : 'Capture failed; retained records keep original times.'
+              : archive.error === 'capacity-gap'
+                ? 'Capacity gap: new capture exceeds 4 MB allocation; existing captures preserved until expiry.'
+                : 'Capture failed; retained records keep original times.'
             : ''}
         </p>
       )}

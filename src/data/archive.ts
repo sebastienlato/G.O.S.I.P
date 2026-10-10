@@ -9,7 +9,8 @@ import type { ExplorerEvent } from './events'
 export const ARCHIVE_DAYS = 7
 export const DAY = 86_400_000
 export const ARCHIVE_SOURCE_BYTES = 500_000
-export const ARCHIVE_MAX_BYTES = 7_100_000
+export const ARCHIVE_MAX_BYTES = 7_100_000 // Legacy read bound until natural expiry.
+export const ARCHIVE_WRITE_BYTES = 4_000_000
 export const archiveSources = ['usgs', 'eonet'] as const
 export type ArchiveSource = (typeof archiveSources)[number]
 export interface Release {
@@ -27,7 +28,8 @@ export interface Archive {
   version: 1
   attempted_at: string
   status: 'ok' | 'degraded'
-  error: 'capture-unavailable' | 'continuity-unavailable' | null
+  error:
+    'capture-unavailable' | 'continuity-unavailable' | 'capacity-gap' | null
   continuity_since: string
   captures: Capture[]
 }
@@ -119,9 +121,12 @@ export function decodeArchive(raw: string, now: number): Archive {
   if (
     a.version !== 1 ||
     !['ok', 'degraded'].includes(String(a.status)) ||
-    ![null, 'capture-unavailable', 'continuity-unavailable'].includes(
-      a.error as null,
-    ) ||
+    ![
+      null,
+      'capture-unavailable',
+      'continuity-unavailable',
+      'capacity-gap',
+    ].includes(a.error as null) ||
     (a.status === 'ok') !== (a.error === null) ||
     !Array.isArray(a.captures) ||
     a.captures.length > ARCHIVE_DAYS

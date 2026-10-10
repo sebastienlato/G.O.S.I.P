@@ -1,3 +1,5 @@
+import { SourceCadence } from './CadenceStatus'
+import { ageLabel, cadence } from '../data/cadence'
 import { archiveSources, capturedStale, type Capture } from '../data/archive'
 import MaritimeStatus from './MaritimeStatus'
 import LaunchStatus from './LaunchStatus'
@@ -102,6 +104,14 @@ const layerIcon: Record<
   firms: { kind: 'fire', color: fireColor },
 }
 
+const domains: { name: string; layers: LiveLayer[] }[] = [
+  { name: 'Earth', layers: ['usgs', 'eonet', 'dwd', 'firms'] },
+  { name: 'Sky & Space', layers: ['launches'] },
+  { name: 'Sea & Air', layers: ['maritime'] },
+  { name: 'Digital', layers: ['ooni'] },
+  { name: 'Reports', layers: ['news'] },
+]
+
 /** Live layer switches with per-layer counts and freshness. */
 export function LayerToggles({
   historyCapture,
@@ -143,75 +153,115 @@ export function LayerToggles({
   return (
     <fieldset className="layer-toggles">
       <legend className="sr-only">Live layers</legend>
-      {liveLayerKeys
-        .filter(
-          (key) =>
-            historyCapture === undefined ||
-            archiveSources.includes(key as 'usgs' | 'eonet'),
-        )
-        .map((key) => {
-          const historical = historyCapture !== undefined
-          const archived = archiveSources.includes(key as 'usgs' | 'eonet')
-          const on = liveLayers.includes(key) && (!historical || archived)
-          const s = state[key]
-          const status = historical
-            ? !archived
-              ? 'No archive'
-              : !on
-                ? 'Off'
-                : !historyCapture?.sources[key as 'usgs' | 'eonet']?.snapshot
-                  ? 'Missing capture'
-                  : `${counts[key]}${capturedStale(historyCapture, key as 'usgs' | 'eonet') ? ' · stale' : ''}`
-            : !on
-              ? 'Off'
-              : s.loading && !s.snapshot
-                ? 'Loading'
-                : !s.snapshot
-                  ? s.health || s.error
-                    ? 'Unavailable'
-                    : 'Waiting'
-                  : s.stale
-                    ? `${counts[key]} · stale`
-                    : `${counts[key]}`
-          return (
-            <label
-              key={key}
-              className={`layer-toggle ${on ? 'on' : ''} ${!historical && on && (s.stale || (!s.snapshot && !!(s.health || s.error))) && !s.loading ? 'warn' : ''} ${on && counts[key] === 0 ? 'none' : ''}`}
-            >
-              <input
-                type="checkbox"
-                checked={on}
-                disabled={historical && !archived}
-                aria-label={layerMeta[key].name}
-                onChange={() => onToggle(key)}
-              />
-              <span className={`layer-glyph glyph-${key}`} aria-hidden="true">
-                {key === 'eonet' ? (
-                  <>
-                    <KindIcon
-                      kind="storm"
-                      color={hazardColors.severeStorms}
-                      size={15}
-                    />
-                    <KindIcon
-                      kind="volcano"
-                      color={hazardColors.volcanoes}
-                      size={15}
-                    />
-                  </>
-                ) : (
-                  <KindIcon
-                    kind={layerIcon[key].kind}
-                    color={layerIcon[key].color}
-                    size={17}
-                  />
-                )}
-              </span>
-              <span className="layer-name">{layerMeta[key].label}</span>
-              <span className="layer-count">{status}</span>
-            </label>
+      {domains.map((domain) => {
+        const keys = domain.layers
+          .filter((key) => liveLayerKeys.includes(key))
+          .filter(
+            (key) =>
+              historyCapture === undefined ||
+              archiveSources.includes(key as 'usgs' | 'eonet'),
           )
-        })}
+        if (!keys.length) return null
+        return (
+          <div
+            role="group"
+            aria-label={domain.name}
+            className="layer-domain"
+            key={domain.name}
+            data-domain={domain.name}
+          >
+            <span className="domain-label">{domain.name}</span>
+            {keys.map((key) => {
+              const historical = historyCapture !== undefined
+              const archived = archiveSources.includes(key as 'usgs' | 'eonet')
+              const on = liveLayers.includes(key) && (!historical || archived)
+              const s = state[key]
+              const status = historical
+                ? !archived
+                  ? 'No archive'
+                  : !on
+                    ? 'Off'
+                    : !historyCapture?.sources[key as 'usgs' | 'eonet']
+                          ?.snapshot
+                      ? 'Missing capture'
+                      : `${counts[key]}${capturedStale(historyCapture, key as 'usgs' | 'eonet') ? ' · stale' : ''}`
+                : !on
+                  ? 'Off'
+                  : s.loading && !s.snapshot
+                    ? 'Loading'
+                    : !s.snapshot
+                      ? s.health || s.error
+                        ? 'Unavailable'
+                        : 'Waiting'
+                      : s.stale
+                        ? `${counts[key]} · stale`
+                        : `${counts[key]}`
+              return (
+                <label
+                  key={key}
+                  data-domain={
+                    key === 'launches'
+                      ? 'Sky & Space'
+                      : key === 'maritime'
+                        ? 'Sea & Air'
+                        : key === 'ooni'
+                          ? 'Digital'
+                          : key === 'news'
+                            ? 'Reports'
+                            : 'Earth'
+                  }
+                  title={`${layerMeta[key].provider} · ${cadence[key].scope}`}
+                  className={`layer-toggle ${on ? 'on' : ''} ${!historical && on && (s.stale || (!s.snapshot && !!(s.health || s.error))) && !s.loading ? 'warn' : ''} ${on && counts[key] === 0 ? 'none' : ''}`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={on}
+                    disabled={historical && !archived}
+                    aria-label={layerMeta[key].name}
+                    onChange={() => onToggle(key)}
+                  />
+                  <span
+                    className={`layer-glyph glyph-${key}`}
+                    aria-hidden="true"
+                  >
+                    {key === 'eonet' ? (
+                      <>
+                        <KindIcon
+                          kind="storm"
+                          color={hazardColors.severeStorms}
+                          size={15}
+                        />
+                        <KindIcon
+                          kind="volcano"
+                          color={hazardColors.volcanoes}
+                          size={15}
+                        />
+                      </>
+                    ) : (
+                      <KindIcon
+                        kind={layerIcon[key].kind}
+                        color={layerIcon[key].color}
+                        size={17}
+                      />
+                    )}
+                  </span>
+                  <span className="layer-name">
+                    {layerMeta[key].label}
+                    <small className="layer-age">
+                      {historical
+                        ? 'Captured version'
+                        : on && s.snapshot
+                          ? `Retrieved ${ageLabel(s.snapshot.retrieved_at, s.now)}`
+                          : cadence[key].scope}
+                    </small>
+                  </span>
+                  <span className="layer-count">{status}</span>
+                </label>
+              )
+            })}
+          </div>
+        )
+      })}
     </fieldset>
   )
 }
@@ -259,6 +309,7 @@ export function LiveStatus({
         {liveLayers.includes('ooni') && <OoniStatus ooni={ooni} />}
         {liveLayers.includes('news') && (
           <div className="source-status" aria-label="Global Voices status">
+            <SourceCadence source="news" state={news} />
             <strong
               className={
                 !news.snapshot || news.stale ? 'status-warn' : 'status-ok'
@@ -268,7 +319,9 @@ export function LiveStatus({
               {news.loading
                 ? 'Loading report headlines…'
                 : !news.snapshot
-                  ? 'Global Voices unavailable'
+                  ? news.health || news.error
+                    ? 'Global Voices unavailable'
+                    : 'Waiting'
                   : news.stale
                     ? 'STALE · last available reports'
                     : 'Live Global Voices reports'}
@@ -311,10 +364,10 @@ export function LiveStatus({
                   linked articles and third-party media have their own terms.
                 </p>
                 <p>
-                  Provider checks every 15 minutes; published snapshots checked
-                  every 15 minutes. Stale after 45 minutes without a successful
-                  pipeline check or on failure. Retrieval does not establish
-                  editorial freshness. No feed generation time used.
+                  Provider request target is hourly; page checks every 15
+                  minutes. Stale after 90 minutes without retrieval or on
+                  failure. Retrieval does not establish editorial freshness. No
+                  feed generation time used.
                 </p>
                 {news.health && (
                   <p>
@@ -345,6 +398,7 @@ export function LiveStatus({
 
         {liveLayers.includes('usgs') && (
           <div className="source-status">
+            <SourceCadence source="usgs" state={quakes} />
             <div aria-live="polite">
               <strong
                 className={!snapshot || stale ? 'status-warn' : 'status-ok'}
@@ -352,7 +406,9 @@ export function LiveStatus({
                 {loading
                   ? 'Loading earthquake snapshot…'
                   : !snapshot
-                    ? 'USGS unavailable · no observations loaded'
+                    ? health || error
+                      ? 'USGS unavailable · no observations loaded'
+                      : 'Waiting'
                     : stale
                       ? 'STALE · last available observations'
                       : 'Live USGS earthquakes'}
@@ -413,6 +469,7 @@ export function LiveStatus({
         )}
         {liveLayers.includes('eonet') && (
           <div className="source-status" aria-label="EONET status">
+            <SourceCadence source="eonet" state={hazards} />
             <strong
               aria-live="polite"
               className={
@@ -422,7 +479,9 @@ export function LiveStatus({
               {hazards.loading
                 ? 'Loading hazard snapshot…'
                 : !hazards.snapshot
-                  ? 'EONET unavailable · no catalog loaded'
+                  ? hazards.health || hazards.error
+                    ? 'EONET unavailable · no catalog loaded'
+                    : 'Waiting'
                   : hazards.stale
                     ? 'STALE · last available EONET catalog'
                     : 'Live EONET global hazards'}
@@ -494,6 +553,7 @@ export function LiveStatus({
         )}
         {liveLayers.includes('dwd') && (
           <div className="source-status" aria-label="DWD status">
+            <SourceCadence source="dwd" state={warnings} />
             <strong
               aria-live="polite"
               className={
@@ -505,7 +565,9 @@ export function LiveStatus({
               {warnings.loading
                 ? 'Loading warnings…'
                 : !warnings.snapshot
-                  ? 'DWD unavailable · no warnings loaded'
+                  ? warnings.health || warnings.error
+                    ? 'DWD unavailable · no warnings loaded'
+                    : 'Waiting'
                   : warnings.stale
                     ? 'STALE · last available DWD warnings'
                     : 'Live DWD weather warnings'}
@@ -585,6 +647,7 @@ export function LiveStatus({
         )}
         {liveLayers.includes('firms') && (
           <div className="source-status" aria-label="FIRMS status">
+            <SourceCadence source="firms" state={fires} />
             <strong
               aria-live="polite"
               className={
@@ -594,7 +657,9 @@ export function LiveStatus({
               {fires.loading
                 ? 'Loading thermal summaries…'
                 : !fires.snapshot
-                  ? 'FIRMS unavailable · no detections loaded'
+                  ? fires.health || fires.error
+                    ? 'FIRMS unavailable · no detections loaded'
+                    : 'Waiting'
                   : fires.stale
                     ? 'STALE · last available FIRMS summary'
                     : 'Live FIRMS · global thermal summary'}

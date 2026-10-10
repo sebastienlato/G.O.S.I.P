@@ -114,5 +114,7 @@ export default defineConfig(({ mode }) => ({
   ],
   server: { host: '127.0.0.1' },
   preview: { host: '127.0.0.1' },
-  test: { include: ['src/**/*.test.ts', 'ingest/**/*.test.ts'] },
+  test: {
+    include: ['src/**/*.test.ts', 'ingest/**/*.test.ts', 'ops/**/*.test.mjs'],
+  },
 }))

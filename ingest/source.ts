@@ -1,3 +1,4 @@
+import { dueSource } from '../src/data/cadence'
 import {
   readBounded,
   type SourceHealth,
@@ -41,6 +42,23 @@ export async function ingestSource<T extends SnapshotBase>(
       }),
       adapter.maxBytes,
     )
+  }
+  let previous: ReturnType<typeof adapter.decode> | null = null
+  if (process.env.GOSIP_USE_CADENCE === '1') {
+    try {
+      previous = adapter.decode(
+        await get(
+          `https://sebastienlato.github.io/G.O.S.I.P/data/${adapter.source}.json`,
+        ),
+        now,
+      )
+      if (!dueSource(previous.health, now)) {
+        // Preserve failures and EVERY original time; this was not a provider check.
+        return adapter.publish(previous.snapshot, previous.health)
+      }
+    } catch {
+      /* Missing/invalid prior data needs one bounded recovery request. */
+    }
   }
   let snapshot: T | null = null
   let error: string | null = null
@@ -116,12 +134,14 @@ export async function ingestSource<T extends SnapshotBase>(
         : 'unavailable or invalid data'
     error = `${adapter.source.toUpperCase()} ${stage} failed: ${detail}.`
     try {
-      snapshot = adapter.decode(
-        await get(
-          `https://sebastienlato.github.io/G.O.S.I.P/data/${adapter.source}.json`,
-        ),
-        now,
-      ).snapshot
+      snapshot = previous
+        ? previous.snapshot
+        : adapter.decode(
+            await get(
+              `https://sebastienlato.github.io/G.O.S.I.P/data/${adapter.source}.json`,
+            ),
+            now,
+          ).snapshot
     } catch {
       /* No usable last-good publication. */
     }

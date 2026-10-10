@@ -1,0 +1,7 @@
+# Phase 21 initial design pass — owner coordinates
+
+Read AGENTS.md, docs/DESIGN.md, DECISIONS D67–D73 and current PROJECT_STATE; git pull --ff-only. Polish the existing satellite globe console, grouped Earth / Sky & Space / Sea & Air / Digital / Reports controls, Auto window disclosure and publication/source cadence. People has no connected source yet. Functional implementation is committed by Work; no pass is complete until your changes are committed/shared and semantic regressions are checked.
+
+Preserve independent toggle accessible names, URL Auto/explicit24h/back/reset/subsets/all-off, history capture provenance, severity only within compatible kinds, schedules soonest and thermal last. Publication is the live served build stamp, not provider content or exact deployment time. Target/overdue/stale/failure/waiting/valid-empty meanings and unknown provider times must remain distinct. External trigger is NOT configured; no next-update promise. No new source/imagery provider/CSP/safety/licence/billing/native changes or replacement landing page.
+
+Inspect 1440×1000, 390 and 320: default, selected, all-off, stale, empty, Current/History; keyboard focus; globe/list/static. Every layer reachable, default desktop layer controls visible without rail scrolling. Improve spacing/type/hierarchy and keep source JSON/provenance reachable. Work verifies build/typecheck/core/browser semantics after the committed pass. Then stop; next design pass is after feature phases 22–23, not another feature implementation.

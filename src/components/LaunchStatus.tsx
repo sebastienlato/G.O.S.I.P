@@ -1,3 +1,4 @@
+import { SourceCadence } from './CadenceStatus'
 import type { useLaunches } from '../state/useEarthquakes'
 import { formatTimestamp } from '../data/events'
 import { LAUNCH_CREDIT } from '../data/launches'
@@ -9,6 +10,7 @@ export default function LaunchStatus({
   const s = launches
   return (
     <div className="source-status" aria-label="Launch Library status">
+      <SourceCadence source="launches" state={launches} />
       <strong
         aria-live="polite"
         className={!s.snapshot || s.stale ? 'status-warn' : 'status-ok'}
@@ -16,7 +18,9 @@ export default function LaunchStatus({
         {s.loading
           ? 'Loading launch schedules…'
           : !s.snapshot
-            ? 'Launch Library unavailable'
+            ? s.health || s.error
+              ? 'Launch Library unavailable'
+              : 'Waiting'
             : s.stale
               ? 'STALE · last available launch schedules'
               : 'Live catalog · scheduled launches'}

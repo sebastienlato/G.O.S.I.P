@@ -13,4 +13,4 @@
 
 **Cost check:** Before adding any provider or deployment, confirm no billing or charges can occur. If uncertain, keep it local and use fixtures. Public use remains free.
 
-Roadmap 3.0 planning was a one-off owner-authorised exception, with a deployed Auto-window increment. Future phases still deliver visible software. Pending working-rule/Claude cadence changes live in [AGENTS_3_PROPOSAL](AGENTS_3_PROPOSAL.md); they are not active until owner approval. [One owner-action list](ROADMAP_3_OWNER_ACTIONS.md) covers setup/decisions; do not request the same action again after it is completed.
+Roadmap 3.0 planning was a one-off owner-authorised exception, with a deployed Auto-window increment. Future phases still deliver visible software. The exact [AGENTS additions](AGENTS_3_PROPOSAL.md) and two-feature-phase Claude cadence were approved/applied 2026-10-10 (D70). [One owner-action list](ROADMAP_3_OWNER_ACTIONS.md) covers setup/decisions; do not request the same action again after it is completed.

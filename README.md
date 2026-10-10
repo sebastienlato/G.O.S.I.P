@@ -1,6 +1,6 @@
 # G.O.S.I.P. — Global Open Source Intelligence Platform
 
-A free public-data console on a 3D satellite globe, with independent layers, a searchable feed and source freshness. No account, payment or analytics. Coverage is incomplete; this is not an emergency service. **Phase 20 is signed off; Roadmap 3.0 plans the next increments.**
+A free public-data console on a 3D satellite globe, with independent layers, a searchable feed and source freshness. No account, payment or analytics. Coverage is incomplete; this is not an emergency service. **Phase 21 adds honest publication/source freshness and cadence controls.**
 
 **[Open GOSIP](https://sebastienlato.github.io/G.O.S.I.P/)** · [Lightweight list](https://sebastienlato.github.io/G.O.S.I.P/?view=list) · [Static map](https://sebastienlato.github.io/G.O.S.I.P/?map=static)
 
@@ -19,7 +19,7 @@ A free public-data console on a 3D satellite globe, with independent layers, a s
 
 ## Freshness and history
 
-Scheduled ingestion publishes bounded snapshots on a best-effort 15-minute cadence. Browsers read data from this site only; the globe separately loads approved NASA GIBS/optional Cesium ion imagery. List/static entry avoids the globe engine and external imagery. Each source preserves original retrieval, provider and event times. Failure retains last-good data marked stale; 45 minutes without freshness also shows stale. Recent retrieval does not prove recent provider curation.
+Scheduled ingestion publishes bounded snapshots on a best-effort 15-minute cadence. Browsers read data from this site only; the globe separately loads approved NASA GIBS/optional Cesium ion imagery. List/static entry avoids the globe engine and external imagery. Each source preserves original retrieval, provider and event times. Failure retains last-good data marked stale; Fast sources become stale after 45 minutes; hourly reports after 90 minutes, six-hour OONI checks after 6 h 30 min and twelve-hour maritime checks after 12 h 30 min. Source retrieval becomes overdue at its target; failure is stale immediately. Recent retrieval does not prove recent provider curation. The masthead separately reads the live publication build stamp: overdue after 15 minutes, stale after 45. External scheduling is approved but unconfigured; GitHub scheduling remains best effort.
 
 **History** keeps the first successful daily capture of previously published USGS/EONET snapshots, at most seven captures for seven days. Collection began in Phase 19: initial coverage is partial, with no backfill. Captured versions stay fixed; provider links may contain later corrections. Capture time is separate from source time and is not proof of earlier knowledge. Other sources have no archive. Missing/expired captures stay unavailable; outages can interrupt continuity and delay physical deletion of expired payloads.
 

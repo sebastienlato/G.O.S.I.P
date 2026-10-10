@@ -221,3 +221,66 @@ describe('bounded published history', () => {
     expect(parseFilters('?source=demo&history=latest').history).toBe('')
   })
 })
+
+function largeCapture(at: number): Capture {
+  const c = capture(at)
+  const q = parseUSGS(
+    feed(
+      Array.from({ length: 1400 }, (_, i) =>
+        quake(`test${i}`, { time: at - 3600_000, updated: at - 1800_000 }),
+      ),
+      at,
+    ),
+    at,
+  )
+  const f = eonetFixture(at)
+  f.events = Array.from({ length: 200 }, (_, i) => ({
+    ...f.events[0],
+    id: `EONET_${i}`,
+    sources: [
+      { id: 'TEST', url: 'https://example.org/' + 'a'.repeat(940) },
+      { id: 'TEST2', url: 'https://example.org/' + 'b'.repeat(940) },
+    ],
+  }))
+  const e = parseEONET(f, at)
+  c.sources.usgs = publish(q, {
+    ...c.sources.usgs!.health,
+    record_count: q.events.length,
+  })
+  c.sources.eonet = publishEONET(e, {
+    ...c.sources.eonet!.health,
+    record_count: e.events.length,
+  })
+  return c
+}
+it('capacity gaps preserve a valid legacy archive above 4 MB until natural expiry', async () => {
+  const old = archive(
+    Array.from({ length: 5 }, (_, i) => largeCapture(now - (5 - i) * DAY)),
+  )
+  expect(JSON.stringify(old).length).toBeGreaterThan(4_000_000)
+  expect(JSON.stringify(old).length).toBeLessThan(7_100_000)
+  const result = await ingestArchive(
+    transport(old, largeCapture(now)),
+    () => now,
+  )
+  expect(result.error).toBe('capacity-gap')
+  expect(result.captures).toEqual(old.captures)
+  const later = now + 7 * DAY
+  const expired = await ingestArchive(
+    transport(result, capture(later)),
+    () => later,
+  )
+  expect(expired.captures).toEqual([capture(later)])
+})
+it('rejects a new capture crossing 4 MB without evicting smaller retained captures', async () => {
+  const old = archive(
+    Array.from({ length: 4 }, (_, i) => largeCapture(now - (4 - i) * DAY)),
+  )
+  expect(JSON.stringify(old).length).toBeLessThan(4_000_000)
+  const result = await ingestArchive(
+    transport(old, largeCapture(now)),
+    () => now,
+  )
+  expect(result.error).toBe('capacity-gap')
+  expect(result.captures).toEqual(old.captures)
+})

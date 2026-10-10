@@ -1,6 +1,6 @@
-# Proposed AGENTS additions — owner approval pending
+# AGENTS additions — approved and applied 2026-10-10 (D70)
 
-AGENTS.md is unchanged. This proposal neither grants new source access nor alters $0, safety, same-origin data, provenance, source rights, no public simulations, native pause, phase boundaries or commit/deployment rules. The owner authorised only this planning exception; future phases still deliver software.
+The exact additions below are now in AGENTS.md. This proposal neither grants new source access nor alters $0, safety, same-origin data, provenance, source rights, no public simulations, native pause, phase boundaries or commit/deployment rules. Owner approved the proposal and every-two-feature-phase cadence; future phases still deliver software.
 
 Suggested addition under Owner direction:
 
@@ -27,4 +27,4 @@ Suggested addition under Workflow:
 >
 > **Domains.** Use Earth, Sky & Space, Sea & Air, Digital, People, Reports to group controls as layers grow; independent toggles/health remain. Earth = quakes/hazards/thermal/weather/air quality; Sky & Space = forecasts and schedules; Sea & Air = ports/airport status; Digital = network measurements/signals; People = country population/health context; Reports = attributed publications. Economy/energy grouping needs an explicit design decision at Phase 36. Categories/domains are navigation, not evidence relationships or shared severity. Never replace the 3D globe with a flat map/landing page.
 
-Owner approval requested for these exact additions and the cadence choice in [the single action list](ROADMAP_3_OWNER_ACTIONS.md). External-trigger secrets and archive-byte reallocation are separate choices there, not hidden AGENTS exceptions.
+Owner approval recorded for these exact additions and the every-two-phase cadence in [the single action list](ROADMAP_3_OWNER_ACTIONS.md). External-trigger secrets and archive-byte reallocation are separate choices there, not hidden AGENTS exceptions.

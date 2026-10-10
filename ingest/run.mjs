@@ -1,5 +1,6 @@
 import { createServer } from 'vite'
 import { mkdir, writeFile } from 'node:fs/promises'
+process.env.GOSIP_USE_CADENCE = '1'
 const server = await createServer({
   server: { middlewareMode: true, watch: null },
   appType: 'custom',

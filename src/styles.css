@@ -2266,3 +2266,60 @@ dialog::backdrop {
 .map-credit > .globe-credits:empty {
   display: none;
 }
+
+/* Phase 21 functional hooks; owner-coordinated Claude pass pending. */
+.publication-status {
+  display: block;
+  font-size: 11px;
+  color: var(--caution);
+}
+.cadence-summary {
+  font-size: 11px;
+  color: var(--steel);
+  line-height: 1.4;
+  margin: 0 0 6px;
+}
+.publication-disclosure {
+  margin-bottom: 6px;
+}
+.source-cadence {
+  border-bottom: 1px solid var(--edge);
+  padding-bottom: 6px;
+  margin-bottom: 8px;
+}
+.source-cadence p {
+  overflow-wrap: anywhere;
+}
+.layer-name .layer-age {
+  display: block;
+  color: var(--steel);
+  font-size: 9px;
+  font-weight: normal;
+  letter-spacing: 0;
+  line-height: 1.3;
+}
+
+.layer-domain {
+  display: grid;
+  gap: 3px;
+  grid-column: 1 / -1;
+}
+.domain-label {
+  font: 9px var(--mono);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--steel);
+}
+@media (max-width: 700px) {
+  .layer-domain {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .domain-label {
+    grid-column: 1 / -1;
+  }
+}
+@media (max-width: 640px) {
+  .layer-domain {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

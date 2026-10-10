@@ -1,4 +1,10 @@
-# Current release status — Phase 20 complete; Roadmap 3.0 planning increment
+# Current release status — Phase 21
+
+Local verification: 278 unit/core tests, 50 repository-path browser checks and root/Pages builds/typecheck pass. Candidate 12,557,434 bytes within 24.75 MB envelope / 25 MB hard cap. Actual 1440/390/320 default/selected/empty/all-off/stale/Current/History inspected; phone grouped controls repaired. Existing Cesium lazy chunk warning; no complete accessibility/Safari/Firefox/native claim.
+
+Publication UI reports the actual served build stamp separately from provider times. Source cadence and reuse preserve original times/failures. Worker code and duplicate guards tested locally; Cloudflare NOT configured, no external cadence claim. Owner setup is listed once in ROADMAP_3_OWNER_ACTIONS; Claude initial design handoff pending. Strict scheduled verifier remains unchanged. It initially failed because live release was push; then genuinely passed unchanged schedule 38057805714 on 2026-10-10 (13:58:56 UTC start), all eight fresh sources and zero artifacts. One schedule success amid multi-hour gaps is not reliable cadence. Live Phase 21 deployment evidence follows in PROJECT_STATE.
+
+## Historical Phase 20 / planning status
 
 Phase 20 sign-off verified 2026-10-10: D64 commit `898e3cb` and documentation-only descendants, actual fresh HTTPS release `68158e2aae8a15e15565b1868d00f10223de02d9` / manual recovery run [38055370796](https://github.com/sebastienlato/G.O.S.I.P/actions/runs/38055370796), built 13:21:23.349 UTC. Build/deploy/cleanup succeeded; zero run/repository artifacts. All eight embedded/index health mirrors fresh/ok, strict actual desktop/mobile browser verifier passed including immutable two-capture history. Initial >5h-old scheduled release failed strict freshness. Manual recovery does not prove reliable cadence; Phase 21 addresses that limitation. Full sign-off details in PROJECT_STATE; older launch-gate text below is historical and superseded.
 

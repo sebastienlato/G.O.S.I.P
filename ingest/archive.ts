@@ -1,6 +1,7 @@
 import { readBounded } from '../src/data/published'
 import {
   ARCHIVE_MAX_BYTES,
+  ARCHIVE_WRITE_BYTES,
   ARCHIVE_SOURCE_BYTES,
   archiveSources,
   decodeArchive,
@@ -80,7 +81,15 @@ export async function ingestArchive(
         { captured_at: new Date(clock()).toISOString(), release, sources },
         clock(),
       )
-      captures.push(capture)
+      // Reserve envelope metadata without evicting/revising any existing capture.
+      if (
+        new TextEncoder().encode(JSON.stringify([...captures, capture]))
+          .byteLength +
+          1000 >
+        ARCHIVE_WRITE_BYTES
+      )
+        error = 'capacity-gap'
+      else captures.push(capture)
     } catch {
       error = 'capture-unavailable'
     }

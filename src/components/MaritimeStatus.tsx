@@ -1,3 +1,4 @@
+import { SourceCadence } from './CadenceStatus'
 import type { useMaritime } from '../state/useEarthquakes'
 import { formatTimestamp } from '../data/events'
 import {
@@ -12,6 +13,7 @@ export default function MaritimeStatus({
 }) {
   return (
     <div className="source-status" aria-label="PortWatch status">
+      <SourceCadence source="maritime" state={s} />
       <strong
         aria-live="polite"
         className={!s.snapshot || s.stale ? 'status-warn' : 'status-ok'}
@@ -19,7 +21,9 @@ export default function MaritimeStatus({
         {s.loading
           ? 'Loading port-call estimates…'
           : !s.snapshot
-            ? 'PortWatch unavailable'
+            ? s.health || s.error
+              ? 'PortWatch unavailable'
+              : 'Waiting'
             : s.stale
               ? 'STALE · last available port estimates'
               : 'PortWatch · delayed port estimates'}
@@ -44,9 +48,9 @@ export default function MaritimeStatus({
         <div className="disclosure-body">
           <p>{MARITIME_COVERAGE}</p>
           <p>
-            One bounded request per scheduled run; latest complete source day in
-            a 14-day query, no archive. Same-origin checks every 15 minutes;
-            retrieval stale after 45 minutes or failure. Provider generation,
+            One bounded request per 12-hour target; latest complete source day
+            in a 14-day query, no archive. Same-origin checks every 15 minutes;
+            retrieval stale after 12 h 30 min or failure. Provider generation,
             publication and revision times are unknown. Recent retrieval does
             not make the estimates current.
           </p>

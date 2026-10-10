@@ -54,8 +54,8 @@ async function size(path) {
 }
 const bytes = await size('dist')
 assert(
-  bytes < 25_000_000,
-  'Publication budget is 25 MB (owner-approved for the globe, D52); investigate instead of increasing hosting usage',
+  bytes < 24_750_000,
+  '24.75 MB planning envelope exceeded; notify owner and reduce scope. Hard site cap remains 25 MB.',
 )
 await writeFile('dist/.nojekyll', '')
 console.log(

@@ -195,6 +195,17 @@ test.beforeEach(async ({ context, page }) => {
       await route.abort()
       return
     }
+    if (url.pathname.endsWith('/release.json')) {
+      await route.fulfill({
+        json: {
+          source_commit: 'a'.repeat(40),
+          event: 'push',
+          run_id: '123',
+          built_at: new Date(now).toISOString(),
+        },
+      })
+      return
+    }
     if (url.pathname.endsWith('/data/history.json')) {
       await route.fulfill({ json: archivePublished })
       return
@@ -527,7 +538,9 @@ for (const mode of ['view=list', 'map=static']) {
     ).not.toBeVisible()
     await page.locator('.event-card.kind-quake').first().click()
     await expect(page.getByRole('dialog')).toContainText(
-      snapshot.events[0].provider_id,
+      [...snapshot.events].sort(
+        (a, b) => (b.magnitude ?? -Infinity) - (a.magnitude ?? -Infinity),
+      )[0].provider_id,
     )
     await page.keyboard.press('Escape')
     await page.reload()
@@ -1396,4 +1409,55 @@ test('auto windows expose delayed layers, preserve explicit 24h links and reset 
   await page.getByRole('button', { name: 'Reset', exact: true }).click()
   await expect(auto).toHaveAttribute('aria-pressed', 'true')
   await expect(page.locator('.event-card.kind-news')).toHaveCount(1)
+})
+
+test('publication evidence remains independent of all-off, overdue, stale and retrieval failure', async ({
+  page,
+  context,
+}) => {
+  await page.goto(`${origin}${base}?live=&view=list`)
+  await expect(page.locator('.publication-status')).toContainText(
+    'Published · 0 min ago',
+  )
+  await expect(
+    page.getByText('External trigger not configured.', { exact: false }),
+  ).toBeVisible()
+  await page.clock.setFixedTime(now + 16 * 60_000)
+  await expect(page.locator('.publication-status')).toContainText(
+    'Publication overdue',
+  )
+  await page.clock.setFixedTime(now + 46 * 60_000)
+  await expect(page.locator('.publication-status')).toContainText(
+    'Publication stale',
+  )
+  await context.route('**/release.json', (route) =>
+    route.fulfill({ status: 503, body: 'Unavailable' }),
+  )
+  await page.reload()
+  await expect(page.locator('.publication-status')).toContainText(
+    'Publication check failed',
+  )
+  await expect(page.locator('.event-card')).toHaveCount(0)
+})
+
+test('cadence distinguishes daily source retrieval, provider time and safety delay', async ({
+  page,
+}) => {
+  await page.goto(`${origin}${base}?view=list&live=ooni,maritime,news`)
+  await expect(
+    page.locator('[aria-label="OONI status"] .source-cadence'),
+  ).toContainText('Pipeline target 6 h')
+  await expect(
+    page.locator('[aria-label="PortWatch status"] .source-cadence'),
+  ).toContainText('At least 72 h safety delay')
+  await expect(
+    page.locator('[aria-label="Global Voices status"] .source-cadence'),
+  ).toContainText('Provider generation unknown')
+  await page.clock.setFixedTime(now + 61 * 60_000)
+  await expect(
+    page.locator('[aria-label="Global Voices status"] .source-cadence'),
+  ).toContainText('Overdue')
+  await expect(
+    page.locator('[aria-label="OONI status"] .source-cadence'),
+  ).toContainText('Retrieved')
 })

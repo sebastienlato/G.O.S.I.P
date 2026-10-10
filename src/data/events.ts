@@ -191,56 +191,60 @@ export function filterEvents(
   referenceTime = DEMO_TIME,
 ): ExplorerEvent[] {
   const q = query.trim().toLocaleLowerCase()
-  return events
-    .filter((e) => {
-      const windowHours = hours === 'auto' ? defaultWindowHours(e) : hours
-      const cutoff = referenceTime - windowHours * 3_600_000
-      return (
-        selected.includes(e.category) &&
-        (isLaunch(e)
-          ? launchMatches(e, referenceTime, windowHours)
-          : isFireSummary(e) || isOoni(e) || isMaritime(e)
-            ? Date.parse(e.interval_end) > cutoff &&
-              Date.parse(e.interval_start) < referenceTime
-            : isWarning(e)
-              ? (e.valid_until === null ||
-                  Date.parse(e.valid_until) > referenceTime) &&
-                Date.parse(e.valid_from) <
-                  referenceTime + windowHours * 3_600_000
-              : isForecast(e)
-                ? Date.parse(e.valid_until) > referenceTime &&
-                  Date.parse(e.occurred_at) <
+  return rankCompatible(
+    events
+      .filter((e) => {
+        const windowHours = hours === 'auto' ? defaultWindowHours(e) : hours
+        const cutoff = referenceTime - windowHours * 3_600_000
+        return (
+          selected.includes(e.category) &&
+          (isLaunch(e)
+            ? launchMatches(e, referenceTime, windowHours)
+            : isFireSummary(e) || isOoni(e) || isMaritime(e)
+              ? Date.parse(e.interval_end) > cutoff &&
+                Date.parse(e.interval_start) < referenceTime
+              : isWarning(e)
+                ? (e.valid_until === null ||
+                    Date.parse(e.valid_until) > referenceTime) &&
+                  Date.parse(e.valid_from) <
                     referenceTime + windowHours * 3_600_000
-                : isDigital(e)
-                  ? Date.parse(e.interval_end) > cutoff &&
-                    Date.parse(e.occurred_at) < referenceTime
-                  : Date.parse(eventTime(e)) >= cutoff &&
-                    Date.parse(eventTime(e)) <= referenceTime) &&
-        `${e.title} ${e.source_name} ${isNews(e) ? e.author : ''} ${e.summary} ${e.region} ${e.country} ${categories[e.category].label} ${isAdditional(e) ? `${e.family} ${additionalBases[e.basis]} ${e.unit}` : ''} ${isDigital(e) ? `${e.source_name} ${e.method} ${digitalFamilies[e.family]} ${digitalResults[e.result]} ${e.network_asn === null ? '' : `AS${e.network_asn}`}` : ''} ${isReport(e) ? `${e.source_name} ${e.source_language} ${e.translation?.title ?? ''} ${e.translation?.summary ?? ''}` : ''}`
-          .toLocaleLowerCase()
-          .includes(q)
-      )
-    })
-    .sort((a, b) =>
-      // Aggregated thermal cells share one window end and would bury every
-      // individual record: list them last, busiest cell first.
-      isFireSummary(a) !== isFireSummary(b)
-        ? isFireSummary(a)
-          ? 1
-          : -1
-        : isFireSummary(a) && isFireSummary(b)
-          ? b.detection_count - a.detection_count
-          : isLaunch(a) !== isLaunch(b)
-            ? isLaunch(a)
-              ? -1
-              : 1
-            : isLaunch(a) && isLaunch(b)
-              ? Date.parse(a.net ?? '9999-01-01') -
-                Date.parse(b.net ?? '9999-01-01')
-              : isForecast(a) && isForecast(b)
-                ? Date.parse(a.occurred_at) - Date.parse(b.occurred_at)
-                : Date.parse(eventTime(b)) - Date.parse(eventTime(a)),
-    )
+                : isForecast(e)
+                  ? Date.parse(e.valid_until) > referenceTime &&
+                    Date.parse(e.occurred_at) <
+                      referenceTime + windowHours * 3_600_000
+                  : isDigital(e)
+                    ? Date.parse(e.interval_end) > cutoff &&
+                      Date.parse(e.occurred_at) < referenceTime
+                    : Date.parse(eventTime(e)) >= cutoff &&
+                      Date.parse(eventTime(e)) <= referenceTime) &&
+          `${e.title} ${e.source_name} ${isNews(e) ? e.author : ''} ${e.summary} ${e.region} ${e.country} ${categories[e.category].label} ${isAdditional(e) ? `${e.family} ${additionalBases[e.basis]} ${e.unit}` : ''} ${isDigital(e) ? `${e.source_name} ${e.method} ${digitalFamilies[e.family]} ${digitalResults[e.result]} ${e.network_asn === null ? '' : `AS${e.network_asn}`}` : ''} ${isReport(e) ? `${e.source_name} ${e.source_language} ${e.translation?.title ?? ''} ${e.translation?.summary ?? ''}` : ''}`
+            .toLocaleLowerCase()
+            .includes(q)
+        )
+      })
+      .sort((a, b) =>
+        // Aggregated thermal cells share one window end and would bury every
+        // individual record: list them last, busiest cell first.
+        isFireSummary(a) !== isFireSummary(b)
+          ? isFireSummary(a)
+            ? 1
+            : -1
+          : isFireSummary(a) && isFireSummary(b)
+            ? b.detection_count - a.detection_count || a.id.localeCompare(b.id)
+            : isLaunch(a) !== isLaunch(b)
+              ? isLaunch(a)
+                ? -1
+                : 1
+              : isLaunch(a) && isLaunch(b)
+                ? Date.parse(a.net ?? '9999-01-01') -
+                    Date.parse(b.net ?? '9999-01-01') ||
+                  a.id.localeCompare(b.id)
+                : isForecast(a) && isForecast(b)
+                  ? Date.parse(a.occurred_at) - Date.parse(b.occurred_at)
+                  : Date.parse(eventTime(b)) - Date.parse(eventTime(a)) ||
+                    a.id.localeCompare(b.id),
+      ),
+  )
 }
 // Reports and additional summaries use publication; digital uses interval end.
 export const eventTime = (event: ExplorerEvent): string =>
@@ -337,3 +341,36 @@ export const locationMeaning = (event: ExplorerEvent) =>
                         : isForecast(event)
                           ? 'Forecast location'
                           : 'Estimated epicentre'
+
+// Sort comparable records within their chronological slots. Mixing magnitude and
+// time in one pairwise comparator is non-transitive across kinds.
+export function rankCompatible(events: ExplorerEvent[]): ExplorerEvent[] {
+  const kind = (e: ExplorerEvent) =>
+    'magnitude_type' in e ? 'quake' : isWarning(e) ? 'dwd' : null
+  const value = (e: ExplorerEvent) =>
+    'magnitude_type' in e
+      ? (e.magnitude ?? -Infinity)
+      : isWarning(e)
+        ? e.level
+        : -Infinity
+  const groups = new Map<string, ExplorerEvent[]>()
+  for (const event of events) {
+    const key = kind(event)
+    if (key) groups.set(key, [...(groups.get(key) ?? []), event])
+  }
+  for (const list of groups.values())
+    list.sort(
+      (a, b) =>
+        value(b) - value(a) ||
+        Date.parse(eventTime(b)) - Date.parse(eventTime(a)) ||
+        a.id.localeCompare(b.id),
+    )
+  const index = new Map<string, number>()
+  return events.map((event) => {
+    const key = kind(event)
+    if (!key) return event
+    const n = index.get(key) ?? 0
+    index.set(key, n + 1)
+    return groups.get(key)![n]
+  })
+}

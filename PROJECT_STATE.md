@@ -1,4 +1,16 @@
-# Project state — Phase 20 complete; Roadmap 3.0 planning
+# Project state — Phase 21 implementation; deployment verification pending
+
+## Phase 21 — 2026-10-10
+
+- Owner's five approvals recorded D67–D70; exact AGENTS proposal applied. Cloudflare account/token/Worker NOT configured, optional MeteoAlarm/ReliefWeb/Radar/OpenAQ unapproved; conflict out, long-term non-commercial confirmed. Initial Claude pass remains pending, owner handoff in prompts/CLAUDE_PHASE21.md; no pass credited.
+- Visible publication build age/trigger/run, 15 min target / overdue / 45 min stale / failed check, independent of all-off/history. Per-source retrieval age, provider generation/unknown, cadence and safety delay/link/JSON. Grouped occupied domains preserve toggle names, Auto/explicit windows, subset/reset/back/all-off. Supplied quake magnitude and DWD level rank within compatible kind slots; schedules soonest, thermal last; no threat/corroboration score.
+- Local reviewed/tested trigger-only Worker, exact UTC cron 11,26,41,56; fixed bounded release read/dispatch, expiry guard, no HTTP handler, storage or credential logs. Serialized workflow publication/due-source guard; push/manual bypass publication gate only. Reuse slow/fresh source snapshots with original attempt/retrieval/error; all provider calls still bounded, no retries. Targets: fast five 15 min; GV hourly; OONI 6 h; PortWatch 12 h. Failure remains stale; slow-source stale thresholds target +30 min. GitHub cron unchanged, no external cadence claim.
+- New raw captures capped at 4 MB; existing captures stay immutable until seven-day expiry, explicit capacity gap instead of eviction. Legacy 7.1 MB read bound only for migration; 1.35 MB summaries reserved, not implemented. Build now stops at 24.75 MB envelope, hard cap 25 MB unchanged. Local Pages candidate 12,557,434 bytes; $0 guard/no-payment confirmation unchanged.
+- npm ci, 278 unit/core tests (including Worker, duplicate/reuse/failed-attempt guards, magnitude/level ordering and archive capacity migration), root/Pages builds/typecheck, 50 repository-path browser checks pass. 1440/390/320 default/selected/empty/all-off/stale/current/history inspected using captured public snapshots, plus mocked regression tests. Visual review caught/fixed cramped phone grouped labels. Initial four browser assertions assumed newest quake; corrected to magnitude order. One new test initially used invalid all-off URL; corrected to existing `live=` contract. No remaining check failure in the final local suite; Cesium chunk warning persists, no full a11y/Safari/Firefox/native claim.
+- Preflight served planning push 89c30c1 / run 38056421292; eight mirrors agreed, two immutable captures ~254.7 KB, zero repository artifacts. Initial strict scheduler verifier correctly failed push provenance. During implementation, actual unchanged GitHub schedule 38057805714 / source 3fd8c8b (created 13:58:56 UTC) completed and passed the unchanged strict scheduled-source verifier with all eight fresh mirrors/zero artifacts. Prior schedule starts were 01:18:08 and 07:39:07 UTC: sparse scheduling, not repeated 15-minute evidence. Worker is not configured; no three-interval external observation is possible yet.
+- Phase 21 live deployment evidence is recorded below after verification. Evidence files in ignored .phase21-evidence/ and test-results/. Next chat Phase 22 only; single setup list docs/ROADMAP_3_OWNER_ACTIONS.md.
+
+## Historical project state — Phase 20 / planning
 
 ## Roadmap 3.0 planning increment — 2026-10-10
 

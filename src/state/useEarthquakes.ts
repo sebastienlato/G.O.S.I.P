@@ -1,3 +1,4 @@
+import { staleAfter } from '../data/cadence'
 import { decodeMaritime, MARITIME_MAX_BYTES } from '../data/maritime'
 import { decodeLaunches, LAUNCH_MAX_BYTES } from '../data/launches'
 import { decodeOoni, OONI_MAX_BYTES } from '../data/ooni'
@@ -8,7 +9,6 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   decodePublished,
   readBounded,
-  LIVE_STALE_MS,
   type SourceHealth,
 } from '../data/published'
 import type { EarthquakeSnapshot } from '../data/usgs'
@@ -109,7 +109,7 @@ export function usePublished<T extends Snapshot>(
             Date.parse(snapshot.generated_at ?? snapshot.retrieved_at),
             Date.parse(snapshot.retrieved_at),
           ) >
-          LIVE_STALE_MS),
+          staleAfter(source)),
   }
 }
 
