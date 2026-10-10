@@ -2481,3 +2481,36 @@ dialog::backdrop {
 .feed-summary {
   color: var(--steel);
 }
+/* Desktop rail: a slightly wider panel and one-line scopes keep every layer,
+   the window, view and categories inside 1440×1000 in healthy and stale
+   states. The full scope stays in the row tooltip and source details. */
+@media (min-width: 1281px) {
+  :root {
+    --left: 336px;
+  }
+}
+@media (min-width: 961px) {
+  .layer-scope {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .domain-label {
+    margin-top: 7px;
+  }
+}
+@media (min-width: 961px) {
+  .layer-toggle {
+    min-height: 36px;
+  }
+  .panel-controls {
+    gap: 8px;
+  }
+}
+/* Narrow desktop rail: the scope wins the space; per-row age shows only when
+   a layer needs attention (the masthead and source details always carry it). */
+@media (min-width: 961px) and (max-width: 1280px) {
+  .layer-toggle:not(.warn) .layer-age {
+    display: none;
+  }
+}

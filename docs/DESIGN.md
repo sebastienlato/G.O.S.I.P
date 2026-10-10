@@ -71,7 +71,7 @@ Data colours (`encoding.ts`): magnitude <4 `#e9b44c`, 4–4.9 `#f08a3e`, 5–5.9
 
 ## Phase 21 design pass (D74)
 
-- **Layer rows:** domain label is a dim mono caption with a fading rule. Each row is two lines: name over scope (always the scope, per layer-quality check 2) on the left; count over retrieval age on the right. Never repeat "Retrieved…" as the row's only description.
+- **Layer rows:** domain label is a dim mono caption with a fading rule. Each row is two lines: name over scope (always the scope, per layer-quality check 2) on the left; count over retrieval age on the right. Never repeat "Retrieved…" as the row's only description. On desktop the scope stays on one line (the rail is 336px at ≥1281) and the age reads short ("17 min"); on 961–1280 rails the age shows only for layers needing attention. The whole control panel must end above 1000px at 1440×1000 with live data, not only test fixtures.
 - **Cadence:** the publication target sentence and "Publication evidence" sit in one quiet bordered block *below* the layer list; layers are the first thing in the panel. Rail disclosures (`.rail-disclosure`) use the Categories mono-caps summary, not body text.
 - **Masthead:** clock (label over time) on the left, publication age over data age on the right. Publication text is steel when on target and `--caution` only when overdue, stale or failed. Phones get a full-width status strip under the wordmark so long states never collide with the buttons.
 - **Context marks are quieter than events:** OONI country badges are 20px, thinner ring, 80% opacity until hovered/selected. Apply the same to any future context-only layer (population, annual statistics).

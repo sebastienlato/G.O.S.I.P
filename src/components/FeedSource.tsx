@@ -258,7 +258,10 @@ export function LayerToggles({
                         className="layer-age"
                         title={`Retrieved ${ageLabel(s.snapshot.retrieved_at, s.now)}`}
                       >
-                        {ageLabel(s.snapshot.retrieved_at, s.now)}
+                        {ageLabel(s.snapshot.retrieved_at, s.now).replace(
+                          / ago$/,
+                          '',
+                        )}
                       </small>
                     )}
                   </span>
