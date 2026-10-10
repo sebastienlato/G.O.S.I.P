@@ -649,8 +649,8 @@ export default function App() {
             />
             <div className="cadence-block">
               <p className="cadence-summary">
-                15 min publication target · GitHub best effort. External trigger
-                not configured.
+                15 min publication target · best effort. External trigger configured;
+                cadence unverified.
               </p>
               <details className="rail-disclosure publication-disclosure">
                 <summary>Publication evidence</summary>

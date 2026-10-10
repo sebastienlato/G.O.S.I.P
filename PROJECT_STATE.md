@@ -1,4 +1,10 @@
-# Project state — Phase 21 delivered and design pass done (D74); owner Worker setup pending
+# Project state — Phase 21 delivered; Worker configured, external cadence unverified
+
+## External trigger verification — 2026-10-10 (D75)
+
+Owner confirmed configuration and January 8, 2027 token expiry. Four slots 15:26/15:41/15:56/16:11 UTC (three full intervals), observed through16:16UTC: no Cron rows, no GitHub external run, no new publication; cause unconfirmed. Full [evidence and limits](docs/EXTERNAL_TRIGGER_VERIFICATION.md). HTTPS stayed push ab9a3ba /38061719826 built14:58:38, approximately78min old at close. Eight mirrors agreed, two captures unchanged/hash6fbe9eef..., zero artifacts. Strict schedule verifier correctly failed push provenance. No manual dispatch/push or configuration change contaminated observation. No reliable external cadence claim.
+
+Configured-status UI now says “External trigger configured; cadence unverified.” D74 design preserved, 278unit/50browser/root+Pages builds/typecheck pass; local12,560,574bytes. The owner setup action is complete; further controlled diagnostic remains separate. Final status-copy deployment evidence follows after publication. Older pending-setup passages below are historical.
 
 ## Phase 21 Claude design pass — 2026-10-10 (D74)
 

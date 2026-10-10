@@ -1420,7 +1420,7 @@ test('publication evidence remains independent of all-off, overdue, stale and re
     'Published · 0 min ago',
   )
   await expect(
-    page.getByText('External trigger not configured.', { exact: false }),
+    page.getByText('External trigger configured; cadence unverified.', { exact: false }),
   ).toBeVisible()
   await page.clock.setFixedTime(now + 16 * 60_000)
   await expect(page.locator('.publication-status')).toContainText(
