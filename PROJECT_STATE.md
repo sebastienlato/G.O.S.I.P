@@ -1,4 +1,12 @@
-# Project state — Phase 21 delivered; Worker configured, external cadence unverified
+# Project state — Phase 21 delivered; external dispatch repaired and verified
+
+## External Worker repair — 2026-10-10 (D76)
+
+Production now has one verified external publication. Cloudflare live log at **16:41:06.458 UTC (12:41 EDT)**: `dispatch-accepted` for exact configured cron. GitHub [38068660754](https://github.com/sebastienlato/G.O.S.I.P/actions/runs/38068660754) is `workflow_dispatch` with `MANUAL_TRIGGER: external`; build/deploy/cleanup succeeded, no retained artifacts. Actual HTTPS source `0e4c78bbaed63ed35a190f43e3bdc69f7441e155`, run/event match, built 16:41:35.017 UTC. Eight mirrors agree: fast sources retrieved 16:41:29, GV retains 16:17:48 and OONI/PortWatch retain 13:59:14. Two immutable captures / hash6fbe9eef... unchanged. Site 12,566,438 bytes before stamp; 25 MB/$0 safeguards intact. This is genuine external evidence, not a manual CLI substitute or code push.
+
+Root cause: Workers rejects `redirect: 'error'`; both reads now use `manual`, still rejecting redirects without credential forwarding. Also removed exported string CRON for stable-runtime compatibility. Retrospective production logs show four earlier scheduled calls returned `request-failed`, then the corrected 16:26 call returned `recent-publication`. Thus the earlier empty Cron-history table did not prove missing invocations. Corrected Worker active version `dedb6954`, existing secret/expiry/schedule/URLs unchanged. Dashboard's manual Schedule test remained disabled; did not force it or open URLs. Controlled local workerd tests used mocked requests; production proof came from the real 16:41 Cron.
+
+282 unit tests (seven trigger checks, four actual-runtime scenarios), root/Pages build/typecheck and audit zero pass. Pinned stable Miniflare uses its supported 2026-08-06 API baseline, production date remains 2026-10-10; explicit dependency overrides patch sharp/undici in the development harness. Prior 50 browser regressions remain passed; this repair changes no UI or ingestion semantics. D74 preserved. One accepted run is not a 15-minute cadence guarantee; keep cadence-unverified copy and strict scheduled-source verifier unchanged. Temporary live log stream stopped; bounded follow-up ends after final release evidence. No owner setup action or Phase 22 work.
 
 ## External trigger verification — 2026-10-10 (D75)
 

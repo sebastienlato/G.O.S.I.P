@@ -1,5 +1,5 @@
 // Trigger only. No HTTP handler, storage, provider ingestion or arbitrary destination.
-export const CRON = '11,26,41,56 * * * *'
+const CRON = '11,26,41,56 * * * *'
 const RELEASE = 'https://sebastienlato.github.io/G.O.S.I.P/release.json'
 const DISPATCH =
   'https://api.github.com/repos/sebastienlato/G.O.S.I.P/actions/workflows/publish-live.yml/dispatches'
@@ -14,7 +14,7 @@ export async function runTrigger(env, fetcher = fetch, now = Date.now()) {
     return 'configuration-required'
   try {
     const response = await fetcher(RELEASE, {
-      redirect: 'error',
+      redirect: 'manual',
       signal: AbortSignal.timeout(8000),
       headers: { 'Cache-Control': 'no-cache' },
     })
@@ -53,7 +53,7 @@ export async function runTrigger(env, fetcher = fetch, now = Date.now()) {
     if (now - built < 15 * 60_000) return 'recent-publication'
     const result = await fetcher(DISPATCH, {
       method: 'POST',
-      redirect: 'error',
+      redirect: 'manual',
       signal: AbortSignal.timeout(8000),
       headers: {
         Authorization: `Bearer ${env.GITHUB_DISPATCH_TOKEN}`,

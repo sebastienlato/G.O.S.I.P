@@ -1,4 +1,12 @@
-# External trigger observation — 2026-10-10
+# External trigger repair and observation — 2026-10-10
+
+**Updated result (D76): repaired; one actual external publication verified at 16:41 UTC.** Cloudflare version `dedb6954` logged `dispatch-accepted` at 16:41:06.458. [GitHub run 38068660754](https://github.com/sebastienlato/G.O.S.I.P/actions/runs/38068660754) records external-input `workflow_dispatch`, successful build/deploy/cleanup and zero artifacts. Matching HTTPS release built 16:41:35.017, source `0e4c78b`; eight mirrors and original slow-source times intact, same two-capture hash. Site 12,566,438 bytes before stamp. Sustained 15-minute publication remains unverified.
+
+The controlled local workerd diagnostic showed the real production blocker: `redirect: 'error'` throws before fetching. Both requests now use `manual` and reject redirects without following them. The pinned stable runtime also rejects the exported string CRON, so that constant is now internal. This second issue must not be misrepresented as proven production startup failure: the later Observability history shows all four earlier Cron invocations returned `request-failed`, and the repaired 16:26 invocation correctly returned `recent-publication`. The old Cron Events table was incomplete evidence. No token replacement was needed.
+
+Real-runtime regression tests cover startup, successful dispatch, recent-publication skip, and rejected redirects before/after authorization. 282 tests and root/Pages builds pass; audit zero. Development-only Miniflare uses its documented test API baseline; no new production service. Production compatibility date, free plan, secret scope/expiry, cron, closed HTTP routes and storage settings are unchanged. The disabled dashboard manual-test control was not bypassed; local mocked diagnostics were followed by a genuine scheduled publication. Live log stream stopped after verification. One recovery run is not a cadence SLA.
+
+## Original bounded observation (historical)
 
 **Result: configured, but external operation/cadence was not verified.** Owner confirmed `gosip-publish-trigger`, token expires January 8, 2027; Worker cutoff `2027-01-08T00:00:00Z`. No token value was read. Read-only dashboard inspection confirmed encrypted secret, expiry, disabled production/preview URLs, no custom routes/domains/bindings and disabled Logs/Traces/Issues. Active version `8f347e23` visibly contains the reviewed scheduled handler, fixed destination and corrected decoder; no editor problems. The persisted schedule displays minutes 11, 26, 41 and 56. Configuration alone is not execution evidence.
 

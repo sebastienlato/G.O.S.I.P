@@ -29,7 +29,7 @@ it('checks a bounded release without credentials; dispatches only fixed main wor
     [16 * 60_000, 2],
   ]) {
     const f = vi.fn(async (url, options) => {
-      expect(options.redirect).toBe('error')
+      expect(options.redirect).toBe('manual')
       if (url.endsWith('release.json')) {
         expect(options.headers.Authorization).toBeUndefined()
         return Response.json(release(age))
@@ -55,6 +55,10 @@ it('no retry on oversized, malformed, future, denied or failed response', async 
     new Response('{}'),
     Response.json(release(-1000)),
     new Response('', { status: 429 }),
+    new Response('', {
+      status: 302,
+      headers: { Location: 'https://example.invalid/' },
+    }),
   ]) {
     const f = vi.fn(async () => response)
     expect(await runTrigger(env, f, now)).toMatch(/unavailable|failed/)

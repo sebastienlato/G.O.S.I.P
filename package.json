@@ -1,7 +1,7 @@
 {
   "name": "gosip",
   "version": "0.1.0",
-  "description": "Free, local-first global event explorer — observations, forecasts and attributed report examples",
+  "description": "Free, local-first global event explorer \u2014 observations, forecasts and attributed report examples",
   "scripts": {
     "data:native": "node scripts/export-native.mjs",
     "check:native": "node scripts/export-native.mjs --check && swift test --package-path native/GOSIP/Core",
@@ -48,6 +48,7 @@
     "d3-geo": "^3.1.1",
     "d3-geo-projection": "^4.0.0",
     "fast-xml-parser": "^5.11.2",
+    "miniflare": "4.20260730.0",
     "prettier": "^3.9.9",
     "tailwindcss": "^4.3.3",
     "topojson-client": "^3.1.0",
@@ -62,6 +63,10 @@
   },
   "overrides": {
     "@cesium/engine": "26.3.0",
-    "@cesium/widgets": "16.2.0"
+    "@cesium/widgets": "16.2.0",
+    "miniflare": {
+      "undici": "7.29.1",
+      "sharp": "0.35.5"
+    }
   }
 }

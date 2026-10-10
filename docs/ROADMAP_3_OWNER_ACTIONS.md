@@ -1,6 +1,6 @@
 # Roadmap 3.0 — one owner-action list
 
-**All five recommendations approved by owner on 2026-10-10 (D67–D70).** Cloudflare setup was confirmed complete by the owner on 2026-10-10: gosip-publish-trigger, token expiry January 8, 2027. Do not request setup again. External execution/cadence failed bounded verification; see EXTERNAL_TRIGGER_VERIFICATION.md. Optional MeteoAlarm, ReliefWeb, Radar and OpenAQ expansions are undecided, not approved. Do not paste secrets into chat or git. All choices retain free public access, 25 MB, no billing/payment/trial/upgrades and the safety rules. Source/access details: [DATA_POLICY](DATA_POLICY.md#roadmap-30-candidate-review--2026-10-10).
+**All five recommendations approved by owner on 2026-10-10 (D67–D70).** Cloudflare setup was confirmed complete by the owner on 2026-10-10: gosip-publish-trigger, token expiry January 8, 2027. Do not request setup again. External execution was repaired and one real publication verified (D76); sustained cadence remains unverified. See EXTERNAL_TRIGGER_VERIFICATION.md. Optional MeteoAlarm, ReliefWeb, Radar and OpenAQ expansions are undecided, not approved. Do not paste secrets into chat or git. All choices retain free public access, 25 MB, no billing/payment/trial/upgrades and the safety rules. Source/access details: [DATA_POLICY](DATA_POLICY.md#roadmap-30-candidate-review--2026-10-10).
 
 ## Five recorded owner decisions (no further approval request)
 
