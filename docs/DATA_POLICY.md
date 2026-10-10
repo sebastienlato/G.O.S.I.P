@@ -1,5 +1,7 @@
 # Data policy
 
+Current owner status (2026-10-10): D67–D70 approve the trigger-only Worker/secret placement (setup pending), 4 MB raw +1.35 MB summary allocation, conflict out, permanent non-commercial operation and exact AGENTS/two-phase design cadence. Optional MeteoAlarm/ReliefWeb/Radar/OpenAQ remain unapproved. The Phase 21 section at the end supersedes planning-pending wording and historical request/stale intervals below.
+
 For each real feed before public integration, briefly record: official provider, exact allowed use/redistribution, attribution, limits, refresh interval, coverage and sensitivity. If unresolved, keep the source coming or use another reviewed provider; fixtures are test-only. Do not stop unrelated development.
 
 Normalized event: id, category, title, summary, coordinates/region optional, source_name/source_url optional, occurred_at/published_at optional, collected_at, status, freshness, is_demo, coverage_note optional. Preserve provider identifiers and corrections. Distinguish sensor observations from verified incidents and media reports from confirmed events. Never imply complete worldwide coverage. Treat third-party content as untrusted. Protect privacy and avoid unnecessary tactical precision for sensitive conflict data.

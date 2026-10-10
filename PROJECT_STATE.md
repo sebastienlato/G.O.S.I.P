@@ -1,4 +1,4 @@
-# Project state — Phase 21 implementation; deployment verification pending
+# Project state — Phase 21 delivered; owner setup/design pass pending
 
 ## Phase 21 — 2026-10-10
 
@@ -8,7 +8,20 @@
 - New raw captures capped at 4 MB; existing captures stay immutable until seven-day expiry, explicit capacity gap instead of eviction. Legacy 7.1 MB read bound only for migration; 1.35 MB summaries reserved, not implemented. Build now stops at 24.75 MB envelope, hard cap 25 MB unchanged. Local Pages candidate 12,557,434 bytes; $0 guard/no-payment confirmation unchanged.
 - npm ci, 278 unit/core tests (including Worker, duplicate/reuse/failed-attempt guards, magnitude/level ordering and archive capacity migration), root/Pages builds/typecheck, 50 repository-path browser checks pass. 1440/390/320 default/selected/empty/all-off/stale/current/history inspected using captured public snapshots, plus mocked regression tests. Visual review caught/fixed cramped phone grouped labels. Initial four browser assertions assumed newest quake; corrected to magnitude order. One new test initially used invalid all-off URL; corrected to existing `live=` contract. No remaining check failure in the final local suite; Cesium chunk warning persists, no full a11y/Safari/Firefox/native claim.
 - Preflight served planning push 89c30c1 / run 38056421292; eight mirrors agreed, two immutable captures ~254.7 KB, zero repository artifacts. Initial strict scheduler verifier correctly failed push provenance. During implementation, actual unchanged GitHub schedule 38057805714 / source 3fd8c8b (created 13:58:56 UTC) completed and passed the unchanged strict scheduled-source verifier with all eight fresh mirrors/zero artifacts. Prior schedule starts were 01:18:08 and 07:39:07 UTC: sparse scheduling, not repeated 15-minute evidence. Worker is not configured; no three-interval external observation is possible yet.
-- Phase 21 live deployment evidence is recorded below after verification. Evidence files in ignored .phase21-evidence/ and test-results/. Next chat Phase 22 only; single setup list docs/ROADMAP_3_OWNER_ACTIONS.md.
+- Phase 21 HTTPS deployment verified below. Evidence files in ignored .phase21-evidence/ and test-results/. Next chat Phase 22 only; single setup list docs/ROADMAP_3_OWNER_ACTIONS.md.
+
+
+## Phase 21 verified release — 2026-10-10
+
+Final code `c22129dfa1961a9cb6cc4e2c292399a7fb4334bc`, [push run 38058085535](https://github.com/sebastienlato/G.O.S.I.P/actions/runs/38058085535), built 14:03:30.961 UTC (10:03 EDT). Actual HTTPS stamp SHA/event/run match. Build/deploy/cleanup succeeded; zero run and repository artifacts. Pages built/workflow/HTTPS at unchanged public URL. Site 12,552,141 bytes before stamp, **12,552,277 bytes including stamp**, below 24.75 MB envelope / 25 MB hard cap. Earlier implementation push 3efc39b / 38058019414 also deployed/cleaned successfully.
+
+All eight HTTPS health mirrors match, healthy: USGS 360, EONET 16, DWD 173, FIRMS 1,496 cells, GV 9, OONI 97, LL2 3, PortWatch 3. Entire health index is byte-equivalent JSON data to the preceding scheduled publication: original attempt/retrieval ~13:59:14 UTC preserved through both pushes. That is actual reuse evidence, not freshly contacted providers or new provider content. USGS generated 13:58:39, DWD 13:59; other generation unknown. PortWatch still reports October 2.
+
+History 254,728 bytes / two captures. Deep comparison of the full capture array against preflight passed; array SHA-256 `6fbe9eefdfd52ee5802a810d128d0e57f84cd85571ab7270a19f77b05ab1fcfa`; first-capture hash remains `36fb06dff1edf821098a8c3d267d6d2d1b7e3022d43796b0f15b24718f711d88`. No data committed, rewrite or expanded source history. Raw allocation 4 MB / summaries 1.35 MB, $0 protections intact.
+
+Unchanged strict actual HTTPS desktop/mobile verifier passed final source: globe/list/static, details/licences/dates, independent toggles/all-off/reload, retired links and immutable History. Actual 1440/390/320 globe/controls/history screenshots inspected; local stale/empty/selected tests also passed. First live-check attempt was superseded by the corrective stamp-reserve deployment mid-check and failed its source-SHA assertion; final stable-source rerun passed. Local final 278 unit / 50 browser / root and Pages builds/typecheck pass. No new Safari/Firefox/native/full accessibility claim; Cesium chunk warning remains.
+
+Cadence evidence is the one real 13:58:56 scheduled run plus two explicitly push-triggered publications, not three regular external intervals. Cloudflare remains NOT configured; code/configuration/setup steps ready, owner returns Worker name/expiry/“configured”. Initial Claude pass pending owner commits via prompts/CLAUDE_PHASE21.md. These open operational/design items do not invent completion or block the named Phase 22 fallback. Later documentation-only commit records this evidence and is newer than the deployed code. Stop here; next kickoff Phase 22.
 
 ## Historical project state — Phase 20 / planning
 
